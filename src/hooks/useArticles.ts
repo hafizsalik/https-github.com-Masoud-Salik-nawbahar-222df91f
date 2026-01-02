@@ -49,7 +49,6 @@ export function usePublishedArticles() {
         )
       `)
       .eq("status", "published")
-      .order("total_feed_rank", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
 
     if (error) {

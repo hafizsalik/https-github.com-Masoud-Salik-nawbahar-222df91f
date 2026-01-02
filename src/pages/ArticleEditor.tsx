@@ -60,14 +60,14 @@ const ArticleEditor = () => {
         title: title.trim(),
         content: content.trim(),
         author_id: user.id,
-        status: "pending",
+        status: "published",
       });
 
       if (error) throw error;
 
       toast({
         title: "موفق!",
-        description: "مقاله شما با موفقیت ثبت شد و در انتظار بررسی است",
+        description: "مقاله شما با موفقیت منتشر شد",
       });
       navigate("/");
     } catch (error: any) {
