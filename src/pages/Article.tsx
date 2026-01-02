@@ -1,0 +1,249 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, Heart, Bookmark, Share2, BadgeCheck } from "lucide-react";
+import { formatSolarShort } from "@/lib/solarHijri";
+import { cn } from "@/lib/utils";
+
+interface ArticleData {
+  id: string;
+  title: string;
+  content: string;
+  cover_image_url: string | null;
+  tags: string[];
+  created_at: string;
+  save_count: number;
+  author?: {
+    display_name: string;
+    avatar_url: string | null;
+    specialty: string | null;
+    reputation_score: number;
+  };
+}
+
+function getReputationRing(score: number): string {
+  if (score > 80) return "ring-2 ring-yellow-500 ring-offset-2 ring-offset-background";
+  if (score > 50) return "ring-2 ring-blue-500 ring-offset-2 ring-offset-background";
+  return "ring-1 ring-border";
+}
+
+const Article = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [article, setArticle] = useState<ArticleData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      fetchArticle(id);
+    }
+  }, [id]);
+
+  const fetchArticle = async (articleId: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("articles")
+      .select(`
+        id,
+        title,
+        content,
+        cover_image_url,
+        tags,
+        created_at,
+        save_count,
+        profiles:author_id(
+          display_name,
+          avatar_url,
+          specialty,
+          reputation_score
+        )
+      `)
+      .eq("id", articleId)
+      .eq("status", "published")
+      .single();
+
+    if (error || !data) {
+      navigate("/");
+      return;
+    }
+
+    const transformed: ArticleData = {
+      id: data.id,
+      title: data.title,
+      content: data.content,
+      cover_image_url: data.cover_image_url,
+      tags: data.tags || [],
+      created_at: data.created_at,
+      save_count: data.save_count || 0,
+      author: data.profiles ? {
+        display_name: (data.profiles as any).display_name,
+        avatar_url: (data.profiles as any).avatar_url,
+        specialty: (data.profiles as any).specialty,
+        reputation_score: (data.profiles as any).reputation_score || 0,
+      } : undefined,
+    };
+
+    setArticle(transformed);
+    setLoading(false);
+  };
+
+  const formatReadTime = (content: string) => {
+    const words = content.split(/\s+/).length;
+    const minutes = Math.ceil(words / 200);
+    return `${minutes} دقیقه مطالعه`;
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: article?.title,
+        url: window.location.href,
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!article) {
+    return null;
+  }
+
+  const reputationScore = article.author?.reputation_score || 0;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border">
+        <div className="flex items-center justify-between px-4 h-14 max-w-screen-md mx-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowRight size={24} />
+          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsLiked(!isLiked)}
+              className="p-2 transition-colors"
+            >
+              <Heart
+                size={22}
+                fill={isLiked ? "currentColor" : "none"}
+                className={cn(isLiked ? "text-rose-500" : "text-muted-foreground hover:text-foreground")}
+              />
+            </button>
+            <button
+              onClick={() => setIsBookmarked(!isBookmarked)}
+              className="p-2 transition-colors"
+            >
+              <Bookmark
+                size={22}
+                fill={isBookmarked ? "currentColor" : "none"}
+                className={cn(isBookmarked ? "text-primary" : "text-muted-foreground hover:text-foreground")}
+              />
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Share2 size={20} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Article Content */}
+      <main className="max-w-screen-md mx-auto px-4 py-6 pb-20">
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-foreground leading-relaxed mb-4">
+          {article.title}
+        </h1>
+
+        {/* Author */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className={cn("rounded-full", getReputationRing(reputationScore))}>
+            {article.author?.avatar_url ? (
+              <img
+                src={article.author.avatar_url}
+                alt={article.author.display_name}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-primary font-semibold text-lg">
+                  {article.author?.display_name?.charAt(0)}
+                </span>
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-medium text-foreground">
+                {article.author?.display_name}
+              </span>
+              {reputationScore > 80 && (
+                <BadgeCheck size={16} className="text-yellow-500" />
+              )}
+              {reputationScore > 50 && reputationScore <= 80 && (
+                <BadgeCheck size={16} className="text-blue-500" />
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {article.author?.specialty && (
+                <>
+                  <span>{article.author.specialty}</span>
+                  <span>•</span>
+                </>
+              )}
+              <span>{formatSolarShort(article.created_at)}</span>
+              <span>•</span>
+              <span>{formatReadTime(article.content)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Cover Image */}
+        {article.cover_image_url && (
+          <div className="rounded-2xl overflow-hidden mb-6">
+            <img
+              src={article.cover_image_url}
+              alt={article.title}
+              className="w-full object-cover"
+            />
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="prose prose-lg dark:prose-invert max-w-none">
+          <div className="text-foreground leading-loose whitespace-pre-wrap">
+            {article.content}
+          </div>
+        </div>
+
+        {/* Tags */}
+        {article.tags && article.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-border">
+            {article.tags.map((tag) => (
+              <span
+                key={tag}
+                className="text-sm px-3 py-1.5 rounded-full bg-primary/10 text-primary"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default Article;
