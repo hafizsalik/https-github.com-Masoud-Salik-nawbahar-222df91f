@@ -1,8 +1,7 @@
-import { Bookmark, Heart, BadgeCheck, Share2 } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, Share2, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { cn } from "@/lib/utils";
-import { formatSolarShort } from "@/lib/solarHijri";
 import { useArticleInteractions } from "@/hooks/useArticleInteractions";
 import { ArticleMenu } from "./ArticleMenu";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -13,8 +12,9 @@ interface ArticleCardProps {
 }
 
 function getReputationRing(score: number): string {
-  if (score > 80) return "ring-2 ring-yellow-500 ring-offset-2 ring-offset-card";
-  if (score > 50) return "ring-2 ring-blue-500 ring-offset-2 ring-offset-card";
+  if (score >= 90) return "ring-2 ring-yellow-500";
+  if (score >= 70) return "ring-2 ring-green-500";
+  if (score >= 50) return "ring-2 ring-blue-500";
   return "ring-1 ring-border";
 }
 
@@ -27,12 +27,6 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
     toggleLike,
     toggleBookmark,
   } = useArticleInteractions(article.id);
-
-  const formatReadTime = (content: string) => {
-    const words = content.split(/\s+/).length;
-    const minutes = Math.ceil(words / 200);
-    return `${minutes} دقیقه`;
-  };
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -52,75 +46,79 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
     if (navigator.share) {
       navigator.share({
         title: article.title,
-        url: `/article/${article.id}`,
+        url: `${window.location.origin}/article/${article.id}`,
       });
+    } else {
+      navigator.clipboard.writeText(`${window.location.origin}/article/${article.id}`);
     }
   };
 
   const reputationScore = article.author?.reputation_score || 0;
 
   return (
-    <article className="bg-card rounded-2xl border border-border/60 overflow-hidden animate-fade-in hover:shadow-md transition-all duration-300 relative">
-      {/* Three dots menu */}
-      <div className="absolute top-3 left-3 z-10">
-        <ArticleMenu
-          articleId={article.id}
-          authorId={article.author_id}
-          currentUserId={userId}
-          isAdmin={isAdmin}
-          onDelete={onDelete}
-        />
-      </div>
-
+    <article className="bg-card border-b border-border animate-fade-in">
       <Link to={`/article/${article.id}`} className="block">
-        {/* Title */}
-        <div className="px-4 pt-4 pb-3 pl-12">
-          <h3 className="text-lg font-semibold text-foreground leading-relaxed line-clamp-2">
-            {article.title}
-          </h3>
-        </div>
+        {/* Header: Menu Left, Author Right */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+          {/* Three dots menu - Left */}
+          <div onClick={(e) => e.preventDefault()}>
+            <ArticleMenu
+              articleId={article.id}
+              authorId={article.author_id}
+              currentUserId={userId}
+              isAdmin={isAdmin}
+              onDelete={onDelete}
+            />
+          </div>
 
-        {/* Author with Reputation Ring */}
-        <div className="px-4 pb-3">
-          <div className="flex items-center gap-3">
+          {/* Author - Right */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex flex-col items-end">
+              <div className="flex items-center gap-1">
+                {reputationScore >= 70 && (
+                  <BadgeCheck size={14} className={cn(
+                    reputationScore >= 90 ? "text-yellow-500" : "text-green-500"
+                  )} />
+                )}
+                <span className="text-sm font-medium text-foreground">
+                  {article.author?.display_name}
+                </span>
+              </div>
+              {article.author?.specialty && (
+                <span className="text-xs text-muted-foreground">
+                  {article.author.specialty}
+                </span>
+              )}
+            </div>
             <div className={cn("rounded-full", getReputationRing(reputationScore))}>
               {article.author?.avatar_url ? (
                 <img
                   src={article.author.avatar_url}
                   alt={article.author.display_name}
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-9 h-9 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary font-semibold">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-semibold text-sm">
                     {article.author?.display_name?.charAt(0)}
                   </span>
                 </div>
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-medium text-foreground truncate">
-                  {article.author?.display_name}
-                </span>
-                {reputationScore > 80 && (
-                  <BadgeCheck size={14} className="text-yellow-500 flex-shrink-0" />
-                )}
-                {reputationScore > 50 && reputationScore <= 80 && (
-                  <BadgeCheck size={14} className="text-blue-500 flex-shrink-0" />
-                )}
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {article.author?.specialty}
-              </span>
-            </div>
           </div>
+        </div>
+
+        {/* Title */}
+        <div className="px-4 pb-3">
+          <h3 className="text-lg font-bold text-foreground leading-relaxed line-clamp-2">
+            {article.title}
+          </h3>
         </div>
 
         {/* Cover Image */}
         {article.cover_image_url && (
           <div className="px-4 pb-3">
-            <div className="aspect-[16/9] rounded-xl overflow-hidden">
+            <div className="aspect-video rounded-lg overflow-hidden">
               <img
                 src={article.cover_image_url}
                 alt={article.title}
@@ -131,85 +129,68 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         )}
 
         {/* Excerpt */}
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-2">
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-            {article.content.substring(0, 150)}...
+            {article.content.substring(0, 140)}...
           </p>
         </div>
 
-        {/* Tags */}
+        {/* Tags as hashtags */}
         {article.tags && article.tags.length > 0 && (
-          <div className="px-4 pb-3 flex flex-wrap gap-2">
-            {article.tags.slice(0, 3).map((tag) => (
-              <span 
-                key={tag} 
-                className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary"
-              >
-                #{tag}
-              </span>
-            ))}
+          <div className="px-4 pb-3">
+            <p className="text-xs text-muted-foreground">
+              {article.tags.slice(0, 3).map((tag) => `#${tag}`).join(" ")}
+            </p>
           </div>
         )}
 
-        {/* Meta & Actions */}
-        <div className="px-4 pb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span>{formatSolarShort(article.created_at)}</span>
-            <span>•</span>
-            <span>{formatReadTime(article.content)}</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* پسند (Like) */}
-            <button
-              onClick={handleLike}
-              className="flex items-center gap-1.5 text-sm transition-all duration-200 group"
-              title="پسند"
-            >
-              <Heart
-                size={20}
-                strokeWidth={1.5}
-                fill={isLiked ? "currentColor" : "none"}
-                className={cn(
-                  "transition-transform duration-200 group-hover:scale-110",
-                  isLiked ? "text-rose-500" : "text-muted-foreground group-hover:text-foreground"
-                )}
-              />
-              {likeCount > 0 && (
-                <span className="text-muted-foreground">{likeCount}</span>
-              )}
-            </button>
-
-            {/* ذخیره (Save) */}
-            <button
-              onClick={handleBookmark}
+        {/* Footer Actions */}
+        <div className="px-4 pb-4 flex items-center gap-5">
+          {/* Like */}
+          <button
+            onClick={handleLike}
+            className="flex items-center gap-1.5 transition-colors"
+          >
+            <Heart
+              size={20}
+              strokeWidth={1.5}
+              fill={isLiked ? "currentColor" : "none"}
               className={cn(
-                "transition-all duration-200",
-                isBookmarked ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                isLiked ? "text-rose-500" : "text-muted-foreground"
               )}
-              title="ذخیره"
-            >
-              <Bookmark
-                size={20}
-                strokeWidth={1.5}
-                fill={isBookmarked ? "currentColor" : "none"}
-                className="transition-transform duration-200 hover:scale-110"
-              />
-            </button>
+            />
+            {likeCount > 0 && (
+              <span className="text-xs text-muted-foreground">{likeCount}</span>
+            )}
+          </button>
 
-            {/* اشتراک (Share) */}
-            <button
-              onClick={handleShare}
-              className="text-muted-foreground hover:text-foreground transition-all duration-200"
-              title="اشتراک"
-            >
-              <Share2
-                size={18}
-                strokeWidth={1.5}
-                className="transition-transform duration-200 hover:scale-110"
-              />
-            </button>
+          {/* Comment */}
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <MessageCircle size={20} strokeWidth={1.5} />
           </div>
+
+          {/* Bookmark */}
+          <button
+            onClick={handleBookmark}
+            className="transition-colors"
+          >
+            <Bookmark
+              size={20}
+              strokeWidth={1.5}
+              fill={isBookmarked ? "currentColor" : "none"}
+              className={cn(
+                isBookmarked ? "text-primary" : "text-muted-foreground"
+              )}
+            />
+          </button>
+
+          {/* Share */}
+          <button
+            onClick={handleShare}
+            className="text-muted-foreground"
+          >
+            <Share2 size={18} strokeWidth={1.5} />
+          </button>
         </div>
       </Link>
     </article>
