@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/useTheme";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export function Header() {
   const isVisible = useScrollDirection();
   const { theme, toggleTheme } = useTheme();
+  const { unreadCount } = useNotifications();
 
   return (
     <header 
@@ -44,10 +46,14 @@ export function Header() {
           </Button>
 
           {/* Notification Bell */}
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
-            <Bell size={22} strokeWidth={1.5} />
-            <span className="absolute top-2 left-2 w-2 h-2 bg-primary rounded-full" />
-          </Button>
+          <Link to="/notifications">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
+              <Bell size={22} strokeWidth={1.5} />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 left-1.5 w-2.5 h-2.5 bg-destructive rounded-full animate-pulse" />
+              )}
+            </Button>
+          </Link>
         </div>
       </div>
     </header>
