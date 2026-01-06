@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Search, TrendingUp, Hash } from "lucide-react";
+import { Search, TrendingUp, Hash, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { usePublishedArticles } from "@/hooks/useArticles";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "react-router-dom";
 
 const topics = [
   { id: "politics", label: "سیاست", icon: "🏛️", color: "from-blue-500/20 to-blue-600/10" },
@@ -28,24 +29,52 @@ const trendingHashtags = [
 
 const Explore = () => {
   const { articles, refetch } = usePublishedArticles();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  // Initialize from URL params
+  useEffect(() => {
+    const category = searchParams.get("category");
+    const tag = searchParams.get("tag");
+    if (category) setActiveTopic(category);
+    if (tag) setActiveTag(tag);
+  }, [searchParams]);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const filteredArticles = useMemo(() => {
     let result = articles;
 
-    // Filter by topic
+    // Filter by topic/category
     if (activeTopic) {
       result = result.filter((article) =>
         article.tags?.some((tag) =>
-          tag.toLowerCase().includes(activeTopic.toLowerCase())
+          tag.toLowerCase() === activeTopic.toLowerCase()
         )
       );
     }
 
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // Filter by specific tag
+    if (activeTag) {
+      result = result.filter((article) =>
+        article.tags?.some((tag) =>
+          tag.toLowerCase() === activeTag.toLowerCase()
+        )
+      );
+    }
+
+    // Filter by search query (debounced)
+    if (debouncedQuery.trim()) {
+      const query = debouncedQuery.toLowerCase();
       result = result.filter(
         (article) =>
           article.title.toLowerCase().includes(query) ||
@@ -56,16 +85,39 @@ const Explore = () => {
     }
 
     return result;
-  }, [articles, activeTopic, searchQuery]);
+  }, [articles, activeTopic, activeTag, debouncedQuery]);
 
   const handleTopicClick = (topicId: string) => {
-    setActiveTopic(activeTopic === topicId ? null : topicId);
+    const newTopic = activeTopic === topicId ? null : topicId;
+    setActiveTopic(newTopic);
+    setActiveTag(null);
+    setSearchQuery("");
+    if (newTopic) {
+      setSearchParams({ category: newTopic });
+    } else {
+      setSearchParams({});
+    }
   };
 
   const handleHashtagClick = (hashtag: string) => {
-    setSearchQuery(hashtag);
+    setActiveTag(activeTag === hashtag ? null : hashtag);
     setActiveTopic(null);
+    setSearchQuery("");
+    if (activeTag !== hashtag) {
+      setSearchParams({ tag: hashtag });
+    } else {
+      setSearchParams({});
+    }
   };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setActiveTopic(null);
+    setActiveTag(null);
+    setSearchParams({});
+  };
+
+  const hasActiveFilters = searchQuery || activeTopic || activeTag;
 
   return (
     <AppLayout>
@@ -120,7 +172,7 @@ const Explore = () => {
                 onClick={() => handleHashtagClick(hashtag)}
                 className={cn(
                   "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-colors",
-                  searchQuery === hashtag
+                  activeTag === hashtag
                     ? "bg-primary text-primary-foreground"
                     : "bg-secondary text-secondary-foreground hover:bg-primary/10 hover:text-primary"
                 )}
@@ -132,26 +184,50 @@ const Explore = () => {
           </div>
         </div>
 
+        {/* Active Filter Indicator */}
+        {hasActiveFilters && (
+          <div className="px-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              {activeTopic && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                  {topics.find(t => t.id === activeTopic)?.icon} {topics.find(t => t.id === activeTopic)?.label}
+                  <button onClick={() => handleTopicClick(activeTopic)} className="mr-1 hover:text-primary/70">
+                    <X size={14} />
+                  </button>
+                </span>
+              )}
+              {activeTag && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                  #{activeTag}
+                  <button onClick={() => handleHashtagClick(activeTag)} className="mr-1 hover:text-primary/70">
+                    <X size={14} />
+                  </button>
+                </span>
+              )}
+              {debouncedQuery && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm">
+                  جستجو: {debouncedQuery}
+                </span>
+              )}
+              <button
+                onClick={clearFilters}
+                className="text-sm text-primary hover:underline"
+              >
+                پاک کردن همه
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Search Results / Filtered Articles */}
-        {(searchQuery || activeTopic) && (
+        {hasActiveFilters && (
           <div className="border-t border-border pt-4">
-            <div className="px-4 mb-3 flex items-center justify-between">
+            <div className="px-4 mb-3">
               <h2 className="text-base font-semibold text-foreground">
                 {filteredArticles.length > 0
                   ? `${filteredArticles.length} نتیجه`
                   : "نتیجه‌ای یافت نشد"}
               </h2>
-              {(searchQuery || activeTopic) && (
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setActiveTopic(null);
-                  }}
-                  className="text-sm text-primary"
-                >
-                  پاک کردن
-                </button>
-              )}
             </div>
             <div className="space-y-0">
               {filteredArticles.map((article) => (
@@ -162,7 +238,7 @@ const Explore = () => {
         )}
 
         {/* Default State - Show hint */}
-        {!searchQuery && !activeTopic && (
+        {!hasActiveFilters && (
           <div className="px-4 py-8 text-center text-muted-foreground">
             <p className="text-sm">موضوعی را انتخاب کنید یا جستجو کنید</p>
           </div>

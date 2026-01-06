@@ -5,14 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Send, ImagePlus, X } from "lucide-react";
+import { ArrowRight, Send, ImagePlus, X, Tag } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { User } from "@supabase/supabase-js";
+
+const categories = [
+  { id: "politics", label: "سیاست", icon: "🏛️" },
+  { id: "culture", label: "فرهنگ", icon: "🎭" },
+  { id: "science", label: "علم", icon: "🔬" },
+  { id: "society", label: "جامعه", icon: "👥" },
+  { id: "economy", label: "اقتصاد", icon: "📊" },
+  { id: "health", label: "سلامت", icon: "🏥" },
+];
 
 const ArticleEditor = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [category, setCategory] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -79,12 +91,22 @@ const ArticleEditor = () => {
         coverImageUrl = urlData.publicUrl;
       }
 
+      // Parse tags from input
+      const parsedTags = tagsInput
+        .split(/[,،\s]+/)
+        .map(tag => tag.trim().replace(/^#/, ''))
+        .filter(tag => tag.length > 0);
+      
+      // Add category as the first tag if selected
+      const allTags = category ? [category, ...parsedTags] : parsedTags;
+
       const { error } = await supabase.from("articles").insert({
         title: title.trim(),
         content: content.trim(),
         author_id: user.id,
         status: "pending",
         cover_image_url: coverImageUrl,
+        tags: allTags,
       });
 
       if (error) throw error;
@@ -194,11 +216,41 @@ const ArticleEditor = () => {
             onChange={(e) => setTitle(e.target.value)}
             className="text-xl font-semibold border-0 border-b rounded-none px-0 focus-visible:ring-0 bg-transparent"
           />
+
+          {/* Category & Tags */}
+          <div className="flex flex-col sm:flex-row gap-3 py-2">
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="انتخاب دسته‌بندی" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    <span className="flex items-center gap-2">
+                      <span>{cat.icon}</span>
+                      <span>{cat.label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex-1 relative">
+              <Tag size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="برچسب‌ها (با کاما جدا کنید)"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+          </div>
+
           <Textarea
             placeholder="متن مقاله خود را اینجا بنویسید..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[60vh] border-0 resize-none px-0 focus-visible:ring-0 bg-transparent text-base leading-relaxed"
+            className="min-h-[50vh] border-0 resize-none px-0 focus-visible:ring-0 bg-transparent text-base leading-relaxed"
           />
         </div>
       </main>
