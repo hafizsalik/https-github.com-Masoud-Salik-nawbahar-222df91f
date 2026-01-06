@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import ArticleEditor from "./pages/ArticleEditor";
 import AdminDashboard from "./pages/AdminDashboard";
 import Article from "./pages/Article";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/editor" element={<ArticleEditor />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/article/:id" element={<Article />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -154,6 +154,27 @@ export type Database = {
           },
         ]
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           article_id: string
@@ -182,6 +203,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          actor_id: string
+          article_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          article_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          article_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

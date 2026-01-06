@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useArticleInteractions } from "@/hooks/useArticleInteractions";
 import { ArticleMenu } from "./ArticleMenu";
 import { useUserRole } from "@/hooks/useUserRole";
+import { FollowButton } from "@/components/FollowButton";
 
 interface ArticleCardProps {
   article: FeedArticle;
@@ -73,6 +74,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
 
           {/* Author - Right */}
           <div className="flex items-center gap-2.5">
+            <FollowButton userId={article.author_id} />
             <div className="flex flex-col items-end">
               <div className="flex items-center gap-1">
                 {reputationScore >= 70 && (
