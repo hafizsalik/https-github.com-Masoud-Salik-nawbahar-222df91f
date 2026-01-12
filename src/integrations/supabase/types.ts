@@ -159,12 +159,42 @@ export type Database = {
           },
         ]
       }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           article_id: string
           content: string
           created_at: string
           id: string
+          like_count: number | null
           parent_id: string | null
           updated_at: string
           user_id: string
@@ -174,6 +204,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          like_count?: number | null
           parent_id?: string | null
           updated_at?: string
           user_id: string
@@ -183,6 +214,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          like_count?: number | null
           parent_id?: string | null
           updated_at?: string
           user_id?: string
@@ -292,6 +324,7 @@ export type Database = {
           facebook_url: string | null
           id: string
           interests: string[] | null
+          linkedin_url: string | null
           real_name: string | null
           reputation_score: number | null
           specialty: string | null
@@ -305,6 +338,7 @@ export type Database = {
           facebook_url?: string | null
           id: string
           interests?: string[] | null
+          linkedin_url?: string | null
           real_name?: string | null
           reputation_score?: number | null
           specialty?: string | null
@@ -318,6 +352,7 @@ export type Database = {
           facebook_url?: string | null
           id?: string
           interests?: string[] | null
+          linkedin_url?: string | null
           real_name?: string | null
           reputation_score?: number | null
           specialty?: string | null
@@ -354,6 +389,38 @@ export type Database = {
             columns: ["article_id"]
             isOneToOne: false
             referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reported_comments: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          reporter_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reporter_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reporter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reported_comments_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
             referencedColumns: ["id"]
           },
         ]

@@ -7,6 +7,7 @@ export interface Comment {
   content: string;
   created_at: string;
   user_id: string;
+  parent_id?: string | null;
   author?: {
     display_name: string;
     avatar_url: string | null;
@@ -33,12 +34,12 @@ export function useComments(articleId: string) {
   const fetchComments = async () => {
     setLoading(true);
     
-    // First fetch comments
+    // Fetch comments including parent_id for nested replies
     const { data: commentsData, error } = await supabase
       .from("comments")
-      .select("id, content, created_at, user_id")
+      .select("id, content, created_at, user_id, parent_id")
       .eq("article_id", articleId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
 
     if (error || !commentsData) {
       setLoading(false);
@@ -65,6 +66,7 @@ export function useComments(articleId: string) {
         content: item.content,
         created_at: item.created_at,
         user_id: item.user_id,
+        parent_id: item.parent_id,
         author: profile ? {
           display_name: profile.display_name,
           avatar_url: profile.avatar_url,
@@ -76,7 +78,7 @@ export function useComments(articleId: string) {
     setLoading(false);
   };
 
-  const addComment = async (content: string) => {
+  const addComment = async (content: string, parentId?: string) => {
     if (!userId) {
       toast({
         title: "نیاز به ورود",
@@ -101,6 +103,7 @@ export function useComments(articleId: string) {
       article_id: articleId,
       user_id: userId,
       content: content.trim(),
+      parent_id: parentId || null,
     });
 
     if (error) {
@@ -113,7 +116,7 @@ export function useComments(articleId: string) {
       return false;
     }
 
-    toast({ title: "نظر شما ثبت شد" });
+    toast({ title: parentId ? "پاسخ ثبت شد" : "نظر شما ثبت شد" });
     await fetchComments();
     setSubmitting(false);
     return true;
@@ -127,7 +130,7 @@ export function useComments(articleId: string) {
       .eq("user_id", userId);
 
     if (!error) {
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      setComments((prev) => prev.filter((c) => c.id !== commentId && c.parent_id !== commentId));
       toast({ title: "نظر حذف شد" });
     }
   };

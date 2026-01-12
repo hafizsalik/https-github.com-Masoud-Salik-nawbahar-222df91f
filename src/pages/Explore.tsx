@@ -1,19 +1,21 @@
 import { useState, useMemo, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Search, TrendingUp, Hash, X } from "lucide-react";
+import { Search, TrendingUp, Hash, X, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { usePublishedArticles } from "@/hooks/useArticles";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const topics = [
-  { id: "politics", label: "سیاست", icon: "🏛️", color: "from-blue-500/20 to-blue-600/10" },
-  { id: "culture", label: "فرهنگ", icon: "🎭", color: "from-purple-500/20 to-purple-600/10" },
-  { id: "science", label: "علم", icon: "🔬", color: "from-green-500/20 to-green-600/10" },
-  { id: "society", label: "جامعه", icon: "👥", color: "from-orange-500/20 to-orange-600/10" },
-  { id: "economy", label: "اقتصاد", icon: "📊", color: "from-yellow-500/20 to-yellow-600/10" },
-  { id: "health", label: "سلامت", icon: "🏥", color: "from-red-500/20 to-red-600/10" },
+  { id: "politics", label: "سیاست" },
+  { id: "culture", label: "فرهنگ" },
+  { id: "science", label: "علم" },
+  { id: "society", label: "جامعه" },
+  { id: "economy", label: "اقتصاد" },
+  { id: "health", label: "سلامت" },
 ];
 
 const trendingHashtags = [
@@ -23,9 +25,14 @@ const trendingHashtags = [
   "هنر",
   "فناوری",
   "آموزش",
-  "محیط_زیست",
-  "ورزش",
 ];
+
+interface UserProfile {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  specialty: string | null;
+}
 
 const Explore = () => {
   const { articles, refetch } = usePublishedArticles();
@@ -34,6 +41,7 @@ const Explore = () => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [suggestedUsers, setSuggestedUsers] = useState<UserProfile[]>([]);
 
   // Initialize from URL params
   useEffect(() => {
@@ -50,6 +58,25 @@ const Explore = () => {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Search users when query changes
+  useEffect(() => {
+    if (debouncedQuery.trim().length >= 2) {
+      searchUsers(debouncedQuery);
+    } else {
+      setSuggestedUsers([]);
+    }
+  }, [debouncedQuery]);
+
+  const searchUsers = async (query: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url, specialty")
+      .ilike("display_name", `%${query}%`)
+      .limit(5);
+    
+    setSuggestedUsers(data || []);
+  };
 
   const filteredArticles = useMemo(() => {
     let result = articles;
@@ -121,39 +148,63 @@ const Explore = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Search Bar */}
         <div className="px-4 pt-2">
           <div className="relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <Input
               placeholder="جستجوی مقالات، موضوعات، نویسندگان..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-12 bg-muted border-0 rounded-xl h-12 text-base"
+              className="pr-10 bg-muted border-0 rounded-lg h-10 text-sm"
             />
           </div>
+
+          {/* User Search Results */}
+          {suggestedUsers.length > 0 && (
+            <div className="mt-2 bg-card border border-border rounded-lg overflow-hidden">
+              {suggestedUsers.map((user) => (
+                <Link
+                  key={user.id}
+                  to={`/profile/${user.id}`}
+                  className="flex items-center gap-3 p-3 hover:bg-muted transition-colors"
+                >
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User size={16} className="text-primary" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{user.display_name}</p>
+                    {user.specialty && (
+                      <p className="text-xs text-muted-foreground">{user.specialty}</p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Topic Grid */}
+        {/* Topics - Compact pills */}
         <div className="px-4">
-          <h2 className="text-base font-semibold text-foreground mb-3">موضوعات</h2>
-          <div className="grid grid-cols-3 gap-2">
+          <h2 className="text-sm font-semibold text-foreground mb-2">موضوعات</h2>
+          <div className="flex flex-wrap gap-2">
             {topics.map((topic) => (
               <button
                 key={topic.id}
                 onClick={() => handleTopicClick(topic.id)}
                 className={cn(
-                  "flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-200",
-                  "bg-gradient-to-br border",
-                  topic.color,
+                  "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
                   activeTopic === topic.id
-                    ? "border-primary ring-2 ring-primary/20"
-                    : "border-border/50 hover:border-border"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
                 )}
               >
-                <span className="text-2xl mb-1">{topic.icon}</span>
-                <span className="text-sm font-medium text-foreground">{topic.label}</span>
+                {topic.label}
               </button>
             ))}
           </div>
@@ -161,9 +212,9 @@ const Explore = () => {
 
         {/* Trending Hashtags */}
         <div className="px-4">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp size={18} className="text-primary" />
-            <h2 className="text-base font-semibold text-foreground">هشتگ‌های داغ</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={14} className="text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">هشتگ‌های داغ</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {trendingHashtags.map((hashtag) => (
@@ -171,13 +222,13 @@ const Explore = () => {
                 key={hashtag}
                 onClick={() => handleHashtagClick(hashtag)}
                 className={cn(
-                  "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-colors",
+                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors",
                   activeTag === hashtag
                     ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground hover:bg-primary/10 hover:text-primary"
+                    : "bg-secondary text-secondary-foreground hover:bg-primary/10"
                 )}
               >
-                <Hash size={14} />
+                <Hash size={12} />
                 {hashtag}
               </button>
             ))}
@@ -189,31 +240,31 @@ const Explore = () => {
           <div className="px-4">
             <div className="flex items-center gap-2 flex-wrap">
               {activeTopic && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-                  {topics.find(t => t.id === activeTopic)?.icon} {topics.find(t => t.id === activeTopic)?.label}
-                  <button onClick={() => handleTopicClick(activeTopic)} className="mr-1 hover:text-primary/70">
-                    <X size={14} />
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs">
+                  {topics.find(t => t.id === activeTopic)?.label}
+                  <button onClick={() => handleTopicClick(activeTopic)} className="hover:text-primary/70">
+                    <X size={12} />
                   </button>
                 </span>
               )}
               {activeTag && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs">
                   #{activeTag}
-                  <button onClick={() => handleHashtagClick(activeTag)} className="mr-1 hover:text-primary/70">
-                    <X size={14} />
+                  <button onClick={() => handleHashtagClick(activeTag)} className="hover:text-primary/70">
+                    <X size={12} />
                   </button>
                 </span>
               )}
               {debouncedQuery && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs">
                   جستجو: {debouncedQuery}
                 </span>
               )}
               <button
                 onClick={clearFilters}
-                className="text-sm text-primary hover:underline"
+                className="text-xs text-primary hover:underline"
               >
-                پاک کردن همه
+                پاک کردن
               </button>
             </div>
           </div>
@@ -223,7 +274,7 @@ const Explore = () => {
         {hasActiveFilters && (
           <div className="border-t border-border pt-4">
             <div className="px-4 mb-3">
-              <h2 className="text-base font-semibold text-foreground">
+              <h2 className="text-sm font-semibold text-foreground">
                 {filteredArticles.length > 0
                   ? `${filteredArticles.length} نتیجه`
                   : "نتیجه‌ای یافت نشد"}

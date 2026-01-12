@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera } from "lucide-react";
+import { Camera, Phone, MessageCircle, Facebook, Linkedin } from "lucide-react";
 import { compressProfileImage } from "@/lib/imageCompression";
 
 interface EditProfileModalProps {
@@ -20,6 +20,9 @@ interface EditProfileModalProps {
   currentDisplayName: string;
   currentSpecialty: string | null;
   currentAvatarUrl: string | null;
+  currentWhatsapp?: string | null;
+  currentFacebook?: string | null;
+  currentLinkedin?: string | null;
   onUpdate: () => void;
 }
 
@@ -30,12 +33,18 @@ export function EditProfileModal({
   currentDisplayName,
   currentSpecialty,
   currentAvatarUrl,
+  currentWhatsapp,
+  currentFacebook,
+  currentLinkedin,
   onUpdate,
 }: EditProfileModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(currentDisplayName);
   const [specialty, setSpecialty] = useState(currentSpecialty || "");
+  const [whatsapp, setWhatsapp] = useState(currentWhatsapp || "");
+  const [facebook, setFacebook] = useState(currentFacebook || "");
+  const [linkedin, setLinkedin] = useState(currentLinkedin || "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentAvatarUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -107,6 +116,9 @@ export function EditProfileModal({
           display_name: displayName.trim(),
           specialty: specialty.trim() || null,
           avatar_url: avatarUrl,
+          whatsapp_number: whatsapp.trim() || null,
+          facebook_url: facebook.trim() || null,
+          linkedin_url: linkedin.trim() || null,
         })
         .eq("id", userId);
 
@@ -132,12 +144,12 @@ export function EditProfileModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>ویرایش پروفایل</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 py-2">
           {/* Avatar Upload */}
           <div className="flex flex-col items-center">
             <input
@@ -155,53 +167,89 @@ export function EditProfileModal({
                 <img
                   src={avatarPreview}
                   alt="Avatar"
-                  className="w-24 h-24 rounded-full object-cover"
+                  className="w-20 h-20 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary font-bold text-3xl">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-bold text-2xl">
                     {displayName?.charAt(0)}
                   </span>
                 </div>
               )}
               <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera size={24} className="text-white" />
+                <Camera size={20} className="text-white" />
               </div>
             </button>
-            <p className="text-xs text-muted-foreground mt-2">
-              تصاویر به صورت خودکار فشرده می‌شوند
-            </p>
           </div>
 
           {/* Display Name */}
-          <div className="space-y-2">
-            <Label htmlFor="displayName">نام نمایشی</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="displayName" className="text-sm">نام نمایشی</Label>
             <Input
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="نام شما"
+              className="h-9"
             />
           </div>
 
           {/* Specialty */}
-          <div className="space-y-2">
-            <Label htmlFor="specialty">تخصص</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="specialty" className="text-sm">تخصص</Label>
             <Input
               id="specialty"
               value={specialty}
               onChange={(e) => setSpecialty(e.target.value)}
               placeholder="مثال: نویسنده، پژوهشگر"
+              className="h-9"
             />
+          </div>
+
+          {/* Social Links */}
+          <div className="pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-3">لینک‌های اجتماعی (اختیاری)</p>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <MessageCircle size={16} className="text-muted-foreground shrink-0" />
+                <Input
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="شماره واتساپ (مثال: 93700000000)"
+                  className="h-9 text-sm"
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Facebook size={16} className="text-muted-foreground shrink-0" />
+                <Input
+                  value={facebook}
+                  onChange={(e) => setFacebook(e.target.value)}
+                  placeholder="لینک فیسبوک"
+                  className="h-9 text-sm"
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Linkedin size={16} className="text-muted-foreground shrink-0" />
+                <Input
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                  placeholder="لینک لینکدین"
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onClose} className="flex-1">
+        <div className="flex gap-2 pt-2">
+          <Button variant="outline" onClick={onClose} className="flex-1 h-9">
             انصراف
           </Button>
-          <Button onClick={handleSave} disabled={loading} className="flex-1">
-            {loading ? "در حال ذخیره..." : "ذخیره"}
+          <Button onClick={handleSave} disabled={loading} className="flex-1 h-9">
+            {loading ? "..." : "ذخیره"}
           </Button>
         </div>
       </DialogContent>

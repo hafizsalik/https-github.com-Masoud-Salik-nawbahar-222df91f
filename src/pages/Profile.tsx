@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { LogIn, Moon, Sun, Type, LogOut, Shield, Users } from "lucide-react";
+import { LogIn, Moon, Sun, Type, LogOut, Shield, Phone, MessageCircle as WhatsApp, Facebook, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,7 @@ import { useFollowStats } from "@/hooks/useFollowStats";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { formatSolarShort } from "@/lib/solarHijri";
+import { FollowersList } from "@/components/profile/FollowersList";
 
 const Profile = () => {
   const { userId: paramUserId } = useParams();
@@ -26,6 +27,8 @@ const Profile = () => {
   const [isDark, setIsDark] = useState(false);
   const [textSize, setTextSize] = useState<'sm' | 'base' | 'lg' | 'xl'>('base');
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -98,10 +101,13 @@ const Profile = () => {
     );
   }
 
+  // Check if profile has social links
+  const hasSocialLinks = profile?.whatsapp_number || profile?.facebook_url || (profile as any)?.linkedin_url;
+
   return (
     <AppLayout>
-      <div className="p-4 space-y-6">
-        {/* Profile Header */}
+      <div className="p-4 space-y-4">
+        {/* Profile Header - Compact */}
         {profile && (
           <ProfileHeader
             displayName={profile.display_name}
@@ -113,40 +119,82 @@ const Profile = () => {
           />
         )}
 
-        {/* Follow Stats */}
-        <div className="flex items-center justify-center gap-8 py-3 bg-muted/30 rounded-xl">
-          <div className="flex items-center gap-2 text-sm">
-            <Users size={16} className="text-muted-foreground" />
-            <span className="font-semibold">{followerCount}</span>
-            <span className="text-muted-foreground">دنبال‌کننده</span>
-          </div>
-          <div className="w-px h-4 bg-border" />
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold">{followingCount}</span>
-            <span className="text-muted-foreground">دنبال‌شده</span>
-          </div>
+        {/* Follow Stats - Clickable */}
+        <div className="flex items-center justify-center gap-6 py-3">
+          <button 
+            onClick={() => setShowFollowers(true)}
+            className="text-center hover:opacity-70 transition-opacity"
+          >
+            <span className="font-semibold text-lg">{followerCount}</span>
+            <p className="text-xs text-muted-foreground">دنبال‌کننده</p>
+          </button>
+          <div className="w-px h-8 bg-border" />
+          <button 
+            onClick={() => setShowFollowing(true)}
+            className="text-center hover:opacity-70 transition-opacity"
+          >
+            <span className="font-semibold text-lg">{followingCount}</span>
+            <p className="text-xs text-muted-foreground">دنبال‌شده</p>
+          </button>
         </div>
+
+        {/* Social Links (if available) */}
+        {hasSocialLinks && (
+          <div className="flex items-center justify-center gap-3">
+            {profile?.whatsapp_number && (
+              <a 
+                href={`https://wa.me/${profile.whatsapp_number}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+              >
+                <WhatsApp size={18} className="text-muted-foreground" />
+              </a>
+            )}
+            {profile?.facebook_url && (
+              <a 
+                href={profile.facebook_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+              >
+                <Facebook size={18} className="text-muted-foreground" />
+              </a>
+            )}
+            {(profile as any)?.linkedin_url && (
+              <a 
+                href={(profile as any).linkedin_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+              >
+                <Linkedin size={18} className="text-muted-foreground" />
+              </a>
+            )}
+          </div>
+        )}
 
         {/* Admin Button - only for own profile */}
         {isOwnProfile && isAdmin && (
           <Link to="/admin">
-            <Button variant="outline" className="w-full gap-2">
-              <Shield size={18} />
+            <Button variant="outline" className="w-full gap-2 h-10 text-sm">
+              <Shield size={16} />
               پنل مدیریت
             </Button>
           </Link>
         )}
 
-        {/* Tabs: My Articles / Saved (saved only for own profile) */}
+        {/* Tabs: مقالات / ذخیره‌شده‌ها / درباره ما */}
         <Tabs defaultValue="articles" className="w-full">
-          <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            <TabsTrigger value="articles">مقالات</TabsTrigger>
-            {isOwnProfile && <TabsTrigger value="saved">ذخیره شده</TabsTrigger>}
+          <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsTrigger value="articles" className="text-sm">مقالات</TabsTrigger>
+            {isOwnProfile && <TabsTrigger value="saved" className="text-sm">ذخیره‌شده‌ها</TabsTrigger>}
+            <TabsTrigger value="about" className="text-sm">درباره ما</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="articles" className="mt-4 space-y-3">
+          <TabsContent value="articles" className="mt-4 space-y-2">
             {articles.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-muted-foreground text-sm">
                 هنوز مقاله‌ای ننوشته‌اید
               </div>
             ) : (
@@ -157,9 +205,9 @@ const Profile = () => {
           </TabsContent>
 
           {isOwnProfile && (
-            <TabsContent value="saved" className="mt-4 space-y-3">
+            <TabsContent value="saved" className="mt-4 space-y-2">
               {bookmarks.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-muted-foreground text-sm">
                   هنوز مقاله‌ای ذخیره نکرده‌اید
                 </div>
               ) : (
@@ -169,6 +217,29 @@ const Profile = () => {
               )}
             </TabsContent>
           )}
+
+          <TabsContent value="about" className="mt-4">
+            <div className="bg-card rounded-xl border border-border/60 p-4 space-y-4">
+              {profile?.specialty && (
+                <div>
+                  <h4 className="text-sm font-medium text-foreground mb-1">تخصص</h4>
+                  <p className="text-sm text-muted-foreground">{profile.specialty}</p>
+                </div>
+              )}
+              <div>
+                <h4 className="text-sm font-medium text-foreground mb-1">تاریخ عضویت</h4>
+                <p className="text-sm text-muted-foreground">
+                  {profile?.created_at ? formatSolarShort(profile.created_at) : "—"}
+                </p>
+              </div>
+              {profile?.reputation_score !== undefined && profile.reputation_score > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-foreground mb-1">امتیاز</h4>
+                  <p className="text-sm text-muted-foreground">{profile.reputation_score}</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
 
         {/* Settings & Sign Out - only for own profile */}
@@ -185,9 +256,9 @@ const Profile = () => {
             <Button
               variant="outline"
               onClick={handleSignOut}
-              className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
+              className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground h-10 text-sm"
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
               خروج از حساب
             </Button>
           </>
@@ -203,34 +274,55 @@ const Profile = () => {
           currentDisplayName={profile.display_name}
           currentSpecialty={profile.specialty}
           currentAvatarUrl={profile.avatar_url}
+          currentWhatsapp={profile.whatsapp_number}
+          currentFacebook={profile.facebook_url}
+          currentLinkedin={(profile as any).linkedin_url}
           onUpdate={refetch}
         />
+      )}
+
+      {/* Followers List Modal */}
+      {viewingUserId && (
+        <>
+          <FollowersList
+            isOpen={showFollowers}
+            onClose={() => setShowFollowers(false)}
+            userId={viewingUserId}
+            type="followers"
+          />
+          <FollowersList
+            isOpen={showFollowing}
+            onClose={() => setShowFollowing(false)}
+            userId={viewingUserId}
+            type="following"
+          />
+        </>
       )}
     </AppLayout>
   );
 };
 
-// Article List Item Component
+// Article List Item Component - More compact
 function ArticleListItem({ article }: { article: { id: string; title: string; cover_image_url: string | null; created_at: string } }) {
   return (
     <Link
       to={`/article/${article.id}`}
-      className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border/60 hover:border-primary/30 transition-colors"
+      className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border/60 hover:border-primary/30 transition-colors"
     >
       {article.cover_image_url ? (
         <img
           src={article.cover_image_url}
           alt={article.title}
-          className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+          className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
         />
       ) : (
-        <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-primary font-semibold text-lg">ن</span>
+        <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <span className="text-primary font-semibold">ن</span>
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-foreground line-clamp-2">{article.title}</h3>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h3 className="font-medium text-foreground line-clamp-2 text-sm">{article.title}</h3>
+        <p className="text-xs text-muted-foreground mt-1">
           {formatSolarShort(article.created_at)}
         </p>
       </div>
@@ -238,7 +330,7 @@ function ArticleListItem({ article }: { article: { id: string; title: string; co
   );
 }
 
-// Settings Section Component
+// Settings Section Component - More compact
 function SettingsSection({
   isDark,
   setIsDark,
@@ -253,38 +345,38 @@ function SettingsSection({
   textSizes: { key: 'sm' | 'base' | 'lg' | 'xl'; label: string; size: string }[];
 }) {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">تنظیمات</h3>
+    <div className="space-y-3">
+      <h3 className="text-base font-semibold">تنظیمات</h3>
 
       {/* Dark Mode */}
-      <div className="flex items-center justify-between p-4 bg-card rounded-xl border border-border/60">
-        <div className="flex items-center gap-3">
-          {isDark ? <Moon size={20} className="text-primary" /> : <Sun size={20} className="text-primary" />}
-          <span className="font-medium">حالت تاریک</span>
+      <div className="flex items-center justify-between p-3 bg-card rounded-xl border border-border/60">
+        <div className="flex items-center gap-2">
+          {isDark ? <Moon size={18} className="text-primary" /> : <Sun size={18} className="text-primary" />}
+          <span className="font-medium text-sm">حالت تاریک</span>
         </div>
         <button
           onClick={() => setIsDark(!isDark)}
-          className={`w-12 h-7 rounded-full transition-colors ${isDark ? 'bg-primary' : 'bg-muted'} relative`}
+          className={`w-11 h-6 rounded-full transition-colors ${isDark ? 'bg-primary' : 'bg-muted'} relative`}
         >
           <span
-            className={`absolute top-1 w-5 h-5 rounded-full bg-card shadow transition-transform ${isDark ? 'translate-x-6' : 'translate-x-1'}`}
+            className={`absolute top-0.5 w-5 h-5 rounded-full bg-card shadow transition-transform ${isDark ? 'translate-x-5' : 'translate-x-0.5'}`}
           />
         </button>
       </div>
 
       {/* Text Size */}
-      <div className="p-4 bg-card rounded-xl border border-border/60">
-        <div className="flex items-center gap-3 mb-4">
-          <Type size={20} className="text-primary" />
-          <span className="font-medium">اندازه متن</span>
+      <div className="p-3 bg-card rounded-xl border border-border/60">
+        <div className="flex items-center gap-2 mb-3">
+          <Type size={18} className="text-primary" />
+          <span className="font-medium text-sm">اندازه متن</span>
         </div>
         <div className="flex items-center justify-between bg-muted rounded-lg p-1">
           {textSizes.map((size, index) => (
             <button
               key={size.key}
               onClick={() => setTextSize(size.key)}
-              className={`flex-1 py-2 rounded-md transition-colors ${textSize === size.key ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
-              style={{ fontSize: `${12 + index * 4}px` }}
+              className={`flex-1 py-1.5 rounded-md transition-colors text-sm ${textSize === size.key ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
+              style={{ fontSize: `${11 + index * 3}px` }}
             >
               {size.label}
             </button>

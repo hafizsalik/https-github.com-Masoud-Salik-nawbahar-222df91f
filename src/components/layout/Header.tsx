@@ -22,7 +22,7 @@ export function Header() {
           <Button 
             variant="ghost" 
             size="icon"
-            className="text-muted-foreground h-8 w-8"
+            className="text-muted-foreground h-8 w-8 hover:text-foreground"
           >
             <Info size={18} strokeWidth={1.5} />
           </Button>
@@ -40,7 +40,10 @@ export function Header() {
           <Button 
             variant="ghost" 
             size="icon"
-            className="text-muted-foreground h-8 w-8"
+            className={cn(
+              "h-8 w-8 transition-colors",
+              unreadCount > 0 ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
           >
             <Bell size={18} strokeWidth={1.5} />
           </Button>

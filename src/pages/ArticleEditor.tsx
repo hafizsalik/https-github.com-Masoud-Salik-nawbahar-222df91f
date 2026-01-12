@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Send, ImagePlus, X, CornerUpRight } from "lucide-react";
+import { ArrowRight, Send, ImagePlus, X, CornerUpRight, FileText, Bold, Italic, List, Quote } from "lucide-react";
 import { compressArticleImage } from "@/lib/imageCompression";
 import type { User } from "@supabase/supabase-js";
 
@@ -24,6 +24,8 @@ const ArticleEditor = () => {
   const [parentArticle, setParentArticle] = useState<{ id: string; title: string } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textFileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -192,12 +194,60 @@ const ArticleEditor = () => {
     }
   };
 
+  const handleTextFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      setContent(prev => prev ? prev + "\n\n" + text : text);
+      
+      // Try to extract title from first line if empty
+      if (!title.trim()) {
+        const firstLine = text.split('\n')[0].trim();
+        if (firstLine.length > 0 && firstLine.length < 100) {
+          setTitle(firstLine);
+        }
+      }
+
+      toast({
+        title: "موفق",
+        description: "محتوای فایل بارگذاری شد",
+      });
+    } catch (error) {
+      toast({
+        title: "خطا",
+        description: "مشکلی در خواندن فایل پیش آمد",
+        variant: "destructive",
+      });
+    }
+  };
+
   const removeCoverImage = () => {
     setCoverImage(null);
     setCoverPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  // Simple formatting helpers
+  const insertFormat = (prefix: string, suffix: string = prefix) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    const newText = content.substring(0, start) + prefix + selectedText + suffix + content.substring(end);
+    
+    setContent(newText);
+    
+    // Restore focus and selection
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    }, 0);
   };
 
   return (
@@ -209,30 +259,30 @@ const ArticleEditor = () => {
             onClick={() => navigate("/")}
             className="p-2 -mr-2 text-muted-foreground hover:text-foreground"
           >
-            <ArrowRight size={22} strokeWidth={1.5} />
+            <ArrowRight size={20} strokeWidth={1.5} />
           </button>
-          <h1 className="text-base font-medium text-foreground">
+          <h1 className="text-sm font-medium text-foreground">
             {responseToId ? "نوشتن پاسخ" : "نوشتن مقاله"}
           </h1>
           <Button
             onClick={handlePublish}
             disabled={loading || !title.trim() || !content.trim()}
             size="sm"
-            className="gap-2"
+            className="gap-1.5 h-8 px-3"
           >
-            <Send size={16} strokeWidth={1.5} />
+            <Send size={14} strokeWidth={1.5} />
             {loading ? "..." : "انتشار"}
           </Button>
         </div>
       </header>
 
       {/* Editor */}
-      <main className="max-w-screen-md mx-auto px-5 py-6 pb-24">
-        <div className="space-y-5">
+      <main className="max-w-screen-md mx-auto px-4 py-4 pb-24">
+        <div className="space-y-4">
           {/* Response indicator */}
           {parentArticle && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
-              <CornerUpRight size={16} strokeWidth={1.5} />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground p-2.5 bg-muted/50 rounded-lg">
+              <CornerUpRight size={14} strokeWidth={1.5} />
               <span>در پاسخ به:</span>
               <Link 
                 to={`/article/${parentArticle.id}`} 
@@ -243,7 +293,7 @@ const ArticleEditor = () => {
             </div>
           )}
 
-          {/* Cover Image Upload */}
+          {/* File inputs */}
           <input
             ref={fileInputRef}
             type="file"
@@ -251,35 +301,83 @@ const ArticleEditor = () => {
             onChange={handleImageSelect}
             className="hidden"
           />
+          <input
+            ref={textFileInputRef}
+            type="file"
+            accept=".txt,.md,.rtf"
+            onChange={handleTextFileUpload}
+            className="hidden"
+          />
+
+          {/* Toolbar */}
+          <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-md transition-colors"
+              title="افزودن تصویر"
+            >
+              <ImagePlus size={18} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => textFileInputRef.current?.click()}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-md transition-colors"
+              title="بارگذاری فایل متنی"
+            >
+              <FileText size={18} strokeWidth={1.5} />
+            </button>
+            <div className="w-px h-5 bg-border mx-1" />
+            <button
+              onClick={() => insertFormat("**")}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-md transition-colors"
+              title="پررنگ"
+            >
+              <Bold size={18} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => insertFormat("*")}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-md transition-colors"
+              title="مورب"
+            >
+              <Italic size={18} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => insertFormat("\n- ", "")}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-md transition-colors"
+              title="لیست"
+            >
+              <List size={18} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => insertFormat("\n> ", "")}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-md transition-colors"
+              title="نقل قول"
+            >
+              <Quote size={18} strokeWidth={1.5} />
+            </button>
+          </div>
           
-          {coverPreview ? (
+          {/* Cover Image Preview */}
+          {coverPreview && (
             <div className="relative rounded-lg overflow-hidden">
-              <img src={coverPreview} alt="Cover" className="w-full h-48 object-cover" />
+              <img src={coverPreview} alt="Cover" className="w-full h-40 object-cover" />
               <button
                 onClick={removeCoverImage}
                 className="absolute top-2 left-2 p-1.5 bg-background/80 rounded-full hover:bg-background"
               >
-                <X size={16} strokeWidth={1.5} />
+                <X size={14} strokeWidth={1.5} />
               </button>
             </div>
-          ) : (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full h-28 border border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-            >
-              <ImagePlus size={24} strokeWidth={1.5} />
-              <span className="text-sm">افزودن تصویر</span>
-            </button>
           )}
           
           <Input
             placeholder="عنوان..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="text-xl font-semibold border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 bg-transparent h-auto py-3"
+            className="text-lg font-semibold border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 bg-transparent h-auto py-2"
           />
 
           <Textarea
+            ref={textareaRef}
             placeholder="متن مقاله خود را اینجا بنویسید..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
