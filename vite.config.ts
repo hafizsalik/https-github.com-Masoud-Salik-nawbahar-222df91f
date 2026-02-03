@@ -15,40 +15,200 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt"],
+      includeAssets: [
+        "favicon.ico",
+        "robots.txt",
+        "sitemap.xml",
+        "browserconfig.xml",
+        "pwa-*.png",
+        "icons/*.png",
+        "screenshots/*.png",
+      ],
       manifest: {
-        name: "نوبهار",
+        name: "نوبهار - جامعه نخبگان",
         short_name: "نوبهار",
-        description: "جامعه نخبگان",
+        description: "پلتفرم انتشار محتوای تخصصی برای نخبگان ایرانی. مقالات علمی، تحلیلی و فرهنگی با کیفیت بالا.",
         start_url: "/",
+        id: "/",
+        scope: "/",
         display: "standalone",
+        display_override: ["standalone", "minimal-ui"],
         background_color: "#ffffff",
         theme_color: "#0f766e",
-        orientation: "portrait",
+        orientation: "portrait-primary",
         dir: "rtl",
-        lang: "fa",
+        lang: "fa-IR",
+        prefer_related_applications: false,
+        categories: ["news", "social", "education", "lifestyle"],
         icons: [
+          {
+            src: "/pwa-48x48.png",
+            sizes: "48x48",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-72x72.png",
+            sizes: "72x72",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-96x96.png",
+            sizes: "96x96",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-128x128.png",
+            sizes: "128x128",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-144x144.png",
+            sizes: "144x144",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-152x152.png",
+            sizes: "152x152",
+            type: "image/png",
+            purpose: "any",
+          },
           {
             src: "/pwa-192x192.png",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-256x256.png",
+            sizes: "256x256",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-384x384.png",
+            sizes: "384x384",
+            type: "image/png",
+            purpose: "any",
           },
           {
             src: "/pwa-512x512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any",
           },
           {
-            src: "/pwa-512x512.png",
+            src: "/pwa-maskable-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable",
+          },
+          {
+            src: "/pwa-maskable-512x512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
           },
         ],
+        screenshots: [
+          {
+            src: "/screenshots/desktop-home.png",
+            sizes: "1280x720",
+            type: "image/png",
+            form_factor: "wide",
+            label: "صفحه اصلی نوبهار",
+          },
+          {
+            src: "/screenshots/mobile-home.png",
+            sizes: "640x1280",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "صفحه اصلی موبایل",
+          },
+          {
+            src: "/screenshots/mobile-article.png",
+            sizes: "640x1280",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "مشاهده مقاله",
+          },
+        ],
+        shortcuts: [
+          {
+            name: "نوشتن مقاله",
+            short_name: "نوشتن",
+            description: "نوشتن مقاله جدید",
+            url: "/write",
+            icons: [{ src: "/icons/write-96x96.png", sizes: "96x96" }],
+          },
+          {
+            name: "ذخیره‌شده‌ها",
+            short_name: "ذخیره‌ها",
+            description: "مقالات ذخیره شده شما",
+            url: "/bookmarks",
+            icons: [{ src: "/icons/bookmark-96x96.png", sizes: "96x96" }],
+          },
+          {
+            name: "اعلانات",
+            short_name: "اعلانات",
+            description: "مشاهده اعلانات",
+            url: "/notifications",
+            icons: [{ src: "/icons/notification-96x96.png", sizes: "96x96" }],
+          },
+        ],
+        share_target: {
+          action: "/write",
+          method: "GET",
+          params: {
+            title: "title",
+            text: "text",
+            url: "url",
+          },
+        },
+        launch_handler: {
+          client_mode: ["navigate-existing", "auto"],
+        },
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,webp,jpg,jpeg}"],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api/, /^\/auth/],
         runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts-cache",
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "gstatic-fonts-cache",
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/articles/,
             handler: "StaleWhileRevalidate",
@@ -57,6 +217,9 @@ export default defineConfig(({ mode }) => ({
               expiration: {
                 maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24, // 24 hours
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
               },
             },
           },
@@ -69,6 +232,9 @@ export default defineConfig(({ mode }) => ({
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
           {
@@ -80,15 +246,55 @@ export default defineConfig(({ mode }) => ({
                 maxEntries: 200,
                 maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
               },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/storage\.googleapis\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "external-images-cache",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
         ],
+      },
+      devOptions: {
+        enabled: false,
+        type: "module",
       },
     }),
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          supabase: ["@supabase/supabase-js"],
+          query: ["@tanstack/react-query"],
+        },
+      },
+    },
+    sourcemap: false,
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
     },
   },
 }));

@@ -1,3 +1,4 @@
+# Robots.txt for نوبهار
 User-agent: Googlebot
 Allow: /
 
@@ -12,3 +13,20 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://nawbahar.lovable.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Disallow admin and auth pages from indexing
+Disallow: /admin
+Disallow: /auth
+Disallow: /editor
+
+# Allow all assets
+Allow: /assets/
+Allow: /images/
+Allow: /*.css
+Allow: /*.js
