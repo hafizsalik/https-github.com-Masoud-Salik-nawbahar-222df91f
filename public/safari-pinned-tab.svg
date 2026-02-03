@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#ffffff"/>
+  <g transform="translate(256, 220)">
+    <!-- Main leaf -->
+    <path d="M0,-120 Q40,-80 30,-20 Q20,40 0,60 Q-20,40 -30,-20 Q-40,-80 0,-120Z" fill="#0f766e"/>
+    <!-- Left leaf -->
+    <path d="M-60,20 Q-80,-20 -60,-60 Q-40,-40 -30,0 Q-20,40 -40,60 Q-60,40 -60,20Z" fill="#0f766e" transform="rotate(-30, -40, 0)"/>
+    <!-- Right leaf -->
+    <path d="M60,20 Q80,-20 60,-60 Q40,-40 30,0 Q20,40 40,60 Q60,40 60,20Z" fill="#0f766e" transform="rotate(30, 40, 0)"/>
+    <!-- Stem -->
+    <rect x="-4" y="40" width="8" height="60" fill="#0f766e"/>
+  </g>
+</svg>

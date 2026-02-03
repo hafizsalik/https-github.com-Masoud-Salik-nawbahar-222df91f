@@ -18,6 +18,7 @@ import Article from "./pages/Article";
 import Notifications from "./pages/Notifications";
 import VIP from "./pages/VIP";
 import About from "./pages/About";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/vip" element={<VIP />} />
           <Route path="/about" element={<About />} />
+          <Route path="/install" element={<Install />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
