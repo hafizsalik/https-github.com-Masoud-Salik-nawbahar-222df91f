@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, MessageCircle, CornerDownLeft, CornerUpRight, MoreVertical } from "lucide-react";
+import { Eye, MessageCircle, CornerDownLeft, CornerUpRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { useComments } from "@/hooks/useComments";
@@ -21,10 +21,9 @@ function calculateReadTime(content: string): string {
   return `${minutes} دقیقه`;
 }
 
-function getExcerpt(content: string, lines: number = 3): string {
-  const maxChars = lines * 55;
+function getExcerpt(content: string, maxChars: number = 150): string {
   if (content.length <= maxChars) return content;
-  return content.slice(0, maxChars).trim();
+  return content.slice(0, maxChars).trim() + "...";
 }
 
 export function ArticleCard({ article, onDelete }: ArticleCardProps) {
@@ -34,6 +33,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   const { latestComment } = useLatestComment(article.id);
   const [showComments, setShowComments] = useState(false);
   const [interactedIcons, setInteractedIcons] = useState<Record<string, boolean>>({});
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   const viewCount = (article as any).view_count || 0;
 
@@ -57,12 +57,11 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
     setInteractedIcons(prev => ({ ...prev, response: true }));
   };
 
-  // Format count - don't show 0
   const formatCount = (count: number) => count > 0 ? count : null;
 
   return (
-    <article className="bg-card border-b border-border animate-fade-in">
-      {/* Response indicator - if this is a response to another article */}
+    <article className="bg-card rounded-xl border border-border/50 overflow-hidden elevated animate-fade-in transition-shadow duration-200 hover:shadow-md">
+      {/* Response indicator */}
       {parentArticle && (
         <Link 
           to={`/article/${parentArticle.id}`}
@@ -76,32 +75,36 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
       {/* Top Row: Author + Date + Menu */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button onClick={handleAuthorClick} className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <button 
+              onClick={handleAuthorClick} 
+              className="flex items-center gap-2.5 group"
+              aria-label={`پروفایل ${article.author?.display_name}`}
+            >
               {article.author?.avatar_url ? (
                 <img
                   src={article.author.avatar_url}
-                  alt={article.author.display_name}
-                  className="w-6 h-6 rounded-full object-cover"
+                  alt=""
+                  className="w-7 h-7 rounded-full object-cover ring-2 ring-transparent group-hover:ring-primary/20 transition-all"
+                  loading="lazy"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                  <span className="text-muted-foreground text-[10px] font-medium">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <span className="text-primary text-[11px] font-semibold">
                     {article.author?.display_name?.charAt(0)}
                   </span>
                 </div>
               )}
-              <span className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                 {article.author?.display_name}
               </span>
             </button>
-            <span className="text-xs text-muted-foreground/50">·</span>
+            <span className="text-muted-foreground/40">·</span>
             <span className="text-xs text-muted-foreground">
               {getRelativeTime(article.created_at)}
             </span>
           </div>
 
-          {/* Vertical three-dot menu */}
           <div onClick={(e) => e.preventDefault()}>
             <ArticleActionsMenu
               articleId={article.id}
@@ -113,45 +116,50 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
       </div>
 
       <Link to={`/article/${article.id}`} className="block">
-        {/* Title - Clear, semibold, prominent */}
+        {/* Title */}
         <div className="px-4 pb-3">
-          <h3 className="text-[15px] font-semibold text-foreground leading-7 line-clamp-2">
+          <h3 className="text-[15px] font-semibold text-foreground leading-7 line-clamp-2 hover:text-primary transition-colors">
             {article.title}
           </h3>
         </div>
 
-        {/* Cover Image - Slightly reduced height, soft corners */}
+        {/* Cover Image */}
         {article.cover_image_url && (
-          <div className="aspect-[16/9] overflow-hidden bg-muted mx-4 rounded-lg">
+          <div className="aspect-[16/9] overflow-hidden bg-muted mx-4 rounded-lg relative">
+            {!imageLoaded && (
+              <div className="absolute inset-0 skeleton" />
+            )}
             <img
               src={article.cover_image_url}
-              alt={article.title}
-              className="w-full h-full object-cover"
+              alt=""
+              className={cn(
+                "w-full h-full object-cover transition-opacity duration-300",
+                imageLoaded ? "opacity-100" : "opacity-0"
+              )}
               loading="lazy"
               decoding="async"
+              onLoad={() => setImageLoaded(true)}
             />
           </div>
         )}
 
-        {/* Excerpt - 3 lines on mobile with soft fade */}
+        {/* Excerpt */}
         <div className="px-4 py-3">
-          <p className="text-sm text-muted-foreground leading-6 line-clamp-3 relative">
-            {getExcerpt(article.content, 3)}
-            <span className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+          <p className="text-sm text-muted-foreground leading-6 line-clamp-3">
+            {getExcerpt(article.content, 180)}
           </p>
         </div>
       </Link>
 
       {/* Bottom Interaction Bar */}
-      <div className="px-4 pb-3 flex items-center gap-5">
-        <span className="text-[11px] text-muted-foreground">
+      <div className="px-4 pb-4 flex items-center gap-4">
+        <span className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
           {calculateReadTime(article.content)}
         </span>
-        <span className="text-muted-foreground/30">·</span>
         
         {/* View count */}
         <div className={cn(
-          "flex items-center gap-1 transition-colors duration-300",
+          "flex items-center gap-1 transition-colors duration-200",
           interactedIcons.view ? "text-primary" : "text-muted-foreground"
         )}>
           <Eye size={14} strokeWidth={1.5} />
@@ -160,13 +168,14 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
           )}
         </div>
         
-        {/* Comment count - clickable */}
+        {/* Comment count */}
         <button 
           onClick={handleCommentClick}
           className={cn(
-            "flex items-center gap-1 transition-colors duration-300",
+            "flex items-center gap-1 transition-all duration-200 btn-press",
             interactedIcons.comment ? "text-primary" : "text-muted-foreground hover:text-foreground"
           )}
+          aria-label={`${comments.length} نظر`}
         >
           <MessageCircle size={14} strokeWidth={1.5} />
           {formatCount(comments.length) && (
@@ -174,13 +183,14 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
           )}
         </button>
         
-        {/* Response count - clickable */}
+        {/* Response count */}
         <button 
           onClick={handleResponseClick}
           className={cn(
-            "flex items-center gap-1 transition-colors duration-300",
+            "flex items-center gap-1 transition-all duration-200 btn-press",
             interactedIcons.response ? "text-primary" : "text-muted-foreground hover:text-foreground"
           )}
+          aria-label={`${responseCount} پاسخ`}
         >
           <CornerDownLeft size={14} strokeWidth={1.5} />
           {formatCount(responseCount) && (
@@ -191,10 +201,10 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
 
       {/* Latest Comment Teaser */}
       {latestComment && !showComments && (
-        <div className="px-4 pb-3">
-          <div className="bg-muted/50 rounded-lg p-3 text-sm">
+        <div className="px-4 pb-4">
+          <div className="bg-muted/50 rounded-lg p-3 text-sm border border-border/30">
             <span className="font-medium text-foreground">{latestComment.author_name}:</span>
-            <span className="text-muted-foreground mr-1 line-clamp-1">{latestComment.content}</span>
+            <span className="text-muted-foreground mr-1.5 line-clamp-1">{latestComment.content}</span>
           </div>
         </div>
       )}

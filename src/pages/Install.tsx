@@ -1,7 +1,7 @@
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Smartphone, CheckCircle2, Share, Plus, MoreVertical } from "lucide-react";
+import { Download, Smartphone, CheckCircle2, Share, Plus, MoreVertical, ArrowRight, Wifi, Zap, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Install() {
@@ -19,18 +19,18 @@ export default function Install() {
   if (isInstalled) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
+        <Card className="w-full max-w-md text-center animate-scale-in">
           <CardHeader>
-            <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
-              <CheckCircle2 className="h-12 w-12 text-primary" />
+            <div className="mx-auto bg-primary/10 p-5 rounded-2xl mb-4">
+              <CheckCircle2 className="h-14 w-14 text-primary" />
             </div>
-            <CardTitle className="text-2xl">نوبهار نصب شده است</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl">نوبهار نصب شده است ✅</CardTitle>
+            <CardDescription className="leading-relaxed">
               می‌توانید از آیکون روی صفحه اصلی دستگاهتان به اپلیکیشن دسترسی داشته باشید
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/')} className="w-full">
+            <Button onClick={() => navigate('/')} className="w-full btn-press" size="lg">
               برو به صفحه اصلی
             </Button>
           </CardContent>
@@ -41,10 +41,19 @@ export default function Install() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 animate-fade-in">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowRight size={18} />
+          <span className="text-sm">بازگشت</span>
+        </button>
+
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="mx-auto bg-primary/10 p-4 rounded-2xl mb-4 w-fit">
+          <div className="mx-auto bg-primary/10 p-5 rounded-2xl mb-4 w-fit">
             <img 
               src="/pwa-192x192.png" 
               alt="نوبهار" 
@@ -55,96 +64,102 @@ export default function Install() {
           <p className="text-muted-foreground">جامعه نخبگان</p>
         </div>
 
+        {/* Features Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <Wifi className="h-6 w-6 text-primary mx-auto mb-2" />
+            <p className="text-xs font-medium">دسترسی آفلاین</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <Zap className="h-6 w-6 text-primary mx-auto mb-2" />
+            <p className="text-xs font-medium">سرعت بیشتر</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <Bell className="h-6 w-6 text-primary mx-auto mb-2" />
+            <p className="text-xs font-medium">اعلانات</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <Smartphone className="h-6 w-6 text-primary mx-auto mb-2" />
+            <p className="text-xs font-medium">تمام‌صفحه</p>
+          </div>
+        </div>
+
         {/* Install Card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Smartphone className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Download className="h-5 w-5 text-primary" />
               نصب اپلیکیشن
             </CardTitle>
             <CardDescription>
-              با نصب اپلیکیشن، دسترسی سریع‌تر و تجربه بهتری خواهید داشت
+              با نصب اپلیکیشن، تجربه بهتری خواهید داشت
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Features */}
-            <div className="space-y-3 text-sm">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>دسترسی آفلاین به محتوای ذخیره شده</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>اعلانات برای مقالات و نظرات جدید</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>سرعت بارگذاری بیشتر</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>تجربه تمام‌صفحه بدون نوار مرورگر</span>
-              </div>
-            </div>
-
             {/* Install Button */}
             {isInstallable ? (
-              <Button onClick={handleInstall} className="w-full" size="lg">
+              <Button onClick={handleInstall} className="w-full btn-press" size="lg">
                 <Download className="h-5 w-5 ml-2" />
                 نصب اپلیکیشن
               </Button>
             ) : (
               <div className="space-y-4">
-                <div className="bg-muted rounded-lg p-4">
-                  <p className="text-sm font-medium mb-3">راهنمای نصب دستی:</p>
+                <div className="bg-muted rounded-xl p-4">
+                  <p className="text-sm font-medium mb-4 text-center">راهنمای نصب دستی</p>
                   
                   {instructions.platform === 'ios' && (
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">۱</span>
-                        <span>روی دکمه</span>
-                        <Share className="h-4 w-4" />
-                        <span>ضربه بزنید</span>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center gap-3 bg-card rounded-lg p-3">
+                        <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۱</span>
+                        <div className="flex items-center gap-2">
+                          <span>روی</span>
+                          <Share className="h-4 w-4 text-primary" />
+                          <span>ضربه بزنید</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">۲</span>
-                        <span>«Add to Home Screen» را انتخاب کنید</span>
-                        <Plus className="h-4 w-4" />
+                      <div className="flex items-center gap-3 bg-card rounded-lg p-3">
+                        <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۲</span>
+                        <div className="flex items-center gap-2">
+                          <span>«Add to Home Screen»</span>
+                          <Plus className="h-4 w-4 text-primary" />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">۳</span>
+                      <div className="flex items-center gap-3 bg-card rounded-lg p-3">
+                        <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۳</span>
                         <span>روی «Add» ضربه بزنید</span>
                       </div>
                     </div>
                   )}
 
                   {instructions.platform === 'android' && (
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">۱</span>
-                        <span>روی</span>
-                        <MoreVertical className="h-4 w-4" />
-                        <span>ضربه بزنید</span>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center gap-3 bg-card rounded-lg p-3">
+                        <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۱</span>
+                        <div className="flex items-center gap-2">
+                          <span>روی</span>
+                          <MoreVertical className="h-4 w-4 text-primary" />
+                          <span>ضربه بزنید</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">۲</span>
-                        <span>«نصب برنامه» یا «افزودن به صفحه اصلی» را انتخاب کنید</span>
+                      <div className="flex items-center gap-3 bg-card rounded-lg p-3">
+                        <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۲</span>
+                        <span>«نصب برنامه» را انتخاب کنید</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">۳</span>
+                      <div className="flex items-center gap-3 bg-card rounded-lg p-3">
+                        <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۳</span>
                         <span>«نصب» را تأیید کنید</span>
                       </div>
                     </div>
                   )}
 
                   {instructions.platform === 'desktop' && (
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">۱</span>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center gap-3 bg-card rounded-lg p-3">
+                        <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۱</span>
                         <span>روی آیکون نصب در نوار آدرس کلیک کنید</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">۲</span>
+                      <div className="flex items-center gap-3 bg-card rounded-lg p-3">
+                        <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۲</span>
                         <span>«Install» را انتخاب کنید</span>
                       </div>
                     </div>
@@ -159,7 +174,7 @@ export default function Install() {
         <Button 
           variant="ghost" 
           onClick={() => navigate('/')} 
-          className="w-full text-muted-foreground"
+          className="w-full text-muted-foreground hover:text-foreground"
         >
           ادامه بدون نصب
         </Button>
