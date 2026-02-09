@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Star, CornerUpRight } from "lucide-react";
+import { ArrowRight, Star, CornerUpRight, Share2 } from "lucide-react";
 import { formatSolarShort } from "@/lib/solarHijri";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -17,6 +17,8 @@ import { ArticleReactions } from "@/components/articles/ArticleReactions";
 import { ArticleBottomSignals } from "@/components/articles/ArticleBottomSignals";
 import { ResponseArticles } from "@/components/articles/ResponseArticles";
 import { Button } from "@/components/ui/button";
+import { FollowButton } from "@/components/FollowButton";
+import { useToast } from "@/hooks/use-toast";
 
 interface ArticleData {
   id: string;
@@ -35,12 +37,14 @@ interface ArticleData {
   author?: {
     display_name: string;
     avatar_url: string | null;
+    specialty: string | null;
   };
 }
 
 const Article = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
@@ -51,66 +55,43 @@ const Article = () => {
   const { userReaction, likedCount, dislikedCount, setReaction } = useReactions(id || "");
   const { responses, responseCount, parentArticle } = useResponseArticles(id || "");
   
-  // Track user engagement (scroll depth, time spent)
   const contentLength = article?.content?.length || 0;
   useEngagementTracking(id || "", contentLength);
 
-  const {
-    comments,
-    loading: commentsLoading,
-    submitting,
-    userId,
-    addComment,
-    deleteComment,
-  } = useComments(id || "");
+  const { comments, loading: commentsLoading, submitting, userId, addComment, deleteComment } = useComments(id || "");
 
   useEffect(() => {
-    if (id) {
-      fetchArticle(id);
-    }
+    if (id) fetchArticle(id);
   }, [id]);
 
   useEffect(() => {
     if (window.location.hash === "#comments" && !loading) {
-      const commentsSection = document.getElementById("comments");
-      if (commentsSection) {
-        setTimeout(() => {
-          commentsSection.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      }
+      const el = document.getElementById("comments");
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
     }
   }, [loading]);
 
   const fetchArticle = async (articleId: string) => {
     setLoading(true);
-    
-    const { data: articleData, error: articleError } = await supabase
+    const { data: articleData, error } = await supabase
       .from("articles")
       .select("id, title, content, cover_image_url, tags, created_at, save_count, author_id, editorial_score_science, editorial_score_ethics, editorial_score_writing, editorial_score_timing, editorial_score_innovation")
       .eq("id", articleId)
       .eq("status", "published")
       .maybeSingle();
 
-    if (articleError || !articleData) {
-      navigate("/");
-      return;
-    }
+    if (error || !articleData) { navigate("/"); return; }
 
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name, avatar_url, specialty")
       .eq("id", articleData.author_id)
       .maybeSingle();
 
-    const transformed: ArticleData = {
-      id: articleData.id,
-      title: articleData.title,
-      content: articleData.content,
-      cover_image_url: articleData.cover_image_url,
+    setArticle({
+      ...articleData,
       tags: articleData.tags || [],
-      created_at: articleData.created_at,
       save_count: articleData.save_count || 0,
-      author_id: articleData.author_id,
       editorial_score_science: articleData.editorial_score_science || 0,
       editorial_score_ethics: articleData.editorial_score_ethics || 0,
       editorial_score_writing: articleData.editorial_score_writing || 0,
@@ -119,52 +100,55 @@ const Article = () => {
       author: profileData ? {
         display_name: profileData.display_name,
         avatar_url: profileData.avatar_url,
+        specialty: profileData.specialty,
       } : undefined,
-    };
-
-    setArticle(transformed);
+    });
     setLoading(false);
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/article/${id}`;
+    if (navigator.share) {
+      await navigator.share({ title: article?.title || "مقاله", url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "لینک کپی شد ✅" });
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+        <div className="relative">
+          <div className="w-10 h-10 border-2 border-primary/20 rounded-full" />
+          <div className="absolute inset-0 w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
       </div>
     );
   }
 
-  if (!article) {
-    return null;
-  }
+  if (!article) return null;
+
+  const readTime = Math.max(1, Math.ceil(article.content.split(/\s+/).length / 200));
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - Minimal */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border/50">
         <div className="flex items-center justify-between px-4 h-12 max-w-screen-md mx-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <button onClick={() => navigate(-1)} className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowRight size={22} strokeWidth={1.5} />
           </button>
           <div className="flex items-center gap-1">
+            <button onClick={handleShare} className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted">
+              <Share2 size={17} strokeWidth={1.5} />
+            </button>
             {isAdmin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setRatingModalOpen(true)}
-                className="text-muted-foreground h-8 w-8"
-              >
-                <Star size={18} strokeWidth={1.5} />
+              <Button variant="ghost" size="icon" onClick={() => setRatingModalOpen(true)} className="text-muted-foreground h-8 w-8">
+                <Star size={17} strokeWidth={1.5} />
               </Button>
             )}
-            <ArticleActionsMenu 
-              articleId={article.id} 
-              authorId={article.author_id}
-              articleTitle={article.title}
-            />
+            <ArticleActionsMenu articleId={article.id} authorId={article.author_id} articleTitle={article.title} />
           </div>
         </div>
       </header>
@@ -175,96 +159,82 @@ const Article = () => {
         {parentArticle && (
           <Link
             to={`/article/${parentArticle.id}`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors bg-primary/5 px-3 py-2 rounded-lg"
           >
-            <CornerUpRight size={16} strokeWidth={1.5} />
+            <CornerUpRight size={16} strokeWidth={1.5} className="text-primary" />
             <span>در پاسخ به:</span>
-            <span className="text-foreground">{parentArticle.title}</span>
+            <span className="text-foreground font-medium">{parentArticle.title}</span>
           </Link>
         )}
 
-        {/* Author - Simple, top section */}
-        <div className="flex items-center gap-3 mb-8">
-          <Link to={`/profile/${article.author_id}`}>
-            {article.author?.avatar_url ? (
-              <img
-                src={article.author.avatar_url}
-                alt={article.author.display_name}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-muted-foreground font-medium">
-                  {article.author?.display_name?.charAt(0)}
-                </span>
-              </div>
-            )}
-          </Link>
-          <div>
-            <Link 
-              to={`/profile/${article.author_id}`} 
-              className="font-medium text-foreground hover:underline"
-            >
-              {article.author?.display_name}
+        {/* Author Section */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <Link to={`/profile/${article.author_id}`}>
+              {article.author?.avatar_url ? (
+                <img src={article.author.avatar_url} alt={article.author.display_name} className="w-11 h-11 rounded-full object-cover ring-2 ring-primary/10" />
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-medium text-lg">{article.author?.display_name?.charAt(0)}</span>
+                </div>
+              )}
             </Link>
-            <p className="text-sm text-muted-foreground">
-              {formatSolarShort(article.created_at)}
-            </p>
+            <div>
+              <Link to={`/profile/${article.author_id}`} className="font-medium text-foreground hover:underline">
+                {article.author?.display_name}
+              </Link>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                <span>{formatSolarShort(article.created_at)}</span>
+                <span className="text-muted-foreground/40">·</span>
+                <span>{readTime} دقیقه مطالعه</span>
+              </div>
+            </div>
           </div>
+          {user?.id !== article.author_id && <FollowButton userId={article.author_id} />}
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-foreground leading-relaxed mb-6">
-          {article.title}
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground leading-relaxed mb-6">{article.title}</h1>
 
         {/* Cover Image */}
         {article.cover_image_url && (
           <div className="rounded-xl overflow-hidden mb-8">
-            <img
-              src={article.cover_image_url}
-              alt={article.title}
-              className="w-full object-cover"
-              loading="lazy"
-            />
+            <img src={article.cover_image_url} alt={article.title} className="w-full object-cover" loading="lazy" />
           </div>
         )}
 
-        {/* Content - Improved typography */}
+        {/* Content */}
         <article className="article-content">
-          <div className="text-foreground whitespace-pre-wrap">
-            {article.content}
-          </div>
+          <div className="text-foreground whitespace-pre-wrap">{article.content}</div>
         </article>
 
+        {/* Tags */}
+        {article.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-8">
+            {article.tags.map(tag => (
+              <Link
+                key={tag}
+                to={`/explore?tag=${encodeURIComponent(tag)}`}
+                className="px-3 py-1.5 bg-muted text-muted-foreground rounded-full text-xs hover:bg-primary/10 hover:text-primary transition-colors"
+              >
+                #{tag}
+              </Link>
+            ))}
+          </div>
+        )}
+
         {/* Reactions */}
-        <ArticleReactions
-          userReaction={userReaction}
-          likedCount={likedCount}
-          dislikedCount={dislikedCount}
-          onReaction={setReaction}
-        />
+        <ArticleReactions userReaction={userReaction} likedCount={likedCount} dislikedCount={dislikedCount} onReaction={setReaction} />
 
         {/* Bottom Signals */}
-        <ArticleBottomSignals
-          viewCount={viewCount}
-          commentCount={comments.length}
-          responseCount={responseCount}
-        />
+        <ArticleBottomSignals viewCount={viewCount} commentCount={comments.length} responseCount={responseCount} />
 
         {/* Response Articles */}
         <ResponseArticles responses={responses} />
 
         {/* Comments Section */}
         <div id="comments" className="mt-10 pt-8 border-t border-border">
-          <CommentSection
-            comments={comments}
-            loading={commentsLoading}
-            submitting={submitting}
-            userId={userId}
-            onAddComment={addComment}
-            onDeleteComment={deleteComment}
-          />
+          <CommentSection comments={comments} loading={commentsLoading} submitting={submitting} userId={userId} onAddComment={addComment} onDeleteComment={deleteComment} />
         </div>
       </main>
 

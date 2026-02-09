@@ -1,7 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ArticleFeed } from "@/components/articles/ArticleFeed";
 import { usePublishedArticles } from "@/hooks/useArticles";
-import { RefreshCw } from "lucide-react";
 
 const Index = () => {
   const { articles, loading, refetch } = usePublishedArticles();

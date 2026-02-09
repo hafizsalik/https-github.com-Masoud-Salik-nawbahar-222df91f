@@ -7,9 +7,10 @@ export interface Profile {
   avatar_url: string | null;
   specialty: string | null;
   reputation_score: number | null;
+  trust_score: number | null;
   whatsapp_number: string | null;
   facebook_url: string | null;
-  linkedin_url?: string | null;
+  linkedin_url: string | null;
   created_at: string;
 }
 
@@ -29,6 +30,8 @@ export function useProfile(userId: string | undefined) {
   useEffect(() => {
     if (userId) {
       fetchProfile();
+    } else {
+      setLoading(false);
     }
   }, [userId]);
 
@@ -37,39 +40,38 @@ export function useProfile(userId: string | undefined) {
     
     setLoading(true);
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("id, display_name, avatar_url, specialty, reputation_score, whatsapp_number, facebook_url, created_at")
-      .eq("id", userId)
-      .maybeSingle();
+    // Fetch profile, articles, and bookmarks in parallel
+    const [profileResult, articlesResult, bookmarksResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, specialty, reputation_score, trust_score, whatsapp_number, facebook_url, linkedin_url, created_at")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("articles")
+        .select("id, title, cover_image_url, created_at")
+        .eq("author_id", userId)
+        .eq("status", "published")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("bookmarks")
+        .select("article_id")
+        .eq("user_id", userId),
+    ]);
 
-    if (profileData) {
-      setProfile({
-        ...profileData,
-        linkedin_url: (profileData as any).linkedin_url || null,
-      });
+    if (profileResult.data) {
+      setProfile(profileResult.data as Profile);
     }
 
-    const { data: articlesData } = await supabase
-      .from("articles")
-      .select("id, title, cover_image_url, created_at")
-      .eq("author_id", userId)
-      .eq("status", "published")
-      .order("created_at", { ascending: false });
+    setArticles(articlesResult.data || []);
 
-    setArticles(articlesData || []);
-
-    const { data: bookmarksData } = await supabase
-      .from("bookmarks")
-      .select("article_id")
-      .eq("user_id", userId);
-
-    if (bookmarksData && bookmarksData.length > 0) {
-      const articleIds = bookmarksData.map(b => b.article_id);
+    // Fetch bookmarked articles
+    const bookmarkIds = (bookmarksResult.data || []).map(b => b.article_id);
+    if (bookmarkIds.length > 0) {
       const { data: bookmarkedArticles } = await supabase
         .from("articles")
         .select("id, title, cover_image_url, created_at")
-        .in("id", articleIds)
+        .in("id", bookmarkIds)
         .eq("status", "published")
         .order("created_at", { ascending: false });
 
