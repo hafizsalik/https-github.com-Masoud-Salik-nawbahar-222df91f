@@ -7,63 +7,67 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface VIPPost {
   id: string;
   title: string;
   content: string;
-  type: "editorial" | "competition" | "announcement";
+  type: string;
+  author_id: string | null;
   created_at: string;
 }
 
-const VIP_STORAGE_KEY = "nawbahar_vip_posts";
-
 const VIP = () => {
   const { isAdmin } = useUserRole();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [posts, setPosts] = useState<VIPPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editPost, setEditPost] = useState<Partial<VIPPost>>({});
 
-  useEffect(() => {
-    const saved = localStorage.getItem(VIP_STORAGE_KEY);
-    if (saved) {
-      try { setPosts(JSON.parse(saved)); } catch {}
-    }
-  }, []);
-
-  const savePosts = (newPosts: VIPPost[]) => {
-    setPosts(newPosts);
-    localStorage.setItem(VIP_STORAGE_KEY, JSON.stringify(newPosts));
+  const fetchPosts = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("vip_posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setPosts(data || []);
+    setLoading(false);
   };
 
-  const handleSave = () => {
+  useEffect(() => { fetchPosts(); }, []);
+
+  const handleSave = async () => {
     if (!editPost.title?.trim() || !editPost.content?.trim()) {
       toast({ title: "عنوان و محتوا الزامی است", variant: "destructive" });
       return;
     }
 
     if (editPost.id) {
-      savePosts(posts.map(p => p.id === editPost.id ? { ...p, ...editPost } as VIPPost : p));
+      const { error } = await supabase
+        .from("vip_posts")
+        .update({ title: editPost.title, content: editPost.content, type: editPost.type || "announcement" })
+        .eq("id", editPost.id);
+      if (error) { toast({ title: "خطا", description: error.message, variant: "destructive" }); return; }
       toast({ title: "✅ ویرایش شد" });
     } else {
-      const newPost: VIPPost = {
-        id: crypto.randomUUID(),
-        title: editPost.title,
-        content: editPost.content,
-        type: (editPost.type as VIPPost["type"]) || "announcement",
-        created_at: new Date().toISOString(),
-      };
-      savePosts([newPost, ...posts]);
+      const { error } = await supabase
+        .from("vip_posts")
+        .insert({ title: editPost.title, content: editPost.content, type: editPost.type || "announcement", author_id: user?.id });
+      if (error) { toast({ title: "خطا", description: error.message, variant: "destructive" }); return; }
       toast({ title: "✅ مطلب اضافه شد" });
     }
     setEditPost({});
     setIsEditing(false);
+    fetchPosts();
   };
 
-  const handleDelete = (id: string) => {
-    savePosts(posts.filter(p => p.id !== id));
-    toast({ title: "حذف شد" });
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("vip_posts").delete().eq("id", id);
+    if (!error) { toast({ title: "حذف شد" }); fetchPosts(); }
   };
 
   const typeLabels: Record<string, string> = {
@@ -144,14 +148,18 @@ const VIP = () => {
         )}
 
         {/* Posts */}
-        {posts.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-7 h-7 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : posts.length > 0 ? (
           <div className="space-y-3">
             {posts.map((post) => (
               <Card key={post.id}>
                 <CardHeader className="pb-2 flex-row items-start justify-between">
                   <div>
                     <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                      {typeLabels[post.type]}
+                      {typeLabels[post.type] || post.type}
                     </span>
                     <CardTitle className="text-sm mt-2">{post.title}</CardTitle>
                   </div>

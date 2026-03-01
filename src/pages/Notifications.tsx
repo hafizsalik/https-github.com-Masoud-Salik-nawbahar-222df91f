@@ -1,8 +1,9 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useNotifications } from "@/hooks/useNotifications";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, UserPlus, Bell, CheckCheck, Settings, Trash2, X, BellOff } from "lucide-react";
+import { Heart, MessageCircle, UserPlus, Bell, CheckCheck, Settings, Trash2, X, BellOff, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -53,17 +54,18 @@ const Notifications = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { 
-    notifications, 
-    unreadCount, 
-    loading, 
-    markAsRead, 
-    markAllAsRead,
-    deleteNotification,
-    settings,
-    updateSettings
+    notifications, unreadCount, loading, 
+    markAsRead, markAllAsRead, deleteNotification,
+    settings, updateSettings
   } = useNotifications();
+  const { isSupported, isSubscribed, permission, subscribe, unsubscribe } = usePushNotifications();
   
   const [showSettings, setShowSettings] = useState(false);
+
+  const handlePushToggle = async (checked: boolean) => {
+    if (checked) await subscribe();
+    else await unsubscribe();
+  };
 
   if (!user) {
     return (
@@ -92,23 +94,12 @@ const Notifications = () => {
           <h1 className="text-lg font-semibold">اعلان‌ها</h1>
           <div className="flex items-center gap-1">
             {unreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={markAllAsRead}
-                className="text-xs gap-1.5 text-primary h-8"
-              >
+              <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs gap-1.5 text-primary h-8">
                 <CheckCheck size={14} />
                 <span className="hidden sm:inline">خواندن همه</span>
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSettings(!showSettings)}
-              className="h-8 w-8"
-              aria-label="تنظیمات اعلانات"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setShowSettings(!showSettings)} className="h-8 w-8" aria-label="تنظیمات اعلانات">
               {showSettings ? <X size={18} /> : <Settings size={18} />}
             </Button>
           </div>
@@ -122,35 +113,46 @@ const Notifications = () => {
               تنظیمات اعلان‌ها
             </h3>
             <div className="space-y-3">
+              {/* Push Notification Toggle */}
+              {isSupported && (
+                <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2 border border-primary/20">
+                  <div className="flex items-center gap-2">
+                    <BellRing size={14} className="text-primary" />
+                    <div>
+                      <span className="text-sm font-medium">اعلان‌های پوش</span>
+                      <p className="text-[10px] text-muted-foreground">دریافت اعلان حتی خارج از اپ</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={isSubscribed}
+                    onCheckedChange={handlePushToggle}
+                    disabled={permission === 'denied'}
+                  />
+                </div>
+              )}
+              {permission === 'denied' && (
+                <p className="text-[10px] text-destructive px-1">اعلان‌ها در تنظیمات مرورگر مسدود شده‌اند. لطفاً از تنظیمات مرورگر فعال کنید.</p>
+              )}
               <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2">
                   <MessageCircle size={14} className="text-muted-foreground" />
                   <span className="text-sm">نظرات جدید</span>
                 </div>
-                <Switch 
-                  checked={settings.comments}
-                  onCheckedChange={(checked) => updateSettings({ comments: checked })}
-                />
+                <Switch checked={settings.comments} onCheckedChange={(checked) => updateSettings({ comments: checked })} />
               </div>
               <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2">
                   <Heart size={14} className="text-muted-foreground" />
                   <span className="text-sm">پسندها</span>
                 </div>
-                <Switch 
-                  checked={settings.likes}
-                  onCheckedChange={(checked) => updateSettings({ likes: checked })}
-                />
+                <Switch checked={settings.likes} onCheckedChange={(checked) => updateSettings({ likes: checked })} />
               </div>
               <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2">
                   <UserPlus size={14} className="text-muted-foreground" />
                   <span className="text-sm">دنبال‌کننده‌های جدید</span>
                 </div>
-                <Switch 
-                  checked={settings.follows}
-                  onCheckedChange={(checked) => updateSettings({ follows: checked })}
-                />
+                <Switch checked={settings.follows} onCheckedChange={(checked) => updateSettings({ follows: checked })} />
               </div>
             </div>
           </div>
@@ -194,19 +196,12 @@ const Notifications = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm leading-relaxed">
-                      {getNotificationText(
-                        notification.type,
-                        notification.actor?.display_name || "کاربر",
-                        notification.article?.title
-                      )}
+                      {getNotificationText(notification.type, notification.actor?.display_name || "کاربر", notification.article?.title)}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1.5">
-                      {getRelativeTime(notification.created_at)}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1.5">{getRelativeTime(notification.created_at)}</p>
                   </div>
                 </Link>
                 
-                {/* Delete button */}
                 <button
                   onClick={() => deleteNotification(notification.id)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-muted-foreground hover:text-destructive rounded-full hover:bg-muted"
