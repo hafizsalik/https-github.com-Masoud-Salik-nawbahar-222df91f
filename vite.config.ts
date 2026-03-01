@@ -124,14 +124,14 @@ export default defineConfig(({ mode }) => ({
           },
           {
             src: "/screenshots/mobile-home.png",
-            sizes: "640x1280",
+            sizes: "390x844",
             type: "image/png",
             form_factor: "narrow",
             label: "صفحه اصلی موبایل",
           },
           {
             src: "/screenshots/mobile-article.png",
-            sizes: "640x1280",
+            sizes: "390x844",
             type: "image/png",
             form_factor: "narrow",
             label: "مشاهده مقاله",
@@ -169,8 +169,12 @@ export default defineConfig(({ mode }) => ({
             url: "url",
           },
         },
+        handle_links: "preferred",
         launch_handler: {
           client_mode: ["navigate-existing", "auto"],
+        },
+        edge_side_panel: {
+          preferred_width: 400,
         },
       },
       workbox: {
