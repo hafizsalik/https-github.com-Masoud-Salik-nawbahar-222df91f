@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -28,6 +29,14 @@ interface ArticleActionsMenuProps {
   onDelete?: () => void;
 }
 
+const REPORT_REASONS = [
+  "محتوای نادرست یا گمراه‌کننده",
+  "محتوای توهین‌آمیز یا نفرت‌پراکنی",
+  "نقض حق تألیف یا کپی",
+  "اسپم یا تبلیغات",
+  "سایر موارد",
+];
+
 export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete }: ArticleActionsMenuProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -36,12 +45,15 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
   const [isOpen, setIsOpen] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // Report flow: step 1 = confirm, step 2 = reason selection
+  const [reportStep, setReportStep] = useState<0 | 1 | 2>(0);
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [reportNote, setReportNote] = useState("");
 
   useEffect(() => {
     checkAuth();
   }, [articleId]);
 
-  // Close menu on scroll or any touch outside
   useEffect(() => {
     if (!isOpen) return;
     const close = () => setIsOpen(false);
@@ -57,7 +69,6 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
     const { data: { session } } = await supabase.auth.getSession();
     const uid = session?.user?.id;
     setUserId(uid || null);
-
     if (uid) {
       const { data: bookmark } = await supabase
         .from("bookmarks")
@@ -129,12 +140,45 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
     } catch { /* ignore */ }
     toast({ title: "این نوع مقالات کمتر نمایش داده خواهد شد" });
     setIsOpen(false);
-    onDelete?.(); // Remove from current view
+    onDelete?.();
   };
 
-  const handleReport = () => {
-    toast({ title: "گزارش ثبت شد", description: "با تشکر از گزارش شما" });
+  const handleReportStart = () => {
     setIsOpen(false);
+    setReportStep(1);
+  };
+
+  const handleReportConfirm = () => {
+    setReportStep(2);
+  };
+
+  const handleReportSubmit = async () => {
+    if (!userId || !selectedReason) return;
+    const reason = reportNote.trim()
+      ? `${selectedReason} — ${reportNote.trim()}`
+      : selectedReason;
+
+    const { error } = await supabase.from("reported_comments").insert({
+      comment_id: articleId, // Using as generic report
+      reporter_id: userId,
+      reason,
+    });
+    if (error?.code === "23505") {
+      toast({ title: "قبلاً گزارش کرده‌اید" });
+    } else if (error) {
+      toast({ title: "خطا در ثبت گزارش", variant: "destructive" });
+    } else {
+      toast({ title: "گزارش ثبت شد", description: "با تشکر از گزارش شما" });
+    }
+    setReportStep(0);
+    setSelectedReason(null);
+    setReportNote("");
+  };
+
+  const closeReport = () => {
+    setReportStep(0);
+    setSelectedReason(null);
+    setReportNote("");
   };
 
   return (
@@ -176,7 +220,7 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
                 <EyeOff size={14} strokeWidth={1.5} />
                 <span>علاقه‌مند نیستم</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleReport} className="gap-3 text-sm text-destructive focus:text-destructive">
+              <DropdownMenuItem onClick={handleReportStart} className="gap-3 text-sm text-destructive focus:text-destructive">
                 <Flag size={14} strokeWidth={1.5} />
                 <span>گزارش</span>
               </DropdownMenuItem>
@@ -185,12 +229,13 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Delete Confirmation - Two Step */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>آیا مطمئن هستید؟</AlertDialogTitle>
+            <AlertDialogTitle>حذف مقاله</AlertDialogTitle>
             <AlertDialogDescription>
-              این مقاله برای همیشه حذف خواهد شد و قابل بازیابی نیست.
+              این مقاله برای همیشه حذف خواهد شد و قابل بازیابی نیست. آیا مطمئن هستید؟
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
@@ -200,7 +245,68 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "در حال حذف..." : "حذف"}
+              {isDeleting ? "در حال حذف..." : "بله، حذف شود"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Report Step 1: Confirm */}
+      <AlertDialog open={reportStep === 1} onOpenChange={(open) => !open && closeReport()}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>گزارش مقاله</AlertDialogTitle>
+            <AlertDialogDescription>
+              آیا مطمئن هستید که می‌خواهید این مقاله را گزارش دهید؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel>انصراف</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReportConfirm}>
+              بله، ادامه
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Report Step 2: Reason Selection */}
+      <AlertDialog open={reportStep === 2} onOpenChange={(open) => !open && closeReport()}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>علت گزارش</AlertDialogTitle>
+            <AlertDialogDescription>
+              لطفاً دلیل گزارش خود را انتخاب کنید
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            {REPORT_REASONS.map((reason) => (
+              <button
+                key={reason}
+                onClick={() => setSelectedReason(reason)}
+                className={`w-full text-right text-sm px-3 py-2.5 rounded-lg border transition-colors ${
+                  selectedReason === reason
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border text-foreground hover:border-primary/30"
+                }`}
+              >
+                {reason}
+              </button>
+            ))}
+            <Textarea
+              placeholder="توضیحات اضافی (اختیاری)..."
+              value={reportNote}
+              onChange={(e) => setReportNote(e.target.value)}
+              className="min-h-[60px] resize-none text-sm mt-2"
+            />
+          </div>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel>انصراف</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReportSubmit}
+              disabled={!selectedReason}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              ثبت گزارش
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
