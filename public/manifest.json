@@ -167,6 +167,7 @@
     }
   },
   "handle_links": "preferred",
+  "iarc_rating_id": "",
   "launch_handler": {
     "client_mode": [
       "navigate-existing",
