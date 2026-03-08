@@ -104,9 +104,9 @@ export function ArticleCardMetrics({
               onClick={handleReactionSummaryClick}
               className="flex items-center gap-1 hover:opacity-80 transition-opacity"
             >
-              {topTypes.length > 0 && (
+              {displayTopTypes.length > 0 && (
                 <div className="flex items-center -space-x-0.5">
-                  {topTypes.slice(0, 2).map((type) => (
+                  {displayTopTypes.slice(0, 2).map((type) => (
                     <span
                       key={type}
                       className="text-[13px] leading-none"

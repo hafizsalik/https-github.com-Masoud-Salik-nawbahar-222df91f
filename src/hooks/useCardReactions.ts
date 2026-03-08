@@ -54,8 +54,9 @@ export function useCardReactions(articleId: string) {
 
     const { data: reactions } = await supabase
       .from("reactions")
-      .select("reaction_type, user_id")
-      .eq("article_id", articleId);
+      .select("reaction_type, user_id, created_at")
+      .eq("article_id", articleId)
+      .order("created_at", { ascending: false });
 
     if (!reactions || reactions.length === 0) {
       setSummary(EMPTY_SUMMARY);
@@ -77,17 +78,20 @@ export function useCardReactions(articleId: string) {
       ? (reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined) || null
       : null;
 
-    const otherReactorIds = reactions
-      .filter((r) => r.user_id !== currentUserId)
-      .map((r) => r.user_id);
+    const uniqueOtherReactorIds = Array.from(
+      new Set(reactions.filter((r) => r.user_id !== currentUserId).map((r) => r.user_id))
+    );
 
     let reactorNames: string[] = [];
-    if (otherReactorIds.length > 0) {
+    if (uniqueOtherReactorIds.length > 0) {
+      const reactorIdsToShow = uniqueOtherReactorIds.slice(0, 3);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("display_name")
-        .in("id", otherReactorIds.slice(0, 2));
-      reactorNames = profiles?.map((p) => p.display_name) || [];
+        .select("id, display_name")
+        .in("id", reactorIdsToShow);
+
+      const profileMap = new Map((profiles || []).map((p) => [p.id, p.display_name]));
+      reactorNames = reactorIdsToShow.map((id) => profileMap.get(id)).filter((name): name is string => Boolean(name));
     }
 
     setSummary({ topTypes, totalCount: reactions.length, reactorNames, userReaction });
