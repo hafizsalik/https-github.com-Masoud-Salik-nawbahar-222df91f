@@ -88,20 +88,20 @@ export function BottomNav() {
                 src={avatarUrl}
                 alt=""
                 className={cn(
-                  "w-[22px] h-[22px] rounded-full object-cover transition-all duration-200",
+                  "w-[21px] h-[21px] rounded-full object-cover transition-all duration-200",
                   isProfileActive
-                    ? "ring-[1.5px] ring-foreground scale-110"
-                    : "opacity-45 group-active:opacity-70 group-active:scale-90"
+                    ? "ring-[1.5px] ring-foreground ring-offset-1 ring-offset-background"
+                    : "opacity-60 grayscale-[30%] group-active:opacity-80 group-active:scale-95"
                 )}
               />
             ) : (
               <div className={cn(
-                "w-[22px] h-[22px] rounded-full bg-muted-foreground/20 flex items-center justify-center transition-all duration-200",
+                "w-[21px] h-[21px] rounded-full bg-muted flex items-center justify-center transition-all duration-200",
                 isProfileActive
-                  ? "ring-[1.5px] ring-foreground scale-110"
-                  : "group-active:scale-90 group-active:bg-muted-foreground/30"
+                  ? "ring-[1.5px] ring-foreground ring-offset-1 ring-offset-background"
+                  : "opacity-50 group-active:scale-95"
               )}>
-                <span className="text-[9px] text-muted-foreground font-bold">؟</span>
+                <span className="text-[9px] text-muted-foreground font-medium">؟</span>
               </div>
             )}
           </Link>
