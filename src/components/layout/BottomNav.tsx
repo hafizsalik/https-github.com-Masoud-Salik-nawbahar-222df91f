@@ -35,77 +35,71 @@ export function BottomNav() {
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="bg-background/95 backdrop-blur-md border-t border-border/60 safe-bottom">
+      <div className="bg-background border-t border-border/60 safe-bottom">
         <div className="flex items-center justify-around max-w-lg mx-auto h-12">
           {/* Home */}
-          <Link
-            to="/"
-            className={cn(
-              "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
-              isActive("/") ? "text-foreground" : "text-muted-foreground/45 active:text-muted-foreground"
-            )}
-          >
-            <Home size={22} strokeWidth={isActive("/") ? 2 : 1.4} fill={isActive("/") ? "currentColor" : "none"} />
-          </Link>
+          <NavItem to="/" active={isActive("/")}>
+            <Home
+              size={21}
+              strokeWidth={isActive("/") ? 2.2 : 1.4}
+              fill={isActive("/") ? "currentColor" : "none"}
+            />
+          </NavItem>
 
           {/* Search */}
-          <Link
-            to="/explore"
-            className={cn(
-              "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
-              isActive("/explore") ? "text-foreground" : "text-muted-foreground/45 active:text-muted-foreground"
-            )}
-          >
-            <Search size={22} strokeWidth={isActive("/explore") ? 2 : 1.4} fill={isActive("/explore") ? "currentColor" : "none"} />
-          </Link>
+          <NavItem to="/explore" active={isActive("/explore")}>
+            <Search
+              size={21}
+              strokeWidth={isActive("/explore") ? 2.2 : 1.4}
+            />
+          </NavItem>
 
           {/* Write - Center prominent */}
           <Link
             to="/write"
-            className="flex items-center justify-center flex-1 h-full focus:outline-none"
+            className="flex items-center justify-center flex-1 h-full focus:outline-none group"
           >
             <div className={cn(
-              "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150",
+              "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200",
               isActive("/write")
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:bg-foreground/10"
+                ? "bg-foreground text-background scale-105"
+                : "bg-muted text-muted-foreground group-active:scale-90 group-active:bg-foreground/15"
             )}>
               <Plus size={20} strokeWidth={2} />
             </div>
           </Link>
 
           {/* VIP */}
-          <Link
-            to="/vip"
-            className={cn(
-              "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
-              isActive("/vip") ? "text-foreground" : "text-muted-foreground/45 active:text-muted-foreground"
-            )}
-          >
-            <BookOpen size={22} strokeWidth={isActive("/vip") ? 2 : 1.4} fill={isActive("/vip") ? "currentColor" : "none"} />
-          </Link>
+          <NavItem to="/vip" active={isActive("/vip")}>
+            <BookOpen
+              size={21}
+              strokeWidth={isActive("/vip") ? 2.2 : 1.4}
+              fill={isActive("/vip") ? "currentColor" : "none"}
+            />
+          </NavItem>
 
           {/* Profile */}
           <Link
             to="/profile"
-            className={cn(
-              "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
-              isProfileActive ? "text-foreground" : "text-muted-foreground/45 active:text-muted-foreground"
-            )}
+            className="flex items-center justify-center flex-1 h-full focus:outline-none group"
           >
             {avatarUrl ? (
               <img
                 src={avatarUrl}
                 alt=""
                 className={cn(
-                  "w-[22px] h-[22px] rounded-full object-cover transition-all duration-150",
-                  isProfileActive ? "ring-[1.5px] ring-foreground" : "opacity-50"
+                  "w-[22px] h-[22px] rounded-full object-cover transition-all duration-200",
+                  isProfileActive
+                    ? "ring-[1.5px] ring-foreground scale-110"
+                    : "opacity-45 group-active:opacity-70 group-active:scale-90"
                 )}
               />
             ) : (
               <div className={cn(
-                "w-[22px] h-[22px] rounded-full bg-muted-foreground/20 flex items-center justify-center transition-all duration-150",
-                isProfileActive && "ring-[1.5px] ring-foreground"
+                "w-[22px] h-[22px] rounded-full bg-muted-foreground/20 flex items-center justify-center transition-all duration-200",
+                isProfileActive
+                  ? "ring-[1.5px] ring-foreground scale-110"
+                  : "group-active:scale-90 group-active:bg-muted-foreground/30"
               )}>
                 <span className="text-[9px] text-muted-foreground font-bold">؟</span>
               </div>
@@ -114,5 +108,27 @@ export function BottomNav() {
         </div>
       </div>
     </nav>
+  );
+}
+
+/** Reusable nav item with tactile press feedback */
+function NavItem({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        "flex items-center justify-center flex-1 h-full focus:outline-none group transition-colors duration-200",
+        active ? "text-foreground" : "text-muted-foreground/45"
+      )}
+    >
+      <div className={cn(
+        "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
+        active
+          ? "bg-foreground/[0.06]"
+          : "group-active:scale-90 group-active:bg-foreground/[0.04]"
+      )}>
+        {children}
+      </div>
+    </Link>
   );
 }
