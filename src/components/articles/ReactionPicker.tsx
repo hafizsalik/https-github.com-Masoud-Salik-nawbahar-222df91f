@@ -38,11 +38,12 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
     return () => document.removeEventListener("pointerdown", handler);
   }, [open]);
 
-  // Like button: direct toggle
-  const handleLikeTap = (e: React.MouseEvent) => {
+  // Icon button: always opens picker
+  const handleIconTap = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onReact("like");
+    onHover?.();
+    setOpen((prev) => !prev);
   };
 
   // Summary text click: show details modal
