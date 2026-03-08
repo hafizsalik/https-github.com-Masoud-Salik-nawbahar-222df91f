@@ -86,7 +86,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
       const Icon = REACTION_ICONS[userReaction] || ThumbsUp;
       return (
         <span style={{ animation: "reaction-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both", color: icyText }}>
-          <Icon size={15} strokeWidth={1.5} />
+          <Icon size={15} fill="currentColor" strokeWidth={0} />
         </span>
       );
     }
@@ -95,12 +95,12 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
         <span className="flex items-center -space-x-1">
           {topTypes.slice(0, 2).map((type) => {
             const Icon = REACTION_ICONS[type] || ThumbsUp;
-            return <Icon key={type} size={13} strokeWidth={1.5} className="text-muted-foreground/50" />;
+            return <Icon key={type} size={13} fill="currentColor" strokeWidth={0} className="text-muted-foreground/35" />;
           })}
         </span>
       );
     }
-    return <ThumbsUp size={14} strokeWidth={1.5} />;
+    return <ThumbsUp size={14} fill="currentColor" strokeWidth={0} className="text-muted-foreground/40" />;
   };
 
   return (
