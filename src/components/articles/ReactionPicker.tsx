@@ -122,7 +122,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
             "text-[11px] truncate max-w-[150px] transition-colors duration-200",
             isReacted ? "" : "text-muted-foreground"
           )}
-          style={isReacted ? { color: icyText } : undefined}
+          style={isReacted ? { color: activeColor } : undefined}
         >
           {summaryText}
         </button>
