@@ -7,11 +7,22 @@ interface ReactionPickerProps {
   userReaction: ReactionKey | null;
   onReact: (type: ReactionKey) => void;
   onHover?: () => void;
-  /** Hide the text label next to the icon */
-  hideLabel?: boolean;
+  /** Emoji types to show as small badges after the icon */
+  summaryEmojis?: ReactionKey[];
+  /** Text to show after emojis (e.g. "شما، احمد و ۵ نفر دیگر") */
+  summaryText?: string;
+  /** Click handler for the summary text (opens details modal) */
+  onSummaryClick?: (e: React.MouseEvent) => void;
 }
 
-export function ReactionPicker({ userReaction, onReact, onHover, hideLabel }: ReactionPickerProps) {
+export function ReactionPicker({
+  userReaction,
+  onReact,
+  onHover,
+  summaryEmojis = [],
+  summaryText,
+  onSummaryClick,
+}: ReactionPickerProps) {
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const longPressRef = useRef(false);
@@ -71,6 +82,12 @@ export function ReactionPicker({ userReaction, onReact, onHover, hideLabel }: Re
     setOpen(false);
   };
 
+  const handleTextClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSummaryClick?.(e);
+  };
+
   useEffect(() => {
     return () => clearTimeout(timeoutRef.current);
   }, []);
@@ -86,19 +103,22 @@ export function ReactionPicker({ userReaction, onReact, onHover, hideLabel }: Re
     return () => document.removeEventListener("pointerdown", handler);
   }, [open]);
 
+  const hasReactions = summaryEmojis.length > 0;
+
   return (
     <div
       ref={containerRef}
-      className="relative"
+      className="relative flex items-center gap-1.5"
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
     >
+      {/* The reaction icon button (tap = like, long-press = picker) */}
       <button
         onClick={handleTap}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className={cn(
-          "flex items-center gap-1 text-[12px] transition-all duration-200",
+          "flex items-center transition-all duration-200",
           userReaction
             ? "text-foreground"
             : "text-muted-foreground hover:text-foreground"
@@ -109,13 +129,36 @@ export function ReactionPicker({ userReaction, onReact, onHover, hideLabel }: Re
         ) : (
           <ThumbsUp size={14} strokeWidth={1.5} />
         )}
-        {!hideLabel && (
-          <span className="text-[11.5px]">
-            {userReaction ? REACTION_LABELS[userReaction] : "پسند"}
-          </span>
-        )}
       </button>
 
+      {/* Summary: emoji badges + text */}
+      {summaryText && (
+        <button
+          onClick={onSummaryClick ? handleTextClick : handleTap}
+          className="flex items-center gap-1 min-w-0 hover:opacity-75 transition-opacity"
+        >
+          {hasReactions && (
+            <div className="flex items-center -space-x-1 flex-shrink-0">
+              {summaryEmojis.map((type) => (
+                <span
+                  key={type}
+                  className="w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9.5px] leading-none border-[1.5px] border-background"
+                  style={{ background: "hsl(var(--muted))" }}
+                  role="img"
+                  aria-label={type}
+                >
+                  {REACTION_EMOJIS[type]}
+                </span>
+              ))}
+            </div>
+          )}
+          <span className="text-[11px] text-muted-foreground/60 truncate max-w-[150px]">
+            {summaryText}
+          </span>
+        </button>
+      )}
+
+      {/* Emoji picker tray */}
       {open && (
         <div
           className="absolute bottom-full mb-2 left-0 flex items-center gap-0.5 rounded-full px-2 py-1.5 z-50 animate-scale-in"

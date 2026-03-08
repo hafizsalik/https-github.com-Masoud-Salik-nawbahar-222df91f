@@ -39,17 +39,11 @@ export function ArticleCardMetrics({
     ? topTypes.slice(0, 2)
     : (reactionCount > 0 ? ["like"] : []);
 
-  // Build the text that appears NEXT to the reaction button
-  // No reaction yet → "پسند"
-  // Has reactions → "شما، احمد سالک و ۱۰۰ نفر دیگر" with 1-2 emojis
-  const buildReactionLabel = (): { emojis: ReactionKey[]; text: string } => {
-    if (displayCount === 0) {
-      return { emojis: [], text: "پسند" };
-    }
+  const buildReactionLabel = (): string => {
+    if (displayCount === 0) return "پسند";
 
-    // Before full fetch, show count
     if (totalCount === 0 && reactionCount > 0) {
-      return { emojis: displayTopTypes, text: `${toPersianNumber(reactionCount)} نفر` };
+      return `${toPersianNumber(reactionCount)} نفر`;
     }
 
     const names: string[] = [];
@@ -57,23 +51,23 @@ export function ArticleCardMetrics({
     reactorNames.forEach((n) => { if (!names.includes(n)) names.push(n); });
 
     if (names.length === 0 && displayCount > 0) {
-      return { emojis: displayTopTypes, text: `${toPersianNumber(displayCount)} نفر` };
+      return `${toPersianNumber(displayCount)} نفر`;
     }
 
     const shown = names.slice(0, 2);
     const remaining = Math.max(displayCount - shown.length, 0);
     let text = shown.join("، ");
     if (remaining > 0) text += ` و ${toPersianNumber(remaining)} نفر دیگر`;
-
-    return { emojis: displayTopTypes, text };
+    return text;
   };
 
-  const { emojis, text: reactionText } = buildReactionLabel();
+  const reactionText = buildReactionLabel();
+  const hasReactions = displayCount > 0;
 
   const handleSummaryClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (displayCount > 0) {
+    if (hasReactions) {
       onReactionHover?.();
       setShowReactionDetails(true);
     }
@@ -98,40 +92,15 @@ export function ArticleCardMetrics({
               </span>
             </button>
 
-            {/* Reaction: picker button + inline summary */}
-            <div className="flex items-center gap-1.5">
-              <ReactionPicker
-                userReaction={userReaction}
-                onReact={onReact}
-                onHover={onReactionHover}
-                hideLabel
-              />
-
-              {/* Emoji badges + text label (replaces "پسند") */}
-              <button
-                onClick={displayCount > 0 ? handleSummaryClick : (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); onReact("like"); }}
-                className="flex items-center gap-1 hover:opacity-80 transition-opacity min-w-0"
-              >
-                {emojis.length > 0 && (
-                  <div className="flex items-center -space-x-1 flex-shrink-0">
-                    {emojis.map((type) => (
-                      <span
-                        key={type}
-                        className="w-[16px] h-[16px] flex items-center justify-center rounded-full text-[10px] leading-none border-[1.5px] border-background"
-                        style={{ background: "hsl(var(--muted))" }}
-                        role="img"
-                        aria-label={type}
-                      >
-                        {REACTION_EMOJIS[type]}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <span className="text-[11px] text-muted-foreground/60 truncate max-w-[150px]">
-                  {reactionText}
-                </span>
-              </button>
-            </div>
+            {/* Single reaction button: icon + emojis + text all together */}
+            <ReactionPicker
+              userReaction={userReaction}
+              onReact={onReact}
+              onHover={onReactionHover}
+              summaryEmojis={hasReactions ? displayTopTypes : []}
+              summaryText={reactionText}
+              onSummaryClick={hasReactions ? handleSummaryClick : undefined}
+            />
           </div>
 
           {isRead && (
