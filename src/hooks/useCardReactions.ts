@@ -5,19 +5,25 @@ export const REACTION_EMOJIS: Record<string, string> = {
   like: "👍",
   love: "❤️",
   insightful: "💡",
+  laugh: "😄",
+  sad: "😔",
 };
 
 export const REACTION_LABELS: Record<string, string> = {
   like: "پسند",
   love: "عالی",
   insightful: "آموزنده",
+  laugh: "سرگرم‌کننده",
+  sad: "تأسف‌بار",
 };
 
-/** Muted, editorial-grade colors per reaction */
+/** Muted, editorial-grade colors — LinkedIn-style restraint */
 export const REACTION_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
   like: { bg: "hsl(174 30% 30% / 0.08)", text: "hsl(174 30% 30%)", ring: "hsl(174 30% 30% / 0.15)" },
-  love: { bg: "hsl(0 40% 48% / 0.07)", text: "hsl(0 40% 48%)", ring: "hsl(0 40% 48% / 0.12)" },
-  insightful: { bg: "hsl(210 35% 45% / 0.07)", text: "hsl(210 35% 45%)", ring: "hsl(210 35% 45% / 0.12)" },
+  love: { bg: "hsl(0 35% 48% / 0.07)", text: "hsl(0 35% 48%)", ring: "hsl(0 35% 48% / 0.12)" },
+  insightful: { bg: "hsl(210 30% 45% / 0.07)", text: "hsl(210 30% 45%)", ring: "hsl(210 30% 45% / 0.12)" },
+  laugh: { bg: "hsl(38 30% 48% / 0.07)", text: "hsl(38 30% 42%)", ring: "hsl(38 30% 48% / 0.12)" },
+  sad: { bg: "hsl(220 15% 45% / 0.06)", text: "hsl(220 15% 45%)", ring: "hsl(220 15% 45% / 0.1)" },
 };
 
 export type ReactionKey = keyof typeof REACTION_EMOJIS;
