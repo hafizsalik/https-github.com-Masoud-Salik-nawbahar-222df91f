@@ -84,8 +84,7 @@ export function ArticleCardMetrics({
                 {topTypes.slice(0, 2).map((type) => (
                   <span
                     key={type}
-                    className="w-[18px] h-[18px] flex items-center justify-center rounded-full text-[12px] leading-none ring-[1.5px] ring-background"
-                    style={{ background: "hsl(var(--muted))" }}
+                    className="w-[20px] h-[20px] flex items-center justify-center text-[14px] leading-none"
                   >
                     {REACTION_EMOJIS[type]}
                   </span>
