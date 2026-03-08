@@ -81,7 +81,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
     <div ref={containerRef} className="relative flex items-center gap-1.5">
       {/* Reaction icon — shows emoji if reacted, ThumbsUp outline if not */}
       <button
-        onClick={handleLikeTap}
+        onClick={handleIconTap}
         className={cn(
           "flex items-center transition-all duration-200",
           isReacted ? "text-foreground" : "text-muted-foreground hover:text-foreground"
