@@ -341,7 +341,7 @@ const Profile = () => {
                         style={{ width: `${Math.min(100, profile.reputation_score)}%` }}
                       />
                     </div>
-                    <span className="text-[13px] font-semibold text-primary">{Math.round(profile.reputation_score)}</span>
+                    <span className="text-[13px] font-semibold text-primary">{toPersianNumber(Math.round(profile.reputation_score))}</span>
                   </div>
                 </div>
               )}
