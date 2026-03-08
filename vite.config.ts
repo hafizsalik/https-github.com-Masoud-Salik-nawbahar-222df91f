@@ -111,7 +111,7 @@ export default defineConfig(({ mode }) => ({
           },
         },
         handle_links: "preferred",
-        iarc_rating_id: "",
+        iarc_rating_id: "3a27595a-41bf-4f80-9b5a-e0c920a3b5a3",
         protocol_handlers: [
           {
             protocol: "web+nawbahar",
