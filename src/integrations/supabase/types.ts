@@ -224,6 +224,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
           like_count: number | null
           parent_id: string | null
           updated_at: string
@@ -234,6 +235,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
           like_count?: number | null
           parent_id?: string | null
           updated_at?: string
@@ -244,6 +246,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           like_count?: number | null
           parent_id?: string | null
           updated_at?: string

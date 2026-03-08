@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Send, ImagePlus, X, CornerUpRight, FileText, Bold, Italic, List, Quote, Hash, ShieldCheck, ShieldX, Loader2, Save, Clock, CalendarClock } from "lucide-react";
+import { ArrowRight, Send, ImagePlus, X, CornerUpRight, FileText, Bold, Italic, List, Quote, Hash, ShieldCheck, ShieldX, Loader2, Save, Clock, CalendarClock, Link2, Search } from "lucide-react";
 import { compressArticleImage } from "@/lib/imageCompression";
 import { sanitizeError, validation } from "@/lib/errorHandler";
 import { toPersianNumber } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
+import { useArticleSearch, addCitation } from "@/hooks/useCitations";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -53,6 +54,12 @@ const ArticleEditor = () => {
   // AI Review state
   const [reviewState, setReviewState] = useState<"idle" | "reviewing" | "result">("idle");
   const [aiResult, setAiResult] = useState<AIResult | null>(null);
+
+  // Citations state
+  const [citedArticles, setCitedArticles] = useState<{ id: string; title: string }[]>([]);
+  const [citationSearchQuery, setCitationSearchQuery] = useState("");
+  const [showCitationSearch, setShowCitationSearch] = useState(false);
+  const { results: citationResults, searching: citationSearching, searchArticles } = useArticleSearch();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textFileInputRef = useRef<HTMLInputElement>(null);
@@ -78,6 +85,15 @@ const ArticleEditor = () => {
               supabase.from("articles").select("id, title").eq("id", data.parent_article_id).maybeSingle()
                 .then(({ data: parent }) => { if (parent) setParentArticle(parent); });
             }
+          }
+        });
+      // Load existing citations
+      supabase.from("citations").select("cited_article_id").eq("source_article_id", editId)
+        .then(async ({ data }) => {
+          if (data && data.length > 0) {
+            const ids = data.map(c => c.cited_article_id);
+            const { data: articles } = await supabase.from("articles").select("id, title").in("id", ids);
+            if (articles) setCitedArticles(articles);
           }
         });
     }
@@ -140,7 +156,7 @@ const ArticleEditor = () => {
 
     try {
       // Step 1: Upload cover image if any
-      let coverImageUrl = coverPreview; // keep existing cover for edit mode
+      let coverImageUrl = coverPreview;
       if (coverImage) {
         const fileExt = coverImage.name.split('.').pop();
         const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -153,7 +169,6 @@ const ArticleEditor = () => {
       let articleId: string;
 
       if (isEditMode && editId) {
-        // Update existing article
         const { error } = await supabase.from("articles").update({
           title: title.trim(),
           content: content.trim(),
@@ -164,7 +179,6 @@ const ArticleEditor = () => {
         if (error) throw error;
         articleId = editId;
       } else {
-        // Insert new article as pending
         const { data: insertedArticle, error } = await supabase.from("articles").insert({
           title: title.trim(),
           content: content.trim(),
@@ -178,13 +192,23 @@ const ArticleEditor = () => {
         articleId = insertedArticle.id;
       }
 
-      // Step 3: Call AI evaluation (this will update status to published or rejected)
+      // Save citations
+      if (citedArticles.length > 0) {
+        // Remove old citations if editing
+        if (isEditMode && editId) {
+          await supabase.from("citations").delete().eq("source_article_id", editId);
+        }
+        for (const cited of citedArticles) {
+          await addCitation(articleId, cited.id);
+        }
+      }
+
+      // Step 3: Call AI evaluation
       const { data: evalData, error: evalError } = await supabase.functions.invoke("ai-score-article", {
         body: { title: title.trim(), content: content.trim(), articleId },
       });
 
       if (evalError) {
-        // If AI fails, still publish (fail-open for now)
         await supabase.from("articles").update({ status: "published" }).eq("id", articleId);
         toast({ title: "✅ مقاله منتشر شد", description: "ارزیابی هوش مصنوعی در دسترس نبود" });
         if (!responseToId && !isEditMode) localStorage.removeItem(DRAFT_KEY);
@@ -274,6 +298,26 @@ const ArticleEditor = () => {
       textarea.focus();
       textarea.setSelectionRange(start + prefix.length, end + prefix.length);
     }, 0);
+  };
+
+  // Citation search handler
+  const handleCitationSearch = (query: string) => {
+    setCitationSearchQuery(query);
+    if (query.length >= 2) {
+      searchArticles(query);
+    }
+  };
+
+  const addCitedArticle = (article: { id: string; title: string }) => {
+    if (!citedArticles.find(a => a.id === article.id)) {
+      setCitedArticles(prev => [...prev, article]);
+    }
+    setCitationSearchQuery("");
+    setShowCitationSearch(false);
+  };
+
+  const removeCitedArticle = (id: string) => {
+    setCitedArticles(prev => prev.filter(a => a.id !== id));
   };
 
   const scoreLabels = [
@@ -425,7 +469,7 @@ const ArticleEditor = () => {
               type="date"
               value={scheduledDate}
               onChange={(e) => setScheduledDate(e.target.value)}
-              className="h-7 px-2 text-xs bg-background border border-border rounded-md flex-1"
+              className="h-7 px-2 text-xs bg-background border border-border rounded-md"
             />
             <input
               type="time"
@@ -507,6 +551,81 @@ const ArticleEditor = () => {
             className="min-h-[50vh] border-0 resize-none px-0 focus-visible:ring-0 bg-transparent text-base"
             style={{ lineHeight: '2.2' }}
           />
+
+          {/* Citations / References Section */}
+          <div className="border-t border-border pt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Link2 size={16} className="text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">ارجاعات</span>
+                {citedArticles.length > 0 && (
+                  <span className="text-[10px] text-muted-foreground">({toPersianNumber(citedArticles.length)})</span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowCitationSearch(!showCitationSearch)}
+                className="text-[11px] text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+              >
+                <Search size={12} />
+                افزودن ارجاع
+              </button>
+            </div>
+
+            {/* Citation search */}
+            {showCitationSearch && (
+              <div className="space-y-2 animate-fade-in">
+                <Input
+                  placeholder="جستجوی مقاله برای ارجاع..."
+                  value={citationSearchQuery}
+                  onChange={(e) => handleCitationSearch(e.target.value)}
+                  className="h-9 text-sm"
+                  autoFocus
+                />
+                {citationSearching && (
+                  <div className="flex justify-center py-2">
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  </div>
+                )}
+                {citationResults.length > 0 && (
+                  <div className="border border-border/50 rounded-lg overflow-hidden divide-y divide-border/30 max-h-[200px] overflow-y-auto">
+                    {citationResults
+                      .filter(r => !citedArticles.find(c => c.id === r.id))
+                      .map(article => (
+                        <button
+                          key={article.id}
+                          onClick={() => addCitedArticle(article)}
+                          className="w-full text-right px-3 py-2 text-[12px] hover:bg-muted/50 transition-colors line-clamp-1"
+                        >
+                          {article.title}
+                        </button>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Cited articles list */}
+            {citedArticles.length > 0 && (
+              <div className="space-y-1.5">
+                {citedArticles.map((article, i) => (
+                  <div
+                    key={article.id}
+                    className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-lg border border-border/30"
+                  >
+                    <Link2 size={12} className="text-primary/50 shrink-0" />
+                    <span className="text-[12px] text-foreground flex-1 line-clamp-1">{article.title}</span>
+                    <button
+                      onClick={() => removeCitedArticle(article.id)}
+                      className="text-muted-foreground/40 hover:text-destructive transition-colors shrink-0"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Tags Section */}
           <div className="border-t border-border pt-4 space-y-3">

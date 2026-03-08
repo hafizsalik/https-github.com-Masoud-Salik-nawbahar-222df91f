@@ -9,6 +9,7 @@ export interface Comment {
   created_at: string;
   user_id: string;
   parent_id?: string | null;
+  image_url?: string | null;
   author?: {
     display_name: string;
     avatar_url: string | null;
@@ -46,7 +47,7 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
     
     const { data: commentsData, error } = await supabase
       .from("comments")
-      .select("id, content, created_at, user_id, parent_id")
+      .select("id, content, created_at, user_id, parent_id, image_url")
       .eq("article_id", articleId)
       .order("created_at", { ascending: true });
 
@@ -74,6 +75,7 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
         created_at: item.created_at,
         user_id: item.user_id,
         parent_id: item.parent_id,
+        image_url: (item as any).image_url || null,
         author: profile ? {
           display_name: profile.display_name,
           avatar_url: profile.avatar_url,
@@ -85,7 +87,7 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
     setLoading(false);
   };
 
-  const addComment = async (content: string, parentId?: string) => {
+  const addComment = async (content: string, parentId?: string, imageUrl?: string) => {
     if (!userId) {
       toast({
         title: "نیاز به ورود",
@@ -107,12 +109,15 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
 
     setSubmitting(true);
 
-    const { error } = await supabase.from("comments").insert({
+    const insertData: any = {
       article_id: articleId,
       user_id: userId,
       content: content.trim(),
       parent_id: parentId || null,
-    });
+    };
+    if (imageUrl) insertData.image_url = imageUrl;
+
+    const { error } = await supabase.from("comments").insert(insertData);
 
     if (error) {
       toast({
