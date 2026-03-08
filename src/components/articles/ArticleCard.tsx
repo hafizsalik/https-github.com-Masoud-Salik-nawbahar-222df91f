@@ -152,7 +152,6 @@ export function ArticleCard({ article, onDelete: _onDelete }: ArticleCardProps) 
           isRead={hasBeenRead}
           commentsOpen={showComments}
           tag={article.tags?.[0] || null}
-          latestCommentSnippet={commentSnippet}
           onCommentClick={handleCommentClick}
           onResponseClick={handleResponseClick}
         />
