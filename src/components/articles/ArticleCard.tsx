@@ -20,7 +20,7 @@ function calculateReadTime(content: string): string {
   return `${minutes} دقیقه`;
 }
 
-function getExcerpt(content: string, maxChars: number = 100): string {
+function getExcerpt(content: string, maxChars: number = 110): string {
   if (content.length <= maxChars) return content;
   return content.slice(0, maxChars).trim() + "…";
 }
@@ -33,6 +33,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   
   const viewCount = (article as any).view_count || 0;
+  const hasCover = !!article.cover_image_url;
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,7 +54,6 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   };
 
   const formatCount = (count: number) => count > 0 ? count : null;
-  const hasCover = !!article.cover_image_url;
 
   return (
     <article className="group">
@@ -69,42 +69,51 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
       )}
 
       <Link to={`/article/${article.id}`} className="block">
-        {/* Poster-style card with image */}
         {hasCover ? (
-          <div className="mx-4 mt-4 rounded-xl overflow-hidden relative">
-            {/* Image */}
-            <div className="aspect-[2.2/1] relative bg-muted/30">
-              {!imageLoaded && <div className="absolute inset-0 skeleton" />}
-              <img
-                src={article.cover_image_url!}
-                alt=""
-                className={cn(
-                  "w-full h-full object-cover transition-opacity duration-500",
-                  imageLoaded ? "opacity-100" : "opacity-0"
-                )}
-                loading="lazy"
-                decoding="async"
-                onLoad={() => setImageLoaded(true)}
-              />
-              {/* Gradient overlay from bottom */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-              
-              {/* Title overlaid on image */}
-              <div className="absolute bottom-0 right-0 left-0 p-4">
-                <h3 className="text-[15px] font-extrabold text-white leading-[1.8] line-clamp-2 tracking-tight drop-shadow-sm">
-                  {article.title}
-                </h3>
+          /* --- Card WITH image: poster + text below --- */
+          <div className="px-4 pt-4">
+            {/* Image with title overlay */}
+            <div className="rounded-t-xl overflow-hidden relative">
+              <div className="aspect-[2.6/1] relative bg-muted/30">
+                {!imageLoaded && <div className="absolute inset-0 skeleton" />}
+                <img
+                  src={article.cover_image_url!}
+                  alt=""
+                  className={cn(
+                    "w-full h-full object-cover transition-opacity duration-500",
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                  )}
+                  loading="lazy"
+                  decoding="async"
+                  onLoad={() => setImageLoaded(true)}
+                />
+                {/* Soft gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
+                
+                {/* Title on image */}
+                <div className="absolute bottom-0 right-0 left-0 px-4 pb-3">
+                  <h3 className="text-[14px] font-bold text-white leading-[1.8] line-clamp-2 drop-shadow-sm">
+                    {article.title}
+                  </h3>
+                </div>
               </div>
+            </div>
+            
+            {/* Excerpt below image — seamlessly connected */}
+            <div className="bg-secondary/40 rounded-b-xl px-4 py-2.5">
+              <p className="text-[12.5px] text-muted-foreground/70 leading-[1.9] line-clamp-2">
+                {getExcerpt(article.content, 110)}
+              </p>
             </div>
           </div>
         ) : (
-          /* No image — simple text card */
+          /* --- Card WITHOUT image: clean text --- */
           <div className="px-5 pt-4">
             <h3 className="text-[15px] font-extrabold text-foreground leading-[1.7] line-clamp-2 tracking-tight">
               {article.title}
             </h3>
             <p className="text-[13px] text-muted-foreground/60 leading-[1.8] line-clamp-2 mt-1">
-              {getExcerpt(article.content, 120)}
+              {getExcerpt(article.content, 130)}
             </p>
           </div>
         )}
@@ -132,7 +141,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
                 </span>
               </div>
             )}
-            <span className="text-[12px] text-foreground/70 group-hover/author:text-primary transition-colors font-medium truncate max-w-[100px]">
+            <span className="text-[12px] text-foreground/70 group-hover/author:text-primary transition-colors font-medium truncate max-w-[90px]">
               {article.author?.display_name}
             </span>
           </button>
