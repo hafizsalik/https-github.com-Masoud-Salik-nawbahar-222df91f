@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => ({
         dir: "rtl",
         lang: "fa-AF",
         prefer_related_applications: false,
+        related_applications: [],
         categories: ["news", "social", "education", "lifestyle"],
         icons: [
           {
@@ -110,7 +111,7 @@ export default defineConfig(({ mode }) => ({
           },
         },
         handle_links: "preferred",
-        iarc_rating_id: "",
+        iarc_rating_id: "3a27595a-41bf-4f80-9b5a-e0c920a3b5a3",
         protocol_handlers: [
           {
             protocol: "web+nawbahar",
@@ -120,6 +121,9 @@ export default defineConfig(({ mode }) => ({
         launch_handler: {
           client_mode: ["navigate-existing", "auto"],
         },
+        scope_extensions: [
+          { origin: "https://nawbahar.lovable.app" },
+        ],
         edge_side_panel: {
           preferred_width: 400,
         },
