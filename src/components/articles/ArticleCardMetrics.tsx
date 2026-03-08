@@ -1,4 +1,4 @@
-import { Eye, MessageCircle, ThumbsDown, CheckCheck } from "lucide-react";
+import { Eye, MessageCircle, ChevronDown, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ArticleCardMetricsProps {
@@ -20,18 +20,12 @@ export function ArticleCardMetrics({
   tag,
   onCommentClick,
 }: ArticleCardMetricsProps) {
-  const stop = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
   return (
-    <div className="mt-3">
+    <div className="mt-2.5">
       <div className="flex items-center justify-between">
-        {/* Left: subtle filled icons */}
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1 text-[11px] text-foreground/50">
-            <Eye size={14} strokeWidth={0} fill="currentColor" />
+        <div className="flex items-center gap-3.5">
+          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Eye size={13} strokeWidth={1.6} />
             {viewCount > 0 && <span>{viewCount}</span>}
           </span>
 
@@ -40,29 +34,29 @@ export function ArticleCardMetrics({
             className={cn(
               "flex items-center gap-1 text-[11px] transition-colors",
               commentsOpen
-                ? "text-foreground/60"
-                : "text-foreground/50 hover:text-foreground/60"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground/70"
             )}
           >
-            <MessageCircle size={14} strokeWidth={0} fill="currentColor" />
+            <MessageCircle size={13} strokeWidth={1.6} />
             {commentCount > 0 && <span>{commentCount}</span>}
           </button>
 
           <button
-            onClick={stop}
-            className="text-foreground/50 hover:text-foreground/60 transition-colors"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            className="text-muted-foreground hover:text-foreground/70 transition-colors"
+            aria-label="بیشتر"
           >
-            <ThumbsDown size={13} strokeWidth={0} fill="currentColor" />
+            <ChevronDown size={14} strokeWidth={1.6} />
           </button>
 
           {isRead && (
-            <CheckCheck size={12} strokeWidth={2.2} className="text-primary/40" />
+            <CheckCheck size={11} strokeWidth={2} className="text-primary/50" />
           )}
         </div>
 
-        {/* Right: tag */}
         {tag && (
-          <span className="bg-secondary/50 text-muted-foreground/50 px-2.5 py-[3px] rounded-full text-[10px] font-medium">
+          <span className="text-muted-foreground/60 text-[10px] font-medium">
             {tag}
           </span>
         )}
