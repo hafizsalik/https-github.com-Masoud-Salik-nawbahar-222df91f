@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { useComments } from "@/hooks/useComments";
 import { useResponseArticles } from "@/hooks/useResponseArticles";
+import { useCardReactions } from "@/hooks/useCardReactions";
 import { ArticleActionsMenu } from "./ArticleActionsMenu";
 import { cn } from "@/lib/utils";
 import { SlideDownComments } from "./SlideDownComments";
