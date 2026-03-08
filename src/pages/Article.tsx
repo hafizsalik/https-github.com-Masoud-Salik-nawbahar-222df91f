@@ -6,7 +6,7 @@ import { formatSolarShort } from "@/lib/solarHijri";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useComments } from "@/hooks/useComments";
-import { useReactions } from "@/hooks/useReactions";
+import { useCardReactions } from "@/hooks/useCardReactions";
 import { useResponseArticles } from "@/hooks/useResponseArticles";
 import { useViewCount } from "@/hooks/useViewCount";
 import { useEngagementTracking } from "@/hooks/useEngagementTracking";
