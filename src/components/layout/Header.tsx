@@ -98,8 +98,8 @@ export function Header() {
 
             {menuOpen && (
               <div className="absolute left-0 top-full mt-1.5 w-52 bg-card border border-border rounded-xl shadow-lg animate-scale-in origin-top-left z-50 overflow-hidden">
-                {/* Theme + Text Size compact row */}
-                <div className="px-3 py-2.5 flex items-center justify-between border-b border-border/50">
+                {/* Theme toggle */}
+                <div className="px-3 py-2.5 border-b border-border/50">
                   <button
                     onClick={() => setIsDark(!isDark)}
                     className={cn(
@@ -110,22 +110,6 @@ export function Header() {
                     {isDark ? <Moon size={13} strokeWidth={1.5} /> : <Sun size={13} strokeWidth={1.5} />}
                     {isDark ? "تاریک" : "روشن"}
                   </button>
-                  <div className="flex gap-0.5">
-                    {textSizes.map((ts) => (
-                      <button
-                        key={ts.key}
-                        onClick={() => setTextSize(ts.key)}
-                        className={cn(
-                          "w-6 h-6 rounded-md text-[10px] font-medium transition-all",
-                          textSize === ts.key
-                            ? "bg-foreground text-background"
-                            : "bg-muted/60 text-muted-foreground hover:bg-muted"
-                        )}
-                      >
-                        {ts.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {isAdmin && (
