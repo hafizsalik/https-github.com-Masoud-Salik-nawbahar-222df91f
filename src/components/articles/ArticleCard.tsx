@@ -7,7 +7,7 @@ import { useResponseArticles } from "@/hooks/useResponseArticles";
 import { ArticleActionsMenu } from "./ArticleActionsMenu";
 import { cn } from "@/lib/utils";
 import { SlideDownComments } from "./SlideDownComments";
-import { gregorianToSolar } from "@/lib/solarHijri";
+import { formatSolarShort } from "@/lib/solarHijri";
 import { ArticleCardMetrics } from "./ArticleCardMetrics";
 
 interface ArticleCardProps {
