@@ -536,7 +536,9 @@ export type Database = {
     }
     Functions: {
       get_follower_count: { Args: { target_user_id: string }; Returns: number }
+      get_follower_ids: { Args: { target_user_id: string }; Returns: string[] }
       get_following_count: { Args: { target_user_id: string }; Returns: number }
+      get_following_ids: { Args: { target_user_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
