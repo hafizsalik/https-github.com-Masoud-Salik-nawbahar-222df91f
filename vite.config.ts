@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "نوبهار - جامعه نخبگان",
         short_name: "نوبهار",
-        description: "پلتفرم انتشار محتوای تخصصی برای نخبگان ایرانی. مقالات علمی، تحلیلی و فرهنگی با کیفیت بالا.",
+        description: "پلتفرم انتشار محتوای تخصصی برای نخبگان افغانستانی. مقالات علمی، تحلیلی و فرهنگی با کیفیت بالا.",
         start_url: "/",
         id: "/",
         scope: "/",
@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#0f766e",
         orientation: "portrait-primary",
         dir: "rtl",
-        lang: "fa-IR",
+        lang: "fa-AF",
         prefer_related_applications: false,
         categories: ["news", "social", "education", "lifestyle"],
         icons: [

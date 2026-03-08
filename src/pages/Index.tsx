@@ -18,8 +18,8 @@ const Index = () => {
           name: "نوبهار",
           alternateName: "Nawbahar",
           url: "https://nawbahar.lovable.app",
-          description: "پلتفرم انتشار محتوای تخصصی برای نخبگان ایرانی",
-          inLanguage: "fa-IR",
+          description: "پلتفرم انتشار محتوای تخصصی برای نخبگان افغانستانی",
+          inLanguage: "fa-AF",
           potentialAction: {
             "@type": "SearchAction",
             target: "https://nawbahar.lovable.app/explore?q={search_term_string}",

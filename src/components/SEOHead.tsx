@@ -15,7 +15,7 @@ const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploa
 
 export function SEOHead({
   title,
-  description = "پلتفرم انتشار محتوای تخصصی برای نخبگان ایرانی. مقالات علمی، تحلیلی و فرهنگی با کیفیت بالا.",
+  description = "پلتفرم انتشار محتوای تخصصی برای نخبگان افغانستانی. مقالات علمی، تحلیلی و فرهنگی با کیفیت بالا.",
   ogImage = DEFAULT_OG_IMAGE,
   ogUrl,
   ogType = "website",
