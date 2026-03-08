@@ -86,7 +86,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         </Link>
       )}
 
-      <Link to={`/article/${article.id}`} className="block px-5 pt-5 pb-1">
+      <Link to={`/article/${article.id}`} className="block px-5 pt-6 pb-2 transition-colors hover:bg-muted/10">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-1.5 group/author min-w-0">
             <button onClick={handleAuthorClick} className="flex items-center gap-1.5 min-w-0">
