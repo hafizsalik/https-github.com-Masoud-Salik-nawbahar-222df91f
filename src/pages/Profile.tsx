@@ -94,22 +94,34 @@ const Profile = () => {
         {profile && (
           <div className="px-5 pt-6 pb-3">
             {/* Row 1: Avatar + Name · Specialty */}
-            <div className="flex items-center gap-3.5">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.display_name}
-                  className="w-[52px] h-[52px] rounded-full object-cover ring-2 ring-border/50"
-                />
-              ) : (
-                <div className="w-[52px] h-[52px] rounded-full bg-muted flex items-center justify-center ring-2 ring-border/50">
-                  <span className="text-primary font-bold text-[18px]">
-                    {profile.display_name?.charAt(0)}
-                  </span>
-                </div>
-              )}
+            <div className="flex gap-3.5">
+              {/* Avatar + Edit below */}
+              <div className="flex flex-col items-center shrink-0">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.display_name}
+                    className="w-[52px] h-[52px] rounded-full object-cover ring-2 ring-border/50"
+                  />
+                ) : (
+                  <div className="w-[52px] h-[52px] rounded-full bg-muted flex items-center justify-center ring-2 ring-border/50">
+                    <span className="text-primary font-bold text-[18px]">
+                      {profile.display_name?.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setEditModalOpen(true)}
+                    className="text-[10px] text-primary/70 hover:text-primary mt-1.5 transition-colors"
+                  >
+                    ویرایش
+                  </button>
+                )}
+              </div>
 
-              <div className="flex-1 min-w-0">
+              {/* Name + Stats + Social */}
+              <div className="flex-1 min-w-0 pt-0.5">
                 <h1 className="text-[15px] font-extrabold text-foreground leading-tight truncate">
                   {profile.display_name}
                   {profile.specialty && (
@@ -137,52 +149,31 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
 
-            {/* Social links + Edit button row */}
-            <div className="flex items-center gap-1.5 mt-3 mr-[68px]">
-              {isOwnProfile && (
-                <button
-                  onClick={() => setEditModalOpen(true)}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all"
-                >
-                  ویرایش پروفایل
-                </button>
-              )}
-              {profile.whatsapp_number && (
-                <a
-                  href={`https://wa.me/${encodeURIComponent(profile.whatsapp_number)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all"
-                >
-                  <WhatsApp size={11} strokeWidth={1.5} />
-                  <span>واتساپ</span>
-                </a>
-              )}
-              {profile.facebook_url && (
-                <a
-                  href={profile.facebook_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all"
-                >
-                  <Facebook size={11} strokeWidth={1.5} />
-                  <span>فیسبوک</span>
-                </a>
-              )}
-              {profile.linkedin_url && (
-                <a
-                  href={profile.linkedin_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all"
-                >
-                  <Linkedin size={11} strokeWidth={1.5} />
-                  <span>لینکدین</span>
-                </a>
-              )}
+                {/* Social links */}
+                {(profile.whatsapp_number || profile.facebook_url || profile.linkedin_url) && (
+                  <div className="flex items-center gap-1.5 mt-2">
+                    {profile.whatsapp_number && (
+                      <a href={`https://wa.me/${encodeURIComponent(profile.whatsapp_number)}`} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all">
+                        <WhatsApp size={11} strokeWidth={1.5} /><span>واتساپ</span>
+                      </a>
+                    )}
+                    {profile.facebook_url && (
+                      <a href={profile.facebook_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all">
+                        <Facebook size={11} strokeWidth={1.5} /><span>فیسبوک</span>
+                      </a>
+                    )}
+                    {profile.linkedin_url && (
+                      <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all">
+                        <Linkedin size={11} strokeWidth={1.5} /><span>لینکدین</span>
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
