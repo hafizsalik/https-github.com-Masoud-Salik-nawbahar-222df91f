@@ -107,7 +107,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
       {/* Summary text — always muted to match comment text */}
       <button
         onClick={handleSummaryClick}
-        className="text-[11px] truncate max-w-[150px] text-muted-foreground hover:text-foreground transition-colors duration-200"
+        className="text-[10.5px] sm:text-[11px] truncate max-w-[120px] sm:max-w-[150px] text-muted-foreground hover:text-foreground transition-colors duration-200"
       >
         {summaryText || "واکنش"}
       </button>
