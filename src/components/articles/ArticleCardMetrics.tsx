@@ -41,7 +41,7 @@ export function ArticleCardMetrics({
             className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-accent transition-colors"
             title="پسندیدن"
           >
-            <Hand size={15} strokeWidth={1.5} />
+            <Hand size={15} strokeWidth={1.5} className="rotate-[-25deg]" />
           </button>
 
           {isRead && (
