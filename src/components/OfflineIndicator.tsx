@@ -11,7 +11,6 @@ export function OfflineIndicator() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Show install banner after 30 seconds if installable and not dismissed
     const dismissedAt = localStorage.getItem('pwa-install-dismissed');
     if (dismissedAt) {
       const daysSinceDismissed = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
@@ -43,25 +42,27 @@ export function OfflineIndicator() {
 
   return (
     <>
-      {/* Offline Indicator */}
+      {/* Offline Banner — subtle top bar */}
       {!isOnline && (
-        <div className="fixed top-14 left-0 right-0 z-50 bg-destructive text-destructive-foreground py-2 px-4 text-center text-sm flex items-center justify-center gap-2 animate-fade-in">
-          <WifiOff size={16} />
-          <span>شما آفلاین هستید. در حال نمایش محتوای ذخیره شده...</span>
+        <div className="fixed top-11 left-0 right-0 z-50 animate-slide-down">
+          <div className="bg-muted/95 backdrop-blur-sm border-b border-border py-1.5 px-4 flex items-center justify-center gap-2">
+            <WifiOff size={13} strokeWidth={1.5} className="text-muted-foreground" />
+            <span className="text-[11px] text-muted-foreground font-medium">آفلاین — نمایش محتوای ذخیره‌شده</span>
+          </div>
         </div>
       )}
 
       {/* Install Banner */}
       {showInstallBanner && isOnline && (
-        <div className="fixed bottom-20 left-4 right-4 z-50 bg-card border border-border rounded-xl shadow-lg p-4 animate-fade-in safe-bottom">
+        <div className="fixed bottom-20 left-4 right-4 z-50 bg-card border border-border rounded-xl shadow-lg p-4 animate-slide-up safe-bottom">
           <div className="flex items-start gap-3">
             <div className="bg-primary/10 p-2 rounded-lg shrink-0">
               <Download className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground mb-1">نوبهار را نصب کنید</h3>
-              <p className="text-sm text-muted-foreground">
-                اپلیکیشن را نصب کنید برای دسترسی سریع‌تر و تجربه بهتر
+              <h3 className="font-semibold text-foreground text-[13px] mb-0.5">نوبهار را نصب کنید</h3>
+              <p className="text-[11.5px] text-muted-foreground">
+                دسترسی سریع‌تر و تجربه بهتر
               </p>
             </div>
             <button
@@ -69,14 +70,14 @@ export function OfflineIndicator() {
               className="p-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
               aria-label="بستن"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
           <div className="flex gap-2 mt-3">
             <Button 
               onClick={handleInstall} 
               size="sm" 
-              className="flex-1"
+              className="flex-1 h-8 text-[12px]"
             >
               نصب اپلیکیشن
             </Button>
@@ -84,6 +85,7 @@ export function OfflineIndicator() {
               onClick={handleDismiss} 
               variant="outline" 
               size="sm"
+              className="h-8 text-[12px]"
             >
               بعداً
             </Button>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Search, TrendingUp, Hash, X, User, Info } from "lucide-react";
+import { Search, TrendingUp, Hash, X, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { usePublishedArticles } from "@/hooks/useArticles";
@@ -232,13 +232,6 @@ const Explore = () => {
           </div>
         )}
 
-        {/* About link */}
-        <div className="px-5 py-4 border-t border-border/40">
-          <Link to="/about" className="flex items-center gap-1.5 text-[11px] text-muted-foreground/30 hover:text-foreground transition-colors">
-            <Info size={12} />
-            <span>درباره نوبهار</span>
-          </Link>
-        </div>
       </div>
     </AppLayout>
   );

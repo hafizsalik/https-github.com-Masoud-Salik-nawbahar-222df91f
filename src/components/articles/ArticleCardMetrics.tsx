@@ -41,14 +41,14 @@ export function ArticleCardMetrics({
     if (displayCount === 0) return null;
     // If full data not fetched yet, just show count
     if (totalCount === 0 && reactionCount > 0) {
-      return `${toPersianNumber(reactionCount)} واکنش`;
+      return `${toPersianNumber(reactionCount)} نفر`;
     }
     const names = [...reactorNames];
     if (userReaction) names.unshift("شما");
     const displayNames = names.slice(0, 2);
     const remaining = displayCount - displayNames.length;
-    if (displayNames.length === 0 && remaining > 0) return `${toPersianNumber(remaining)} واکنش`;
-    let text = displayNames.join(" و ");
+    if (displayNames.length === 0 && remaining > 0) return `${toPersianNumber(remaining)} نفر`;
+    let text = displayNames.join("، ");
     if (remaining > 0) text += ` و ${toPersianNumber(remaining)} نفر دیگر`;
     return text;
   };
@@ -65,7 +65,7 @@ export function ArticleCardMetrics({
   return (
     <>
       <div className="mt-3 pb-4">
-        <div className="flex items-center">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={onCommentClick}
@@ -85,38 +85,39 @@ export function ArticleCardMetrics({
               onReact={onReact}
               onHover={onReactionHover}
             />
-
-            {displayCount > 0 && (
-              <button
-                onClick={handleReactionSummaryClick}
-                className="flex items-center gap-1 hover:opacity-80 transition-opacity"
-              >
-                {topTypes.length > 0 && (
-                  <div className="flex items-center gap-px">
-                    {topTypes.slice(0, 2).map((type) => (
-                      <span
-                        key={type}
-                        className="text-base leading-none"
-                        role="img"
-                        aria-label={type}
-                      >
-                        {REACTION_EMOJIS[type]}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {reactorText && (
-                  <span className="text-[10.5px] text-muted-foreground/50 truncate max-w-[120px] mr-0.5">
-                    {reactorText}
-                  </span>
-                )}
-              </button>
-            )}
-
-            {isRead && (
-              <CheckCheck size={12} strokeWidth={2} className="text-primary/35" />
-            )}
           </div>
+
+          {/* Reaction summary — right side */}
+          {displayCount > 0 && (
+            <button
+              onClick={handleReactionSummaryClick}
+              className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+            >
+              {topTypes.length > 0 && (
+                <div className="flex items-center -space-x-0.5">
+                  {topTypes.slice(0, 2).map((type) => (
+                    <span
+                      key={type}
+                      className="text-[13px] leading-none"
+                      role="img"
+                      aria-label={type}
+                    >
+                      {REACTION_EMOJIS[type]}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {reactorText && (
+                <span className="text-[10px] text-muted-foreground/50 truncate max-w-[140px] mr-1">
+                  {reactorText}
+                </span>
+              )}
+            </button>
+          )}
+
+          {isRead && (
+            <CheckCheck size={12} strokeWidth={2} className="text-primary/35" />
+          )}
         </div>
       </div>
 

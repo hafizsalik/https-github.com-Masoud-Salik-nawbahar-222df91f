@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
+import { OfflineFallback } from "@/components/OfflineFallback";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -100,6 +101,7 @@ const Notifications = () => {
   return (
     <AppLayout>
       <SEOHead title="اعلانات" description="اعلانات نوبهار" ogUrl="/notifications" noIndex />
+      <OfflineFallback>
       <div className="min-h-screen animate-fade-in">
         {/* Header */}
         <div className="sticky top-11 z-30 bg-background border-b border-border px-5 py-3 flex items-center justify-between">
@@ -225,6 +227,7 @@ const Notifications = () => {
           </div>
         )}
       </div>
+      </OfflineFallback>
     </AppLayout>
   );
 };
