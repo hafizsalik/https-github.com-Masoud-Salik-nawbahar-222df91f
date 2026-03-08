@@ -67,7 +67,7 @@ export function ArticleCardMetrics({
             onClick={stop}
             className="text-foreground/40 hover:text-foreground/65 transition-colors"
           >
-            <ThumbsDown size={14} strokeWidth={1.7} fill="currentColor" className="opacity-60" />
+            <ThumbsDown size={14} strokeWidth={0} fill="currentColor" />
           </button>
 
           {isRead && (
