@@ -47,6 +47,13 @@ function getNotificationText(type: string, actorName: string, articleTitle?: str
           <strong className="font-medium">{actorName}</strong> شما را دنبال کرد
         </>
       );
+    case "new_article":
+      return (
+        <>
+          <strong className="font-medium">{actorName}</strong> مقاله جدیدی منتشر کرد
+          {articleTitle && <span className="text-muted-foreground/60 block text-[11px] mt-0.5 line-clamp-1">«{articleTitle}»</span>}
+        </>
+      );
     default:
       return <span>اعلان جدید</span>;
   }
