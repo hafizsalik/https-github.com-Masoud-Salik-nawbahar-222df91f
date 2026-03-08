@@ -11,6 +11,10 @@ export interface FeedArticle {
   save_count: number;
   author_id: string;
   view_count: number;
+  comment_count: number;
+  reaction_count: number;
+  parent_article_id: string | null;
+  parent_title?: string | null;
   author?: {
     display_name: string;
     avatar_url: string | null;
@@ -34,7 +38,7 @@ export function usePublishedArticles() {
 
     const { data: articlesData, error: articlesError } = await supabase
       .from("articles")
-      .select("id, title, content, cover_image_url, tags, created_at, save_count, view_count, author_id")
+      .select("id, title, content, cover_image_url, tags, created_at, save_count, view_count, author_id, comment_count, reaction_count, parent_article_id")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .range(offset, offset + PAGE_SIZE - 1);
@@ -53,11 +57,21 @@ export function usePublishedArticles() {
     // Get unique author IDs
     const authorIds = [...new Set(data.map(a => a.author_id))];
     
-    const { data: profilesData } = authorIds.length > 0
-      ? await supabase.from("profiles").select("id, display_name, avatar_url, specialty, reputation_score").in("id", authorIds)
-      : { data: [] };
+    // Get unique parent article IDs for response articles
+    const parentIds = [...new Set(data.map(a => a.parent_article_id).filter(Boolean))] as string[];
 
-    const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+    // Batch fetch authors and parent titles in parallel
+    const [profilesResult, parentsResult] = await Promise.all([
+      authorIds.length > 0
+        ? supabase.from("profiles").select("id, display_name, avatar_url, specialty, reputation_score").in("id", authorIds)
+        : { data: [] },
+      parentIds.length > 0
+        ? supabase.from("articles").select("id, title").in("id", parentIds)
+        : { data: [] },
+    ]);
+
+    const profilesMap = new Map((profilesResult.data || []).map(p => [p.id, p]));
+    const parentsMap = new Map((parentsResult.data || []).map(p => [p.id, p.title]));
 
     const transformed: FeedArticle[] = data.map((item) => {
       const profile = profilesMap.get(item.author_id);
@@ -70,6 +84,10 @@ export function usePublishedArticles() {
         created_at: item.created_at,
         save_count: item.save_count || 0,
         view_count: item.view_count || 0,
+        comment_count: item.comment_count || 0,
+        reaction_count: item.reaction_count || 0,
+        parent_article_id: item.parent_article_id,
+        parent_title: item.parent_article_id ? parentsMap.get(item.parent_article_id) || null : null,
         author_id: item.author_id,
         author: profile ? {
           display_name: profile.display_name,

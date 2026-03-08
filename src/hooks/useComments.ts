@@ -15,17 +15,26 @@ export interface Comment {
   };
 }
 
-export function useComments(articleId: string) {
+interface UseCommentsOptions {
+  lazy?: boolean;
+}
+
+export function useComments(articleId: string, options?: UseCommentsOptions) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
+  const lazy = options?.lazy ?? false;
 
   useEffect(() => {
     checkAuth();
-    fetchComments();
-  }, [articleId]);
+    if (!lazy) {
+      fetchComments();
+    } else {
+      setLoading(false);
+    }
+  }, [articleId, lazy]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -35,7 +44,6 @@ export function useComments(articleId: string) {
   const fetchComments = async () => {
     setLoading(true);
     
-    // Fetch comments including parent_id for nested replies
     const { data: commentsData, error } = await supabase
       .from("comments")
       .select("id, content, created_at, user_id, parent_id")
@@ -47,10 +55,8 @@ export function useComments(articleId: string) {
       return;
     }
 
-    // Get unique user IDs
     const userIds = [...new Set(commentsData.map(c => c.user_id))];
     
-    // Fetch profiles for those users
     const { data: profilesData } = await supabase
       .from("profiles")
       .select("id, display_name, avatar_url")
@@ -89,7 +95,6 @@ export function useComments(articleId: string) {
       return false;
     }
 
-    // Validate comment content
     const commentError = validation.comment.validate(content);
     if (commentError) {
       toast({

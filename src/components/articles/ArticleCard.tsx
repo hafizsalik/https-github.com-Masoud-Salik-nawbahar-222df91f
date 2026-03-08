@@ -1,9 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { CornerUpRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { useComments } from "@/hooks/useComments";
-import { useResponseArticles } from "@/hooks/useResponseArticles";
 import { useCardReactions } from "@/hooks/useCardReactions";
 import { ArticleActionsMenu } from "./ArticleActionsMenu";
 import { FollowButton } from "@/components/FollowButton";
@@ -16,12 +15,6 @@ import defaultCover from "@/assets/default-cover.jpg";
 interface ArticleCardProps {
   article: FeedArticle;
   onDelete?: () => void;
-}
-
-function calculateReadTime(content: string): string {
-  const words = content.split(/\s+/).length;
-  const minutes = Math.max(1, Math.ceil(words / 200));
-  return `${minutes} دقیقه`;
 }
 
 function getExcerpt(content: string, maxChars: number = 110): string {
@@ -39,6 +32,10 @@ function isArticleRead(articleId: string): boolean {
 
 export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   const navigate = useNavigate();
+  const [showComments, setShowComments] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Lazy-load comments only when panel is opened
   const {
     comments,
     loading: commentsLoading,
@@ -47,13 +44,12 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
     deleteComment,
     refetch: refetchComments,
     submitting,
-  } = useComments(article.id);
-  const { responseCount, parentArticle } = useResponseArticles(article.id);
-  const { summary: reactionSummary, toggleReaction } = useCardReactions(article.id);
-  const [showComments, setShowComments] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  } = useComments(article.id, { lazy: !showComments });
 
-  const viewCount = (article as any).view_count || 0;
+  // Lazy-load full reaction data only when needed (picker interaction)
+  const { summary: reactionSummary, toggleReaction } = useCardReactions(article.id);
+
+  const viewCount = article.view_count || 0;
   const coverImage = article.cover_image_url || defaultCover;
   const hasBeenRead = useMemo(() => isArticleRead(article.id), [article.id]);
 
@@ -63,11 +59,11 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
     navigate(`/profile/${article.author_id}`);
   };
 
-  const handleCommentClick = (e: React.MouseEvent) => {
+  const handleCommentClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShowComments(!showComments);
-  };
+    setShowComments(prev => !prev);
+  }, []);
 
   const handleResponseClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -77,15 +73,15 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
 
   return (
     <article className="group">
-      {parentArticle && (
+      {article.parent_title && article.parent_article_id && (
         <Link
-          to={`/article/${parentArticle.id}`}
+          to={`/article/${article.parent_article_id}`}
           className="flex items-center gap-1.5 px-5 pt-3 text-[11px] text-muted-foreground/50 hover:text-primary transition-colors"
         >
           <CornerUpRight size={10} strokeWidth={1.5} className="text-primary/40" />
           <span>
-            پاسخ به: {parentArticle.title.slice(0, 35)}
-            {parentArticle.title.length > 35 ? "…" : ""}
+            پاسخ به: {article.parent_title.slice(0, 35)}
+            {article.parent_title.length > 35 ? "…" : ""}
           </span>
         </Link>
       )}
@@ -157,8 +153,8 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         <ArticleCardMetrics
           articleId={article.id}
           viewCount={viewCount}
-          commentCount={comments.length}
-          responseCount={responseCount}
+          commentCount={article.comment_count}
+          responseCount={0}
           isRead={hasBeenRead}
           commentsOpen={showComments}
           onCommentClick={handleCommentClick}
