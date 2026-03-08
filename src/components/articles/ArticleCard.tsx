@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { useComments } from "@/hooks/useComments";
 import { useResponseArticles } from "@/hooks/useResponseArticles";
+import { useCardReactions } from "@/hooks/useCardReactions";
 import { ArticleActionsMenu } from "./ArticleActionsMenu";
 import { cn } from "@/lib/utils";
 import { SlideDownComments } from "./SlideDownComments";
@@ -47,6 +48,7 @@ export function ArticleCard({ article, onDelete: _onDelete }: ArticleCardProps) 
     submitting,
   } = useComments(article.id);
   const { responseCount, parentArticle } = useResponseArticles(article.id);
+  const { summary: reactionSummary, toggleReaction } = useCardReactions(article.id);
   const [showComments, setShowComments] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -155,6 +157,8 @@ export function ArticleCard({ article, onDelete: _onDelete }: ArticleCardProps) 
           tag={article.tags?.[0] || null}
           onCommentClick={handleCommentClick}
           onResponseClick={handleResponseClick}
+          reactionSummary={reactionSummary}
+          onReact={(type) => { toggleReaction(type); }}
         />
       </Link>
 
