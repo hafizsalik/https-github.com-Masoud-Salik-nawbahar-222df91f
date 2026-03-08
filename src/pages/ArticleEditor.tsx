@@ -329,6 +329,68 @@ const ArticleEditor = () => {
     setCitedArticles(prev => prev.filter(a => a.id !== id));
   };
 
+  // Proofreading
+  const handleProofread = async () => {
+    if (!content.trim() || content.trim().length < 10) {
+      toast({ title: "متن کوتاه است", description: "حداقل چند جمله بنویسید", variant: "destructive" });
+      return;
+    }
+    setProofLoading(true);
+    setProofActive(true);
+    setProofIssues([]);
+    setSelectedIssue(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-proofread", {
+        body: { text: content },
+      });
+      if (error) throw error;
+      setProofIssues(data?.issues || []);
+      if (!data?.issues?.length) {
+        toast({ title: "✅ متن شما مشکلی ندارد!" });
+      }
+    } catch {
+      toast({ title: "خطا در بررسی ویراستاری", variant: "destructive" });
+      setProofActive(false);
+    } finally {
+      setProofLoading(false);
+    }
+  };
+
+  const applyProofFix = (issue: ProofIssue) => {
+    setContent(prev => prev.replace(issue.word, issue.suggestion));
+    setProofIssues(prev => prev.filter(i => i.word !== issue.word));
+    setSelectedIssue(null);
+  };
+
+  const dismissProofIssue = (issue: ProofIssue) => {
+    setProofIssues(prev => prev.filter(i => i.word !== issue.word));
+    setSelectedIssue(null);
+  };
+
+  // Build highlighted content for proofreading overlay
+  const getHighlightedContent = () => {
+    if (!proofActive || proofIssues.length === 0) return null;
+    let result = content;
+    const parts: { text: string; issue?: ProofIssue }[] = [];
+    let remaining = result;
+    
+    // Sort issues by position in text (first occurrence)
+    const sortedIssues = [...proofIssues].sort((a, b) => {
+      const posA = remaining.indexOf(a.word);
+      const posB = remaining.indexOf(b.word);
+      return posA - posB;
+    });
+
+    for (const issue of sortedIssues) {
+      const idx = remaining.indexOf(issue.word);
+      if (idx === -1) continue;
+      if (idx > 0) parts.push({ text: remaining.slice(0, idx) });
+      parts.push({ text: issue.word, issue });
+      remaining = remaining.slice(idx + issue.word.length);
+    }
+    if (remaining) parts.push({ text: remaining });
+    return parts;
+  };
   const scoreLabels = [
     { key: "science", label: "علمی", max: 15 },
     { key: "ethics", label: "اخلاقی", max: 10 },
