@@ -105,7 +105,6 @@ export function ReviewModal({ article, onClose, onComplete }: ReviewModalProps) 
         ai_score_writing: aiScores.writing,
         ai_score_timing: aiScores.timing,
         ai_score_innovation: aiScores.innovation,
-        total_feed_rank: editorTotal,
         final_weight: finalWeight,
       })
       .eq("id", article.id);
