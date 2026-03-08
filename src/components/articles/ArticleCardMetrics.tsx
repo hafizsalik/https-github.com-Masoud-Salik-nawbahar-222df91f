@@ -27,7 +27,6 @@ export function ArticleCardMetrics({
 }: ArticleCardMetricsProps) {
   const { types, totalCount, reactorNames, userReaction } = reactionSummary;
 
-  // Build the "X and Y reacted" text
   const buildReactorText = () => {
     if (totalCount === 0) return null;
 
@@ -54,29 +53,32 @@ export function ArticleCardMetrics({
   const reactorText = buildReactorText();
 
   return (
-    <div className="mt-4 pb-5">
-      {/* Reaction summary row */}
+    <div className="mt-3 pb-4">
+      {/* Reaction count + reactor names — LinkedIn style inline */}
       {totalCount > 0 && (
-        <div className="flex items-center gap-1.5 mb-2.5">
-          <div className="flex items-center -space-x-1">
+        <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-border/40">
+          <div className="flex items-center -space-x-1.5">
             {types.slice(0, 3).map((type) => (
               <span
                 key={type}
-                className="w-[18px] h-[18px] flex items-center justify-center rounded-full bg-background border border-border text-[10px] leading-none"
+                className="w-[17px] h-[17px] flex items-center justify-center rounded-full text-[9px] leading-none ring-[1.5px] ring-background"
+                style={{
+                  background: "hsl(var(--muted))",
+                }}
               >
                 {REACTION_EMOJIS[type]}
               </span>
             ))}
           </div>
           {reactorText && (
-            <span className="text-[11px] text-muted-foreground/60 truncate">
+            <span className="text-[11px] text-muted-foreground/55 truncate leading-none">
               {reactorText}
             </span>
           )}
         </div>
       )}
 
-      {/* Action buttons row */}
+      {/* Action buttons — like LinkedIn's row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-5">
           <ReactionPicker userReaction={userReaction} onReact={onReact} />
@@ -84,23 +86,25 @@ export function ArticleCardMetrics({
           <button
             onClick={onCommentClick}
             className={cn(
-              "flex items-center gap-1.5 text-[12px] transition-colors",
+              "flex items-center gap-1 text-[12px] transition-colors",
               commentsOpen
-                ? "text-primary"
+                ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <MessageCircle size={16} strokeWidth={1.5} />
-            {commentCount > 0 && <span>{commentCount}</span>}
+            <MessageCircle size={14} strokeWidth={1.5} />
+            <span className="text-[11.5px]">
+              {commentCount > 0 ? commentCount : "نظر"}
+            </span>
           </button>
 
           {isRead && (
-            <CheckCheck size={13} strokeWidth={2} className="text-primary/40" />
+            <CheckCheck size={12} strokeWidth={2} className="text-primary/35" />
           )}
         </div>
 
         {tag && (
-          <span className="text-muted-foreground/50 text-[10px]">
+          <span className="text-muted-foreground/40 text-[10px]">
             {tag}
           </span>
         )}

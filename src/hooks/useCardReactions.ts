@@ -3,10 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const REACTION_EMOJIS: Record<string, string> = {
   like: "👍",
+  clap: "👏",
   love: "❤️",
   insightful: "💡",
-  clap: "👏",
+  laugh: "😂",
+  sad: "😢",
   fire: "🔥",
+};
+
+export const REACTION_LABELS: Record<string, string> = {
+  like: "پسند",
+  clap: "تحسین",
+  love: "عالی",
+  insightful: "آموزنده",
+  laugh: "خنده",
+  sad: "غمگین",
+  fire: "عالی",
 };
 
 export type ReactionKey = keyof typeof REACTION_EMOJIS;
@@ -44,16 +56,13 @@ export function useCardReactions(articleId: string) {
       return;
     }
 
-    // Get unique reaction types
     const typesSet = new Set<ReactionKey>();
     reactions.forEach((r) => typesSet.add(r.reaction_type as ReactionKey));
 
-    // Get user's own reaction
     const userReaction = currentUserId
       ? (reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined) || null
       : null;
 
-    // Get reactor user IDs (up to 2 for display)
     const otherReactorIds = reactions
       .filter((r) => r.user_id !== currentUserId)
       .map((r) => r.user_id)
@@ -85,7 +94,6 @@ export function useCardReactions(articleId: string) {
     if (!userId) return false;
 
     if (summary.userReaction === type) {
-      // Remove reaction
       await supabase
         .from("reactions")
         .delete()
@@ -93,14 +101,12 @@ export function useCardReactions(articleId: string) {
         .eq("user_id", userId);
     } else {
       if (summary.userReaction) {
-        // Update existing
         await supabase
           .from("reactions")
           .update({ reaction_type: type })
           .eq("article_id", articleId)
           .eq("user_id", userId);
       } else {
-        // Insert new
         await supabase
           .from("reactions")
           .insert({ article_id: articleId, user_id: userId, reaction_type: type });

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { REACTION_EMOJIS, type ReactionKey } from "@/hooks/useCardReactions";
+import { REACTION_EMOJIS, REACTION_LABELS, type ReactionKey } from "@/hooks/useCardReactions";
 import { cn } from "@/lib/utils";
+import { ThumbsUp } from "lucide-react";
 
 interface ReactionPickerProps {
   userReaction: ReactionKey | null;
@@ -10,31 +11,44 @@ interface ReactionPickerProps {
 export function ReactionPicker({ userReaction, onReact }: ReactionPickerProps) {
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const longPressRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handlePointerEnter = () => {
     clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setOpen(true), 400);
+    timeoutRef.current = setTimeout(() => setOpen(true), 350);
   };
 
   const handlePointerLeave = () => {
     clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setOpen(false), 300);
+    timeoutRef.current = setTimeout(() => setOpen(false), 250);
   };
 
   const handleTap = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (open) return;
-    // Quick tap = toggle default "like"
+    if (open || longPressRef.current) {
+      longPressRef.current = false;
+      return;
+    }
     onReact("like");
   };
 
-  const handleLongPress = (e: React.TouchEvent) => {
-    e.preventDefault();
+  const handleTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
+    longPressRef.current = false;
     clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setOpen(true), 400);
+    timeoutRef.current = setTimeout(() => {
+      longPressRef.current = true;
+      setOpen(true);
+    }, 400);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (!longPressRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
   };
 
   const handleSelect = (type: ReactionKey, e: React.MouseEvent) => {
@@ -48,7 +62,6 @@ export function ReactionPicker({ userReaction, onReact }: ReactionPickerProps) {
     return () => clearTimeout(timeoutRef.current);
   }, []);
 
-  // Close picker on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: Event) => {
@@ -60,8 +73,6 @@ export function ReactionPicker({ userReaction, onReact }: ReactionPickerProps) {
     return () => document.removeEventListener("pointerdown", handler);
   }, [open]);
 
-  const activeEmoji = userReaction ? REACTION_EMOJIS[userReaction] : null;
-
   return (
     <div
       ref={containerRef}
@@ -71,41 +82,46 @@ export function ReactionPicker({ userReaction, onReact }: ReactionPickerProps) {
     >
       <button
         onClick={handleTap}
-        onTouchStart={handleLongPress}
-        onTouchEnd={() => clearTimeout(timeoutRef.current)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         className={cn(
-          "flex items-center gap-1.5 text-[12px] transition-all duration-200",
+          "flex items-center gap-1 text-[12px] transition-all duration-200",
           userReaction
-            ? "text-primary"
+            ? "text-foreground"
             : "text-muted-foreground hover:text-foreground"
         )}
       >
-        <span className="text-[15px] leading-none">
-          {activeEmoji || "👍"}
-        </span>
-        {userReaction && (
-          <span className="text-[11px] font-medium">
-            {userReaction === "like" && "پسند"}
-            {userReaction === "love" && "عالی"}
-            {userReaction === "insightful" && "آموزنده"}
-            {userReaction === "clap" && "تحسین"}
-            {userReaction === "fire" && "عالی"}
-          </span>
+        {userReaction ? (
+          <span className="text-[14px] leading-none">{REACTION_EMOJIS[userReaction]}</span>
+        ) : (
+          <ThumbsUp size={14} strokeWidth={1.5} />
         )}
+        <span className="text-[11.5px]">
+          {userReaction ? REACTION_LABELS[userReaction] : "پسند"}
+        </span>
       </button>
 
       {open && (
-        <div className="absolute bottom-full mb-2 right-0 flex items-center gap-0.5 bg-background border border-border rounded-full px-2 py-1.5 shadow-lg animate-scale-in z-50">
+        <div
+          className="absolute bottom-full mb-2.5 right-1/2 translate-x-1/2 flex items-center gap-0.5 rounded-full px-1.5 py-1 z-50"
+          style={{
+            background: "hsl(var(--background))",
+            boxShadow: "0 2px 16px -2px hsl(var(--foreground) / 0.12), 0 0 0 1px hsl(var(--border) / 0.5)",
+          }}
+        >
           {Object.entries(REACTION_EMOJIS).map(([key, emoji], i) => (
             <button
               key={key}
               onClick={(e) => handleSelect(key as ReactionKey, e)}
               className={cn(
-                "w-9 h-9 flex items-center justify-center rounded-full text-[20px] transition-transform duration-150 hover:scale-[1.35] hover:bg-muted/50",
-                userReaction === key && "bg-primary/10 scale-110"
+                "w-[34px] h-[34px] flex items-center justify-center rounded-full text-[19px] transition-all duration-150",
+                "hover:scale-[1.4] hover:-translate-y-1",
+                userReaction === key && "bg-muted scale-110"
               )}
-              style={{ animationDelay: `${i * 30}ms` }}
-              title={key}
+              style={{
+                animation: `scale-in 0.2s ease-out ${i * 25}ms both`,
+              }}
+              title={REACTION_LABELS[key]}
             >
               {emoji}
             </button>
