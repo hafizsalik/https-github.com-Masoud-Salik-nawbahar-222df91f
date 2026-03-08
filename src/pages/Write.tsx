@@ -12,7 +12,7 @@ const Write = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        navigate("/editor");
+        navigate("/editor", { replace: true });
       }
     });
   }, [navigate]);
