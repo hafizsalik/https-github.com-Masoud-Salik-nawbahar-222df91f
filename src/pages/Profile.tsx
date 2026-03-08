@@ -326,7 +326,7 @@ const Profile = () => {
               <AboutItem 
                 icon={<FileText size={15} strokeWidth={1.5} />}
                 label="مقالات منتشرشده" 
-                value={`${articles.length} مقاله`} 
+                value={`${toPersianNumber(articles.length)} مقاله`} 
               />
               {profile?.reputation_score != null && profile.reputation_score > 0 && (
                 <div>
