@@ -82,12 +82,27 @@ export function EditProfileModal({
   };
 
   const handleSave = async () => {
-    if (!displayName.trim()) {
-      toast({
-        title: "خطا",
-        description: "نام نمایشی الزامی است",
-        variant: "destructive",
-      });
+    if (!displayName.trim() || displayName.trim().length < 2) {
+      toast({ title: "خطا", description: "نام نمایشی باید حداقل ۲ حرف باشد", variant: "destructive" });
+      return;
+    }
+    if (displayName.trim().length > 50) {
+      toast({ title: "خطا", description: "نام نمایشی نباید بیش از ۵۰ حرف باشد", variant: "destructive" });
+      return;
+    }
+    // Validate URLs
+    const urlPattern = /^https?:\/\/.+/;
+    if (facebook.trim() && !urlPattern.test(facebook.trim())) {
+      toast({ title: "خطا", description: "لینک فیسبوک نامعتبر است (باید با https:// شروع شود)", variant: "destructive" });
+      return;
+    }
+    if (linkedin.trim() && !urlPattern.test(linkedin.trim())) {
+      toast({ title: "خطا", description: "لینک لینکدین نامعتبر است (باید با https:// شروع شود)", variant: "destructive" });
+      return;
+    }
+    // Validate WhatsApp number (digits only)
+    if (whatsapp.trim() && !/^\+?[0-9]{7,15}$/.test(whatsapp.trim().replace(/\s/g, ''))) {
+      toast({ title: "خطا", description: "شماره واتساپ نامعتبر است", variant: "destructive" });
       return;
     }
 
