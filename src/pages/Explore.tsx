@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Search, TrendingUp, Hash, X, User, Sparkles, Info } from "lucide-react";
+import { Search, TrendingUp, Hash, X, User, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { usePublishedArticles } from "@/hooks/useArticles";
-import { cn } from "@/lib/utils";
+import { cn, toPersianNumber } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -99,36 +99,36 @@ const Explore = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-4 animate-fade-in">
+      <div className="animate-fade-in">
         {/* Search */}
-        <div className="px-4 pt-3">
+        <div className="px-5 pt-4 pb-3">
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" size={17} />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/30" size={16} />
             <Input
               placeholder="جستجوی مقالات، نویسندگان..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className="pr-10 bg-muted/50 border-border/30 rounded-xl h-10 text-sm focus:ring-1 focus:ring-primary/30 focus:border-primary/30"
+              className="pr-9 bg-muted/30 border-0 rounded-lg h-9 text-[13px] focus:ring-1 focus:ring-primary/20 placeholder:text-muted-foreground/30"
             />
           </div>
 
           {suggestedUsers.length > 0 && isSearchFocused && (
-            <div className="mt-2 bg-card border border-border rounded-xl overflow-hidden shadow-lg animate-slide-down">
-              <p className="text-[10px] text-muted-foreground px-3 py-1.5 bg-muted/50 font-medium">نویسندگان</p>
+            <div className="mt-2 bg-background border border-border rounded-lg overflow-hidden animate-slide-down">
+              <p className="text-[10px] text-muted-foreground/50 px-3 py-1.5 font-medium">نویسندگان</p>
               {suggestedUsers.map((user) => (
-                <Link key={user.id} to={`/profile/${user.id}`} className="flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors">
+                <Link key={user.id} to={`/profile/${user.id}`} className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-muted/30 transition-colors">
                   {user.avatar_url ? (
-                    <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                    <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/8 flex items-center justify-center">
-                      <User size={14} className="text-primary" />
+                    <div className="w-7 h-7 rounded-full bg-primary/8 flex items-center justify-center">
+                      <User size={12} className="text-primary" />
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-medium text-foreground">{user.display_name}</p>
-                    {user.specialty && <p className="text-[11px] text-muted-foreground line-clamp-1">{user.specialty}</p>}
+                    <p className="text-[13px] font-medium text-foreground">{user.display_name}</p>
+                    {user.specialty && <p className="text-[10px] text-muted-foreground/50 line-clamp-1">{user.specialty}</p>}
                   </div>
                 </Link>
               ))}
@@ -137,24 +137,20 @@ const Explore = () => {
         </div>
 
         {/* Topics */}
-        <div className="px-4">
-          <h2 className="text-xs font-bold text-muted-foreground mb-2.5 flex items-center gap-1.5 uppercase tracking-wide">
-            <Sparkles size={12} className="text-primary" />
-            موضوعات
-          </h2>
-          <div className="flex flex-wrap gap-2">
+        <div className="px-5 pb-3">
+          <div className="flex flex-wrap gap-1.5">
             {topics.map((topic) => (
               <button
                 key={topic.id}
                 onClick={() => handleTopicClick(topic.id)}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
+                  "px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 flex items-center gap-1",
                   activeTopic === topic.id
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-foreground text-background"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <span className="text-[11px]">{topic.emoji}</span>
+                <span className="text-[10px]">{topic.emoji}</span>
                 {topic.label}
               </button>
             ))}
@@ -162,70 +158,58 @@ const Explore = () => {
         </div>
 
         {/* Trending */}
-        <div className="px-4">
-          <div className="flex items-center gap-1.5 mb-2.5">
-            <TrendingUp size={12} className="text-primary" />
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">هشتگ‌های داغ</h2>
-          </div>
+        <div className="px-5 pb-3">
           <div className="flex flex-wrap gap-1.5">
             {trendingHashtags.map((hashtag) => (
               <button
                 key={hashtag}
                 onClick={() => handleHashtagClick(hashtag)}
                 className={cn(
-                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] transition-all duration-200",
+                  "inline-flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] transition-all duration-200",
                   activeTag === hashtag
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary/60 text-secondary-foreground hover:bg-primary/10 hover:text-primary"
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground/50 hover:text-foreground"
                 )}
               >
-                <Hash size={10} />
+                <Hash size={9} />
                 {hashtag}
               </button>
             ))}
           </div>
         </div>
 
-        {/* About link */}
-        <div className="px-4">
-          <Link to="/about" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors py-2">
-            <Info size={14} />
-            <span>درباره نوبهار</span>
-          </Link>
-        </div>
-
         {/* Active filters */}
         {hasActiveFilters && (
-          <div className="px-4 animate-slide-down">
+          <div className="px-5 pb-2 animate-slide-down">
             <div className="flex items-center gap-2 flex-wrap">
               {activeTopic && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
-                  {topics.find(t => t.id === activeTopic)?.emoji} {topics.find(t => t.id === activeTopic)?.label}
-                  <button onClick={() => handleTopicClick(activeTopic)} className="mr-1"><X size={10} /></button>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
+                  {topics.find(t => t.id === activeTopic)?.label}
+                  <button onClick={() => handleTopicClick(activeTopic)} className="mr-0.5"><X size={9} /></button>
                 </span>
               )}
               {activeTag && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
                   #{activeTag}
-                  <button onClick={() => handleHashtagClick(activeTag)} className="mr-1"><X size={10} /></button>
+                  <button onClick={() => handleHashtagClick(activeTag)} className="mr-0.5"><X size={9} /></button>
                 </span>
               )}
-              <button onClick={clearFilters} className="text-[11px] text-destructive hover:underline font-medium">پاک کردن</button>
+              <button onClick={clearFilters} className="text-[10px] text-muted-foreground/40 hover:text-foreground">پاک کردن</button>
             </div>
           </div>
         )}
 
         {/* Results */}
         {hasActiveFilters && (
-          <div className="border-t border-border/30 pt-3">
-            <div className="px-4 mb-2">
-              <p className="text-xs font-medium text-muted-foreground">
-                {filteredArticles.length > 0 ? `${filteredArticles.length} نتیجه` : "نتیجه‌ای یافت نشد"}
+          <div className="border-t border-border/40 pt-1">
+            <div className="px-5 py-2">
+              <p className="text-[11px] text-muted-foreground/40">
+                {filteredArticles.length > 0 ? `${toPersianNumber(filteredArticles.length)} نتیجه` : "نتیجه‌ای یافت نشد"}
               </p>
             </div>
-            <div className="space-y-3 px-3">
+            <div>
               {filteredArticles.map((article, index) => (
-                <div key={article.id} className="animate-slide-up" style={{ animationDelay: `${index * 40}ms` }}>
+                <div key={article.id} className="border-b border-border animate-slide-up" style={{ animationDelay: `${index * 30}ms` }}>
                   <ArticleCard article={article} onDelete={refetch} />
                 </div>
               ))}
@@ -234,13 +218,21 @@ const Explore = () => {
         )}
 
         {!hasActiveFilters && (
-          <div className="px-4 py-10 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
-              <Search size={24} className="text-muted-foreground/40" />
+          <div className="px-5 py-12 text-center border-t border-border/40">
+            <div className="w-12 h-12 rounded-2xl bg-muted/30 flex items-center justify-center mx-auto mb-3">
+              <Search size={20} className="text-muted-foreground/25" />
             </div>
-            <p className="text-xs text-muted-foreground">موضوعی را انتخاب کنید یا جستجو کنید</p>
+            <p className="text-[12px] text-muted-foreground/40">موضوعی را انتخاب کنید یا جستجو کنید</p>
           </div>
         )}
+
+        {/* About link */}
+        <div className="px-5 py-4 border-t border-border/40">
+          <Link to="/about" className="flex items-center gap-1.5 text-[11px] text-muted-foreground/30 hover:text-foreground transition-colors">
+            <Info size={12} />
+            <span>درباره نوبهار</span>
+          </Link>
+        </div>
       </div>
     </AppLayout>
   );

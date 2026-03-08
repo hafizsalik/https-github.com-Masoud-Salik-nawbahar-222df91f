@@ -326,7 +326,7 @@ const Profile = () => {
               <AboutItem 
                 icon={<FileText size={15} strokeWidth={1.5} />}
                 label="مقالات منتشرشده" 
-                value={`${articles.length} مقاله`} 
+                value={`${toPersianNumber(articles.length)} مقاله`} 
               />
               {profile?.reputation_score != null && profile.reputation_score > 0 && (
                 <div>
@@ -341,7 +341,7 @@ const Profile = () => {
                         style={{ width: `${Math.min(100, profile.reputation_score)}%` }}
                       />
                     </div>
-                    <span className="text-[13px] font-semibold text-primary">{Math.round(profile.reputation_score)}</span>
+                    <span className="text-[13px] font-semibold text-primary">{toPersianNumber(Math.round(profile.reputation_score))}</span>
                   </div>
                 </div>
               )}
@@ -358,7 +358,7 @@ const Profile = () => {
                         style={{ width: `${profile.trust_score}%` }}
                       />
                     </div>
-                    <span className="text-[13px] font-semibold text-primary">{profile.trust_score}</span>
+                    <span className="text-[13px] font-semibold text-primary">{toPersianNumber(profile.trust_score)}</span>
                   </div>
                 </div>
               )}
