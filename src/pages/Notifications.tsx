@@ -323,7 +323,7 @@ const Notifications = () => {
                           </div>
                         )}
                         {/* Type badge on avatar */}
-                        <div className="absolute -bottom-0.5 -left-0.5 w-4 h-4 rounded-full bg-background flex items-center justify-center shadow-sm border border-border/30">
+                        <div className="absolute -bottom-0.5 -left-0.5 w-[18px] h-[18px] rounded-full bg-background flex items-center justify-center shadow-sm border border-border/30 overflow-hidden">
                           {getNotificationIcon(notification.type, extra?.reactionType)}
                         </div>
                       </div>
