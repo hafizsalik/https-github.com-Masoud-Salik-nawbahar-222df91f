@@ -147,25 +147,16 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
         {renderSmartIcon()}
       </button>
 
-      {summaryText && onSummaryClick ? (
-        <button
-          onClick={handleTextClick}
-          className={cn(
-            "text-[11px] truncate max-w-[150px] transition-colors duration-300",
-            isReacted ? "" : "text-muted-foreground"
-          )}
-          style={isReacted ? { color: activeColor } : undefined}
-        >
-          {summaryText}
-        </button>
-      ) : (
-        <button
-          onClick={handleReactionLabelClick}
-          className="text-[11px] text-muted-foreground hover:text-foreground transition-colors duration-200"
-        >
-          واکنش
-        </button>
-      )}
+      <button
+        onClick={summaryText && onSummaryClick ? handleTextClick : handleReactionLabelClick}
+        className={cn(
+          "text-[11px] truncate max-w-[150px] transition-colors duration-200",
+          isReacted ? "" : "text-muted-foreground hover:text-foreground"
+        )}
+        style={isReacted ? { color: activeColor } : undefined}
+      >
+        {summaryText || "واکنش"}
+      </button>
 
       {/* Picker tray — outline icons with muted colors */}
       {open && (
