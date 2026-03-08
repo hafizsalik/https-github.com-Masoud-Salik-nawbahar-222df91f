@@ -38,11 +38,12 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
     return () => document.removeEventListener("pointerdown", handler);
   }, [open]);
 
-  // Like button: direct toggle
-  const handleLikeTap = (e: React.MouseEvent) => {
+  // Icon button: always opens picker
+  const handleIconTap = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onReact("like");
+    onHover?.();
+    setOpen((prev) => !prev);
   };
 
   // Summary text click: show details modal
@@ -80,7 +81,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
     <div ref={containerRef} className="relative flex items-center gap-1.5">
       {/* Reaction icon — shows emoji if reacted, ThumbsUp outline if not */}
       <button
-        onClick={handleLikeTap}
+        onClick={handleIconTap}
         className={cn(
           "flex items-center transition-all duration-200",
           isReacted ? "text-foreground" : "text-muted-foreground hover:text-foreground"
