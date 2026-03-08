@@ -110,22 +110,28 @@ const Profile = () => {
                 </div>
               )}
 
-              {/* Name + Specialty + Followers */}
+              {/* Name + meta */}
               <div className="flex-1 min-w-0">
                 <h1 className="text-[15px] font-extrabold text-foreground leading-tight truncate">
                   {profile.display_name}
+                  {profile.specialty && (
+                    <span className="text-[11px] font-normal text-muted-foreground/60 mr-1.5">
+                      {profile.specialty}
+                    </span>
+                  )}
                 </h1>
-                {profile.specialty && (
-                  <p className="text-[11px] text-muted-foreground/60 mt-0.5 line-clamp-1">
-                    {profile.specialty}
-                  </p>
-                )}
-                <button
-                  onClick={() => setShowFollowers(true)}
-                  className="text-[11px] text-muted-foreground/50 hover:text-foreground transition-colors mt-1"
-                >
-                  {toPersianNumber(followerCount)} دنبال‌کننده
-                </button>
+                <div className="flex items-center gap-2.5 mt-1">
+                  <button
+                    onClick={() => setShowFollowers(true)}
+                    className="text-[11px] text-muted-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    {toPersianNumber(followerCount)} دنبال‌کننده
+                  </button>
+                  <span className="text-muted-foreground/20 text-[9px]">·</span>
+                  <span className="text-[11px] text-muted-foreground/50">
+                    {toPersianNumber(articles.length)} مقاله
+                  </span>
+                </div>
               </div>
 
               {/* Action */}
