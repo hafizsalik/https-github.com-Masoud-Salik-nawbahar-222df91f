@@ -42,7 +42,7 @@ const EMPTY_SUMMARY: ReactionSummary = {
  * Uses article.reaction_count for display count.
  * Full reaction data is only fetched on first user interaction.
  */
-export function useCardReactions(articleId: string) {
+export function useCardReactions(articleId: string, autoFetch = true) {
   const [summary, setSummary] = useState<ReactionSummary>(EMPTY_SUMMARY);
   const [fetched, setFetched] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
