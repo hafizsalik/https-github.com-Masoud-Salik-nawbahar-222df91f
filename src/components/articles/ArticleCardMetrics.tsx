@@ -14,10 +14,6 @@ interface ArticleCardMetricsProps {
   onResponseClick: (e: React.MouseEvent) => void;
   reactionSummary: ReactionSummary;
   onReact: (type: ReactionKey) => void;
-  /** Names of commenters to show in summary, prioritized by social relevance */
-  commenterNames?: string[];
-  /** Whether current user has commented */
-  userHasCommented?: boolean;
 }
 
 export function ArticleCardMetrics({
