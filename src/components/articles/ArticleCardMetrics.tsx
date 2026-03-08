@@ -1,4 +1,4 @@
-import { MessageCircle, CheckCheck } from "lucide-react";
+import { MessageCircle, CheckCheck, CornerUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ReactionPicker } from "./ReactionPicker";
 import { REACTION_EMOJIS, type ReactionKey, type ReactionSummary } from "@/hooks/useCardReactions";
@@ -14,16 +14,24 @@ interface ArticleCardMetricsProps {
   onResponseClick: (e: React.MouseEvent) => void;
   reactionSummary: ReactionSummary;
   onReact: (type: ReactionKey) => void;
+  /** Names of commenters to show in summary, prioritized by social relevance */
+  commenterNames?: string[];
+  /** Whether current user has commented */
+  userHasCommented?: boolean;
 }
 
 export function ArticleCardMetrics({
   commentCount,
+  responseCount,
   isRead,
   commentsOpen,
   tag,
   onCommentClick,
+  onResponseClick,
   reactionSummary,
   onReact,
+  commenterNames = [],
+  userHasCommented = false,
 }: ArticleCardMetricsProps) {
   const { topTypes, totalCount, reactorNames, userReaction } = reactionSummary;
 
@@ -39,13 +47,26 @@ export function ArticleCardMetrics({
     return text;
   };
 
+  const buildCommentText = () => {
+    if (commentCount === 0) return null;
+    const names = [...commenterNames];
+    if (userHasCommented) names.unshift("شما");
+    const displayNames = names.slice(0, 2);
+    const remaining = commentCount - displayNames.length;
+    if (displayNames.length === 0 && remaining > 0) return `${remaining} نظر`;
+    let text = displayNames.join(" و ");
+    if (remaining > 0) text += ` و ${remaining} نفر دیگر`;
+    return text;
+  };
+
   const reactorText = buildReactorText();
+  const commentText = buildCommentText();
 
   return (
     <div className="mt-3 pb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {/* Comment button first */}
+          {/* Comment button with summary */}
           <button
             onClick={onCommentClick}
             className={cn(
@@ -58,6 +79,27 @@ export function ArticleCardMetrics({
             <MessageCircle size={14} strokeWidth={1.5} />
             {commentCount > 0 && <span className="text-[11.5px]">{commentCount}</span>}
           </button>
+
+          {/* Comment summary text */}
+          {commentText && (
+            <button
+              onClick={onCommentClick}
+              className="text-[10.5px] text-muted-foreground/45 truncate max-w-[100px] hover:text-muted-foreground transition-colors"
+            >
+              {commentText}
+            </button>
+          )}
+
+          {/* Response articles indicator */}
+          {responseCount > 0 && (
+            <button
+              onClick={onResponseClick}
+              className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <CornerUpRight size={13} strokeWidth={1.5} />
+              <span className="text-[11.5px]">{responseCount}</span>
+            </button>
+          )}
 
           {/* Reaction picker */}
           <ReactionPicker userReaction={userReaction} onReact={onReact} />
