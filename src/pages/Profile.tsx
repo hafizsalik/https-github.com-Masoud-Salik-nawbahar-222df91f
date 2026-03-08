@@ -93,7 +93,7 @@ const Profile = () => {
         {/* === Compact Profile Header === */}
         {profile && (
           <div className="px-5 pt-6 pb-3">
-            {/* Row 1: Avatar + Name/Specialty */}
+            {/* Row 1: Avatar + Name · Specialty */}
             <div className="flex items-center gap-3.5">
               {profile.avatar_url ? (
                 <img
@@ -112,40 +112,40 @@ const Profile = () => {
               <div className="flex-1 min-w-0">
                 <h1 className="text-[15px] font-extrabold text-foreground leading-tight truncate">
                   {profile.display_name}
+                  {profile.specialty && (
+                    <>
+                      <span className="text-muted-foreground/25 mx-1.5 font-normal">·</span>
+                      <span className="text-[11.5px] font-normal text-muted-foreground/55">
+                        {profile.specialty}
+                      </span>
+                    </>
+                  )}
                 </h1>
-                {profile.specialty && (
-                  <p className="text-[11px] text-muted-foreground/55 mt-0.5 line-clamp-1">
-                    {profile.specialty}
-                  </p>
-                )}
+                <div className="flex items-center gap-3 mt-1.5">
+                  <button
+                    onClick={() => setShowFollowers(true)}
+                    className="text-[11.5px] text-muted-foreground/55 hover:text-foreground transition-colors"
+                  >
+                    <span className="font-semibold text-foreground/80">{toPersianNumber(followerCount)}</span> دنبال‌کننده
+                  </button>
+                  <span className="text-[11.5px] text-muted-foreground/55">
+                    <span className="font-semibold text-foreground/80">{toPersianNumber(articles.length)}</span> مقاله
+                  </span>
+                  {isOwnProfile && (
+                    <button
+                      onClick={() => setEditModalOpen(true)}
+                      className="text-[11px] text-muted-foreground/45 hover:text-foreground border border-border/40 rounded-md px-2.5 py-0.5 transition-colors mr-auto"
+                    >
+                      ویرایش پروفایل
+                    </button>
+                  )}
+                  {!isOwnProfile && viewingUserId && (
+                    <div className="mr-auto">
+                      <FollowButton userId={viewingUserId} />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-
-            {/* Row 2: Stats + Edit/Follow */}
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowFollowers(true)}
-                  className="text-[11.5px] text-muted-foreground/55 hover:text-foreground transition-colors"
-                >
-                  <span className="font-semibold text-foreground/80">{toPersianNumber(followerCount)}</span> دنبال‌کننده
-                </button>
-                <span className="text-muted-foreground/20 text-[9px]">·</span>
-                <span className="text-[11.5px] text-muted-foreground/55">
-                  <span className="font-semibold text-foreground/80">{toPersianNumber(articles.length)}</span> مقاله
-                </span>
-              </div>
-
-              {isOwnProfile ? (
-                <button
-                  onClick={() => setEditModalOpen(true)}
-                  className="text-[11px] text-muted-foreground hover:text-foreground border border-border/50 rounded-md px-3 py-1 transition-colors"
-                >
-                  ویرایش
-                </button>
-              ) : (
-                viewingUserId && <FollowButton userId={viewingUserId} />
-              )}
             </div>
 
             {/* Social links — pill style */}
