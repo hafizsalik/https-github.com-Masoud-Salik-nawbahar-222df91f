@@ -157,6 +157,8 @@ export function ArticleCard({ article, onDelete: _onDelete }: ArticleCardProps) 
           tag={article.tags?.[0] || null}
           onCommentClick={handleCommentClick}
           onResponseClick={handleResponseClick}
+          reactionSummary={reactionSummary}
+          onReact={(type) => { toggleReaction(type); }}
         />
       </Link>
 
