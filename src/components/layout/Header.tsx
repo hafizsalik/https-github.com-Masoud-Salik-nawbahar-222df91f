@@ -13,9 +13,8 @@ export function Header() {
         isVisible ? "translate-y-0" : "-translate-y-full"
       )}
     >
-      <div className="bg-background/98 backdrop-blur-sm border-b border-border">
+      <div className="bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 h-11 max-w-lg mx-auto">
-          {/* Brand */}
           <Link to="/" className="flex items-center gap-1.5">
             <div className="w-6.5 h-6.5 rounded-md bg-primary flex items-center justify-center">
               <span className="text-[13px] font-black text-primary-foreground leading-none">ن</span>
@@ -25,12 +24,11 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Write */}
           <Link 
             to="/write" 
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground/45 hover:text-foreground transition-colors"
           >
-            <PenLine size={18} strokeWidth={1.8} />
+            <PenLine size={20} strokeWidth={1.5} />
           </Link>
         </div>
       </div>

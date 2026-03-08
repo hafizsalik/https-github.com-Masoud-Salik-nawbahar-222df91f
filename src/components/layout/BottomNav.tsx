@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 import { useNotifications } from "@/hooks/useNotifications";
 
 const navItems = [
-  { icon: Home, path: "/", label: "خانه" },
-  { icon: Compass, path: "/explore", label: "کاوش" },
-  { icon: BookOpen, path: "/vip", label: "ویژه" },
-  { icon: Bell, path: "/notifications", label: "اعلانات", isBell: true },
-  { icon: User, path: "/profile", label: "من" },
+  { icon: Home, path: "/" },
+  { icon: Compass, path: "/explore" },
+  { icon: BookOpen, path: "/vip" },
+  { icon: Bell, path: "/notifications", isBell: true },
+  { icon: User, path: "/profile" },
 ];
 
 export function BottomNav() {
@@ -17,9 +17,9 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 no-print">
-      <div className="bg-background/98 backdrop-blur-sm border-t border-border safe-bottom">
-        <div className="flex items-center justify-around max-w-lg mx-auto h-[52px]">
-          {navItems.map(({ icon: Icon, path, label, isBell }) => {
+      <div className="bg-background border-t border-border safe-bottom">
+        <div className="flex items-center justify-around max-w-lg mx-auto h-11">
+          {navItems.map(({ icon: Icon, path, isBell }) => {
             const isActive = location.pathname === path ||
               (path === "/profile" && location.pathname.startsWith("/profile"));
 
@@ -28,22 +28,16 @@ export function BottomNav() {
                 key={path}
                 to={path}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors duration-150 focus:outline-none",
+                  "relative flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
                   isActive
-                    ? "text-primary"
-                    : "text-muted-foreground/50"
+                    ? "text-foreground"
+                    : "text-muted-foreground/45"
                 )}
-                aria-label={label}
-                aria-current={isActive ? "page" : undefined}
               >
-                {/* Active indicator dot */}
-                {isActive && (
-                  <div className="absolute top-1 w-1 h-1 rounded-full bg-primary" />
-                )}
-                <div className="relative mt-0.5">
+                <div className="relative">
                   <Icon
-                    size={21}
-                    strokeWidth={isActive ? 2.4 : 1.6}
+                    size={22}
+                    strokeWidth={isActive ? 2.2 : 1.5}
                     className="transition-all duration-150"
                   />
                   {isBell && unreadCount > 0 && (
@@ -52,12 +46,6 @@ export function BottomNav() {
                     </span>
                   )}
                 </div>
-                <span className={cn(
-                  "text-[10px] leading-none",
-                  isActive ? "font-bold" : "font-normal"
-                )}>
-                  {label}
-                </span>
               </Link>
             );
           })}

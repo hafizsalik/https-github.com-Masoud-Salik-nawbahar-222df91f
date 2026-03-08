@@ -1,4 +1,4 @@
-import { Eye, MessageCircle, ChevronDown, CheckCheck } from "lucide-react";
+import { Bookmark, MessageCircle, Share, MoreHorizontal, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ArticleCardMetricsProps {
@@ -13,53 +13,67 @@ interface ArticleCardMetricsProps {
 }
 
 export function ArticleCardMetrics({
-  viewCount,
   commentCount,
   isRead,
   commentsOpen,
   tag,
   onCommentClick,
 }: ArticleCardMetricsProps) {
-  return (
-    <div className="mt-2.5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3.5">
-          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Eye size={13} strokeWidth={1.6} />
-            {viewCount > 0 && <span>{viewCount}</span>}
-          </span>
+  const stop = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
+  return (
+    <div className="mt-4 pt-2">
+      <div className="flex items-center justify-between">
+        {/* Left actions */}
+        <div className="flex items-center gap-5">
           <button
             onClick={onCommentClick}
             className={cn(
-              "flex items-center gap-1 text-[11px] transition-colors",
+              "flex items-center gap-1.5 text-[12px] transition-colors",
               commentsOpen
                 ? "text-primary"
-                : "text-muted-foreground hover:text-foreground/70"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <MessageCircle size={13} strokeWidth={1.6} />
+            <MessageCircle size={16} strokeWidth={1.5} />
             {commentCount > 0 && <span>{commentCount}</span>}
           </button>
 
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            className="text-muted-foreground hover:text-foreground/70 transition-colors"
-            aria-label="بیشتر"
+            onClick={stop}
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ChevronDown size={14} strokeWidth={1.6} />
+            <Share size={15} strokeWidth={1.5} />
           </button>
 
           {isRead && (
-            <CheckCheck size={11} strokeWidth={2} className="text-primary/50" />
+            <CheckCheck size={13} strokeWidth={2} className="text-primary/40" />
           )}
         </div>
 
-        {tag && (
-          <span className="text-muted-foreground/60 text-[10px] font-medium">
-            {tag}
-          </span>
-        )}
+        {/* Right actions */}
+        <div className="flex items-center gap-4">
+          {tag && (
+            <span className="text-muted-foreground/50 text-[10px]">
+              {tag}
+            </span>
+          )}
+          <button
+            onClick={stop}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Bookmark size={16} strokeWidth={1.5} />
+          </button>
+          <button
+            onClick={stop}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <MoreHorizontal size={16} strokeWidth={1.5} />
+          </button>
+        </div>
       </div>
     </div>
   );
