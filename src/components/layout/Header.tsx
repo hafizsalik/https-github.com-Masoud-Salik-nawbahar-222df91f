@@ -20,9 +20,6 @@ export function Header() {
     return document.documentElement.classList.contains('dark');
   });
 
-  const [textSize, setTextSize] = useState<'sm' | 'base' | 'lg' | 'xl'>(() => {
-    return (localStorage.getItem('textSize') as any) || 'base';
-  });
 
   useEffect(() => {
     const root = document.documentElement;
@@ -34,13 +31,6 @@ export function Header() {
       localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove('text-sm', 'text-base', 'text-lg', 'text-xl');
-    root.classList.add(`text-${textSize}`);
-    localStorage.setItem('textSize', textSize);
-  }, [textSize]);
 
   useEffect(() => {
     if (!menuOpen) return;
