@@ -20,6 +20,7 @@ interface EditProfileModalProps {
   userId: string;
   currentDisplayName: string;
   currentSpecialty: string | null;
+  currentBio?: string | null;
   currentAvatarUrl: string | null;
   currentWhatsapp?: string | null;
   currentFacebook?: string | null;
