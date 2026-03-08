@@ -1,30 +1,46 @@
 export function LoadingScreen() {
   return (
-    <div className="flex flex-col items-center justify-center py-24 gap-5 animate-fade-in">
-      {/* Logo mark animation */}
-      <div className="relative">
-        <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center">
-          <span className="text-2xl font-black text-primary animate-pulse">ن</span>
+    <div className="flex flex-col items-center justify-center py-24 gap-6 animate-fade-in">
+      <div className="relative w-16 h-16">
+        {/* Outer pulsing ring */}
+        <div className="absolute inset-0 rounded-2xl bg-primary/8 animate-ping" style={{ animationDuration: '2s' }} />
+        
+        {/* Spinning border */}
+        <div className="absolute inset-0">
+          <svg className="w-16 h-16 animate-spin" style={{ animationDuration: '1.5s' }} viewBox="0 0 64 64">
+            <defs>
+              <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <rect x="2" y="2" width="60" height="60" rx="14" ry="14" fill="none" stroke="url(#grad)" strokeWidth="2" />
+          </svg>
         </div>
-        {/* Orbiting ring */}
-        <div className="absolute -inset-2">
-          <div className="w-[72px] h-[72px] border-2 border-transparent border-t-primary/40 border-r-primary/15 rounded-2xl animate-spin" style={{ animationDuration: '1.2s' }} />
+        
+        {/* Center logo */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-[22px] font-black text-primary">ن</span>
         </div>
       </div>
       
-      {/* Loading dots */}
-      <div className="flex items-center gap-1.5">
-        {[0, 1, 2].map(i => (
-          <div
-            key={i}
-            className="w-1.5 h-1.5 rounded-full bg-primary/40"
-            style={{
-              animation: 'bounceSubtle 0.6s ease-in-out infinite',
-              animationDelay: `${i * 0.15}s`,
-            }}
-          />
-        ))}
+      {/* Elegant loading bar */}
+      <div className="w-24 h-[2px] bg-muted rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-primary rounded-full"
+          style={{
+            animation: 'loading-bar 1.2s ease-in-out infinite',
+          }}
+        />
       </div>
+      
+      <style>{`
+        @keyframes loading-bar {
+          0% { width: 0%; margin-left: 0; }
+          50% { width: 60%; margin-left: 20%; }
+          100% { width: 0%; margin-left: 100%; }
+        }
+      `}</style>
     </div>
   );
 }

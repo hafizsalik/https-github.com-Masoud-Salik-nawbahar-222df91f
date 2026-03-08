@@ -1,16 +1,9 @@
-import { Home, Search, BookOpen, PenSquare } from "lucide-react";
+import { Home, Search, BookOpen, Plus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-const navItems = [
-  { icon: Home, path: "/", label: "خانه" },
-  { icon: Search, path: "/explore", label: "کاوش" },
-  { icon: BookOpen, path: "/vip", label: "ویژه" },
-  { icon: PenSquare, path: "/write", label: "نوشتن" },
-];
 
 export function BottomNav() {
   const location = useLocation();
@@ -33,6 +26,7 @@ export function BottomNav() {
   }, []);
 
   const isProfileActive = location.pathname === "/profile" || location.pathname.startsWith("/profile");
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <nav
@@ -43,38 +37,60 @@ export function BottomNav() {
     >
       <div className="bg-background/95 backdrop-blur-md border-t border-border/60 safe-bottom">
         <div className="flex items-center justify-around max-w-lg mx-auto h-12">
-          {navItems.map(({ icon: Icon, path }) => {
-            const isActive = location.pathname === path;
+          {/* Home */}
+          <Link
+            to="/"
+            className={cn(
+              "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
+              isActive("/") ? "text-foreground" : "text-muted-foreground/45 active:text-muted-foreground"
+            )}
+          >
+            <Home size={22} strokeWidth={isActive("/") ? 2 : 1.4} fill={isActive("/") ? "currentColor" : "none"} />
+          </Link>
 
-            return (
-              <Link
-                key={path}
-                to={path}
-                className={cn(
-                  "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
-                  isActive
-                    ? "text-foreground"
-                    : "text-muted-foreground/45 active:text-muted-foreground"
-                )}
-              >
-                <Icon
-                  size={22}
-                  strokeWidth={isActive ? 2 : 1.4}
-                  className="transition-all duration-150"
-                  fill={isActive ? "currentColor" : "none"}
-                />
-              </Link>
-            );
-          })}
+          {/* Search */}
+          <Link
+            to="/explore"
+            className={cn(
+              "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
+              isActive("/explore") ? "text-foreground" : "text-muted-foreground/45 active:text-muted-foreground"
+            )}
+          >
+            <Search size={22} strokeWidth={isActive("/explore") ? 2 : 1.4} fill={isActive("/explore") ? "currentColor" : "none"} />
+          </Link>
 
-          {/* Profile with avatar */}
+          {/* Write - Center prominent */}
+          <Link
+            to="/write"
+            className="flex items-center justify-center flex-1 h-full focus:outline-none"
+          >
+            <div className={cn(
+              "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150",
+              isActive("/write")
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:bg-foreground/10"
+            )}>
+              <Plus size={20} strokeWidth={2} />
+            </div>
+          </Link>
+
+          {/* VIP */}
+          <Link
+            to="/vip"
+            className={cn(
+              "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
+              isActive("/vip") ? "text-foreground" : "text-muted-foreground/45 active:text-muted-foreground"
+            )}
+          >
+            <BookOpen size={22} strokeWidth={isActive("/vip") ? 2 : 1.4} fill={isActive("/vip") ? "currentColor" : "none"} />
+          </Link>
+
+          {/* Profile */}
           <Link
             to="/profile"
             className={cn(
               "flex items-center justify-center flex-1 h-full transition-colors duration-150 focus:outline-none",
-              isProfileActive
-                ? "text-foreground"
-                : "text-muted-foreground/45 active:text-muted-foreground"
+              isProfileActive ? "text-foreground" : "text-muted-foreground/45 active:text-muted-foreground"
             )}
           >
             {avatarUrl ? (
