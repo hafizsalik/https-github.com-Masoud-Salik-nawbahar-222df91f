@@ -1,4 +1,4 @@
-import { Bell, Settings, Info, Moon, Sun, Type, LogOut, Shield } from "lucide-react";
+import { Bell, Menu, Info, Moon, Sun, Type, LogOut, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -97,9 +97,9 @@ export function Header() {
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="flex items-center justify-center w-9 h-9 text-muted-foreground/45 hover:text-foreground transition-colors"
-              aria-label="تنظیمات"
+              aria-label="منو"
             >
-              <Settings size={19} strokeWidth={1.5} className={cn("transition-transform duration-300", menuOpen && "rotate-90")} />
+              <Menu size={19} strokeWidth={1.75} className="transition-opacity duration-200" />
             </button>
 
             {menuOpen && (
