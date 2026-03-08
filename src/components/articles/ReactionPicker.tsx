@@ -1,16 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { REACTION_KEYS, REACTION_LABELS, REACTION_COLORS, REACTION_EMOJIS, type ReactionKey } from "@/hooks/useCardReactions";
+import { REACTION_KEYS, REACTION_LABELS, REACTION_EMOJIS, REACTION_COLORS, type ReactionKey } from "@/hooks/useCardReactions";
 import { cn } from "@/lib/utils";
-import { ThumbsUp, Heart, Lightbulb, Smile, Frown } from "lucide-react";
-
-/** Map reaction keys to Lucide outline icons */
-const REACTION_ICONS: Record<string, React.ElementType> = {
-  like: ThumbsUp,
-  love: Heart,
-  insightful: Lightbulb,
-  laugh: Smile,
-  sad: Frown,
-};
 
 interface ReactionPickerProps {
   userReaction: ReactionKey | null;
@@ -24,17 +14,14 @@ interface ReactionPickerProps {
 export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summaryText, onSummaryClick }: ReactionPickerProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  // Track if reaction changed via user action (not initial load)
   const [justReacted, setJustReacted] = useState(false);
   const prevReaction = useRef(userReaction);
 
   useEffect(() => {
-    // Only trigger pop animation if user actively changed their reaction
     if (prevReaction.current !== userReaction && prevReaction.current !== undefined) {
-      // Skip animation on first data load (prevReaction was null initially)
       if (prevReaction.current !== null || justReacted) {
         setJustReacted(true);
-        const t = setTimeout(() => setJustReacted(false), 350);
+        const t = setTimeout(() => setJustReacted(false), 400);
         return () => clearTimeout(t);
       }
     }
@@ -62,25 +49,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
     return () => document.removeEventListener("pointerdown", handler);
   }, [open]);
 
-  const handleIconTap = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onHover?.();
-    setOpen((prev) => !prev);
-  };
-
-  const handleTextClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onSummaryClick) {
-      onSummaryClick(e);
-      return;
-    }
-    onHover?.();
-    setOpen((prev) => !prev);
-  };
-
-  const handleReactionLabelClick = (e: React.MouseEvent) => {
+  const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onHover?.();
@@ -98,105 +67,112 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
   const isReacted = Boolean(userReaction);
   const activeColor = userReaction ? REACTION_COLORS[userReaction]?.text : undefined;
 
-  const renderSmartIcon = () => {
+  /** Render the emoji icon(s) shown inline */
+  const renderInlineEmoji = () => {
     if (userReaction) {
-      const Icon = REACTION_ICONS[userReaction] || ThumbsUp;
       return (
         <span
-          className="inline-flex transition-colors duration-300"
-          style={{
-            color: activeColor,
-            ...(justReacted ? { animation: "reaction-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both" } : {}),
-          }}
+          className="text-[16px] leading-none"
+          style={justReacted ? { animation: "reaction-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both" } : {}}
         >
-          <Icon size={15} strokeWidth={1.8} />
+          {REACTION_EMOJIS[userReaction]}
         </span>
       );
     }
     if (topTypes && topTypes.length > 0) {
       return (
-        <span className="flex items-center -space-x-1">
-          {topTypes.slice(0, 2).map((type) => {
-            const Icon = REACTION_ICONS[type] || ThumbsUp;
-            const color = REACTION_COLORS[type]?.text;
-            return (
-              <Icon
-                key={type}
-                size={14}
-                strokeWidth={1.6}
-                style={{ color: color || undefined, opacity: 0.7 }}
-              />
-            );
-          })}
+        <span className="flex items-center -space-x-0.5">
+          {topTypes.slice(0, 2).map((type) => (
+            <span key={type} className="text-[14px] leading-none">{REACTION_EMOJIS[type]}</span>
+          ))}
         </span>
       );
     }
-    // Always show ThumbsUp as default - consistent from mount
-    return <ThumbsUp size={14} strokeWidth={1.5} className="text-muted-foreground/40" />;
+    return <span className="text-[15px] leading-none opacity-50">👍</span>;
+  };
+
+  const handleSummaryClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onSummaryClick) {
+      onSummaryClick(e);
+    } else {
+      onHover?.();
+      setOpen((prev) => !prev);
+    }
   };
 
   return (
     <div ref={containerRef} className="relative flex items-center gap-1.5">
-      <button
-        onClick={handleIconTap}
-        className={cn(
-          "flex items-center transition-all duration-300",
-          isReacted ? "" : "text-muted-foreground hover:text-foreground"
-        )}
-      >
-        {renderSmartIcon()}
+      {/* Main emoji button */}
+      <button onClick={handleToggle} className="flex items-center">
+        {renderInlineEmoji()}
       </button>
 
+      {/* Summary text or "واکنش" label */}
       <button
-        onClick={summaryText && onSummaryClick ? handleTextClick : handleReactionLabelClick}
+        onClick={handleSummaryClick}
         className={cn(
           "text-[11px] truncate max-w-[150px] transition-colors duration-200",
-          isReacted ? "" : "text-muted-foreground hover:text-foreground"
+          isReacted ? "font-medium" : "text-muted-foreground hover:text-foreground"
         )}
         style={isReacted ? { color: activeColor } : undefined}
       >
         {summaryText || "واکنش"}
       </button>
 
-      {/* Picker tray — outline icons with muted colors */}
+      {/* LinkedIn-style emoji picker tray */}
       {open && (
         <div
-          className="fixed inset-x-0 bottom-0 sm:absolute sm:inset-auto sm:bottom-full sm:mb-2 sm:left-0 flex items-center justify-center gap-2 sm:gap-1 sm:rounded-full rounded-t-2xl px-4 sm:px-3 py-4 sm:py-2 z-50 animate-scale-in"
+          className={cn(
+            "fixed inset-x-0 bottom-0 z-50",
+            "sm:absolute sm:inset-auto sm:bottom-full sm:mb-2.5 sm:left-1/2 sm:-translate-x-1/2",
+            "flex items-center justify-center",
+            "sm:rounded-full rounded-t-2xl",
+            "px-3 sm:px-2 py-3 sm:py-1.5",
+            "animate-scale-in"
+          )}
           style={{
-            background: "hsl(var(--background))",
-            boxShadow: "0 -4px 20px -4px hsl(var(--foreground) / 0.1), 0 0 0 1px hsl(var(--border) / 0.5)",
+            background: "hsl(var(--card))",
+            boxShadow: "0 -6px 30px -6px hsl(var(--foreground) / 0.12), 0 0 0 1px hsl(var(--border) / 0.4)",
           }}
         >
-          {REACTION_KEYS.map((key, i) => {
-            const Icon = REACTION_ICONS[key];
-            const isActive = userReaction === key;
-            const colors = REACTION_COLORS[key];
-            return (
-              <button
-                key={key}
-                onClick={(e) => handleSelect(key as ReactionKey, e)}
-                className={cn(
-                  "flex flex-col items-center justify-center rounded-full transition-all duration-150",
-                  "w-[52px] h-[52px] sm:w-[40px] sm:h-[40px]",
-                  "hover:scale-[1.18] hover:-translate-y-1 active:scale-95",
-                )}
-                style={{
-                  animation: `scale-in 0.2s ease-out ${i * 40}ms both`,
-                  backgroundColor: isActive ? colors?.bg : `${colors?.bg?.replace(/[\d.]+\)$/, '0.05)')}`,
-                  boxShadow: isActive ? `0 0 0 2px ${colors?.ring}` : undefined,
-                  color: isActive ? colors?.text : colors?.text,
-                }}
-              >
-                <Icon size={22} strokeWidth={isActive ? 2 : 1.5} className="sm:w-[18px] sm:h-[18px]" style={{ opacity: isActive ? 1 : 0.65 }} />
-                <span className="text-[9px] sm:hidden mt-1 leading-none" style={{ opacity: isActive ? 0.9 : 0.6 }}>
-                  {REACTION_LABELS[key]}
-                </span>
-              </button>
-            );
-          })}
+          <div className="flex items-center gap-1 sm:gap-0.5">
+            {REACTION_KEYS.map((key, i) => {
+              const isActive = userReaction === key;
+              return (
+                <button
+                  key={key}
+                  onClick={(e) => handleSelect(key as ReactionKey, e)}
+                  className={cn(
+                    "flex flex-col items-center justify-center rounded-2xl transition-all duration-150",
+                    "w-[56px] h-[62px] sm:w-[44px] sm:h-[44px]",
+                    "hover:scale-[1.25] hover:-translate-y-1.5 active:scale-90",
+                    isActive && "bg-primary/[0.08] scale-[1.1]"
+                  )}
+                  style={{ animation: `reaction-entry 0.25s ease-out ${i * 45}ms both` }}
+                >
+                  <span className={cn(
+                    "transition-transform duration-150",
+                    "text-[28px] sm:text-[24px] leading-none",
+                    isActive && "scale-110"
+                  )}>
+                    {REACTION_EMOJIS[key]}
+                  </span>
+                  <span className={cn(
+                    "text-[9px] sm:hidden mt-1.5 leading-none",
+                    isActive ? "text-foreground font-medium" : "text-muted-foreground"
+                  )}>
+                    {REACTION_LABELS[key]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
+      {/* Backdrop for mobile */}
       {open && (
         <div
           className="fixed inset-0 z-40 bg-background/40 backdrop-blur-sm sm:hidden"
@@ -206,9 +182,13 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
 
       <style>{`
         @keyframes reaction-pop {
-          0% { transform: scale(0.5); opacity: 0; }
-          60% { transform: scale(1.2); }
+          0% { transform: scale(0.4); opacity: 0; }
+          50% { transform: scale(1.3); }
           100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes reaction-entry {
+          0% { transform: scale(0) translateY(8px); opacity: 0; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
         }
       `}</style>
     </div>

@@ -118,16 +118,14 @@ function NavItem({ to, active, children }: { to: string; active: boolean; childr
       to={to}
       className={cn(
         "flex items-center justify-center flex-1 h-full focus:outline-none group transition-colors duration-200",
-        active ? "text-foreground" : "text-muted-foreground/45"
+        active ? "text-foreground" : "text-muted-foreground/40"
       )}
     >
-      <div className={cn(
-        "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
-        active
-          ? "bg-foreground/[0.06]"
-          : "group-active:scale-90 group-active:bg-foreground/[0.04]"
-      )}>
+      <div className="relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 group-active:scale-90">
         {children}
+        {active && (
+          <span className="absolute -bottom-1 w-4 h-[3px] rounded-full bg-foreground" />
+        )}
       </div>
     </Link>
   );
