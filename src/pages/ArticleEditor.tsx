@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Send, ImagePlus, X, CornerUpRight, FileText, Bold, Italic, List, Quote, Hash, ShieldCheck, ShieldX, Loader2, Save, Clock, CalendarClock, Link2, Search } from "lucide-react";
 import { compressArticleImage } from "@/lib/imageCompression";
 import { sanitizeError, validation } from "@/lib/errorHandler";
+import { playSuccessSound } from "@/lib/sounds";
 import { toPersianNumber } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { useArticleSearch, addCitation } from "@/hooks/useCitations";
