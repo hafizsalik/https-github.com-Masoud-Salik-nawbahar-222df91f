@@ -14,7 +14,7 @@ import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { getRelativeTime } from "@/lib/relativeTime";
 import { FollowersList } from "@/components/profile/FollowersList";
 import { FollowButton } from "@/components/FollowButton";
-import { cn } from "@/lib/utils";
+import { cn, toPersianNumber } from "@/lib/utils";
 
 const Profile = () => {
   const { userId: paramUserId } = useParams();
