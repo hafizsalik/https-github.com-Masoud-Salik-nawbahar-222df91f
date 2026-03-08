@@ -39,9 +39,9 @@ export function ArticleCardMetrics({
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
             className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-accent transition-colors"
-            title="واکنش"
+            title="پسندیدن"
           >
-            <Hand size={15} strokeWidth={1.5} />
+            <Heart size={15} strokeWidth={1.5} />
           </button>
 
           {isRead && (
