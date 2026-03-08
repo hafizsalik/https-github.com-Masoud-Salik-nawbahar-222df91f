@@ -45,21 +45,19 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
     onReact("like");
   };
 
-  // "واکنش" text click: open picker (or show details if has reactions)
+  // Summary text click: show details modal
   const handleTextClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // If there are reactions and a summary click handler, show details
     if (onSummaryClick) {
       onSummaryClick(e);
       return;
     }
-    // Otherwise open the picker
     onHover?.();
     setOpen((prev) => !prev);
   };
 
-  // "واکنش" label click when no reactions: open picker
+  // "واکنش" label click: open picker
   const handleReactionLabelClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -76,25 +74,28 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
   };
 
   const isReacted = Boolean(userReaction);
+  const activeEmoji = userReaction ? REACTION_EMOJIS[userReaction] : null;
 
   return (
     <div ref={containerRef} className="relative flex items-center gap-1.5">
-      {/* Like icon — click directly toggles like */}
+      {/* Reaction icon — shows emoji if reacted, ThumbsUp outline if not */}
       <button
         onClick={handleLikeTap}
         className={cn(
-          "flex items-center transition-colors duration-200",
+          "flex items-center transition-all duration-200",
           isReacted ? "text-foreground" : "text-muted-foreground hover:text-foreground"
         )}
       >
-        <ThumbsUp
-          size={14}
-          strokeWidth={1.5}
-          fill={isReacted ? "currentColor" : "none"}
-        />
+        {activeEmoji ? (
+          <span className="text-[15px] leading-none select-none" style={{ animation: "reaction-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both" }}>
+            {activeEmoji}
+          </span>
+        ) : (
+          <ThumbsUp size={14} strokeWidth={1.5} />
+        )}
       </button>
 
-      {/* Text area: either summary (clickable for details) or "واکنش" (clickable to open picker) */}
+      {/* Text: summary with details or "واکنش" to open picker */}
       {summaryText && onSummaryClick ? (
         <button
           onClick={handleTextClick}
@@ -114,7 +115,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
         </button>
       )}
 
-      {/* Emoji picker tray — responsive, always fully visible */}
+      {/* Emoji picker tray */}
       {open && (
         <div
           className="fixed inset-x-0 bottom-0 sm:absolute sm:inset-auto sm:bottom-full sm:mb-2 sm:left-0 flex items-center justify-center gap-1 sm:gap-0.5 sm:rounded-full rounded-t-2xl px-3 sm:px-2 py-3 sm:py-1.5 z-50 animate-scale-in"
@@ -130,7 +131,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
               className={cn(
                 "w-[40px] h-[40px] sm:w-[32px] sm:h-[32px] flex flex-col items-center justify-center rounded-full text-[22px] sm:text-[18px] transition-all duration-150",
                 "hover:scale-[1.25] hover:-translate-y-1 active:scale-95",
-                userReaction === key && "bg-muted/70 scale-110"
+                userReaction === key && "bg-primary/10 scale-110 ring-1.5 ring-primary/20"
               )}
               style={{ animation: `scale-in 0.18s ease-out ${i * 25}ms both` }}
             >
@@ -147,13 +148,17 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
       {open && (
         <div
           className="fixed inset-0 z-40 bg-background/40 backdrop-blur-sm sm:hidden"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setOpen(false);
-          }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); }}
         />
       )}
+
+      <style>{`
+        @keyframes reaction-pop {
+          0% { transform: scale(0.5); opacity: 0; }
+          60% { transform: scale(1.2); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
