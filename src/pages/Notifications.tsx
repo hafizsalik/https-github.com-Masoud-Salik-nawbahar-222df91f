@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn, toPersianNumber } from "@/lib/utils";
 import { getRelativeTime } from "@/lib/relativeTime";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { REACTION_LABELS } from "@/hooks/useCardReactions";
@@ -30,10 +30,7 @@ function useNotificationExtras(notifications: any[]) {
     const fetchExtras = async () => {
       const result: Record<string, { commentPreview?: string; reactionType?: string }> = {};
 
-      // Fetch comment previews
       if (commentNotifs.length > 0) {
-        const pairs = commentNotifs.map(n => `(${JSON.stringify(n.article_id)}, ${JSON.stringify(n.actor_id)})`);
-        // Fetch latest comments by these actors on these articles
         for (const n of commentNotifs.slice(0, 20)) {
           const { data } = await supabase
             .from("comments")
@@ -49,7 +46,6 @@ function useNotificationExtras(notifications: any[]) {
         }
       }
 
-      // Fetch reaction types
       if (reactionNotifs.length > 0) {
         for (const n of reactionNotifs.slice(0, 20)) {
           const { data } = await supabase
@@ -166,6 +162,32 @@ function getNotificationText(
   }
 }
 
+/** Group notifications by time period */
+function groupByTime(notifications: any[]) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const groups: { label: string; items: any[] }[] = [
+    { label: "امروز", items: [] },
+    { label: "این هفته", items: [] },
+    { label: "قبل‌تر", items: [] },
+  ];
+
+  for (const n of notifications) {
+    const d = new Date(n.created_at);
+    if (d >= today) {
+      groups[0].items.push(n);
+    } else if (d >= weekAgo) {
+      groups[1].items.push(n);
+    } else {
+      groups[2].items.push(n);
+    }
+  }
+
+  return groups.filter(g => g.items.length > 0);
+}
+
 const Notifications = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -179,6 +201,8 @@ const Notifications = () => {
 
   const [showSettings, setShowSettings] = useState(false);
 
+  const groups = useMemo(() => groupByTime(notifications), [notifications]);
+
   const handlePushToggle = async (checked: boolean) => {
     if (checked) await subscribe();
     else await unsubscribe();
@@ -190,7 +214,7 @@ const Notifications = () => {
         <SEOHead title="اعلانات" description="اعلانات نوبهار" ogUrl="/notifications" noIndex />
         <div className="flex flex-col items-center justify-center py-20 px-4 text-center animate-fade-in">
           <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
-            <Bell size={22} className="text-muted-foreground/40" />
+            <Bell size={22} className="text-muted-foreground/40" aria-hidden="true" />
           </div>
           <h2 className="text-[15px] font-bold mb-1.5">اعلان‌ها</h2>
           <p className="text-muted-foreground text-[12px] mb-5 max-w-[220px] leading-relaxed">
@@ -216,39 +240,41 @@ const Notifications = () => {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors px-2 py-1.5 rounded-md"
+                  className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors px-2 py-1.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  aria-label="خواندن همه اعلان‌ها"
                 >
-                  <CheckCheck size={12} />
+                  <CheckCheck size={12} aria-hidden="true" />
                   <span>خواندن همه</span>
                 </button>
               )}
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="p-1.5 text-muted-foreground/40 hover:text-foreground transition-colors rounded-md"
+                className="p-1.5 text-muted-foreground/40 hover:text-foreground transition-colors rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                aria-label={showSettings ? "بستن تنظیمات" : "تنظیمات اعلان‌ها"}
               >
                 {showSettings ? <X size={16} strokeWidth={1.5} /> : <Settings size={16} strokeWidth={1.5} />}
               </button>
             </div>
           </div>
 
-          {/* Settings Panel — compact & refined */}
+          {/* Settings Panel */}
           {showSettings && (
-            <div className="border-b border-border/40 px-5 py-3 animate-slide-down">
+            <div className="border-b border-border/40 px-5 py-3 animate-slide-down" role="region" aria-label="تنظیمات اعلان‌ها">
               <div className="space-y-0">
                 {isSupported && (
                   <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-2.5">
-                      <BellRing size={13} className="text-muted-foreground/50" />
+                      <BellRing size={13} className="text-muted-foreground/50" aria-hidden="true" />
                       <div>
                         <span className="text-[12px]">اعلان‌های پوش</span>
                         <p className="text-[10px] text-muted-foreground/40 leading-tight">دریافت خارج از اپ</p>
                       </div>
                     </div>
-                    <Switch checked={isSubscribed} onCheckedChange={handlePushToggle} disabled={permission === 'denied'} />
+                    <Switch checked={isSubscribed} onCheckedChange={handlePushToggle} disabled={permission === 'denied'} aria-label="فعال‌سازی اعلان‌های پوش" />
                   </div>
                 )}
                 {permission === 'denied' && (
-                  <div className="text-[10px] text-muted-foreground/60 bg-muted/40 rounded-lg px-3 py-2 mb-1">
+                  <div className="text-[10px] text-muted-foreground/60 bg-muted/40 rounded-lg px-3 py-2 mb-1" role="alert">
                     <p>اعلان‌ها در مرورگر مسدود شده‌اند.</p>
                     <p className="mt-0.5 text-muted-foreground/40 leading-relaxed">
                       برای فعال‌سازی، روی آیکون قفل 🔒 کنار آدرس سایت کلیک کنید و اعلان‌ها را مجاز کنید.
@@ -262,12 +288,13 @@ const Notifications = () => {
                 ].map(({ key, icon: Icon, label }) => (
                   <div key={key} className="flex items-center justify-between py-1.5">
                     <div className="flex items-center gap-2.5">
-                      <Icon size={13} className="text-muted-foreground/50" />
+                      <Icon size={13} className="text-muted-foreground/50" aria-hidden="true" />
                       <span className="text-[12px]">{label}</span>
                     </div>
                     <Switch
                       checked={settings[key]}
                       onCheckedChange={(checked) => updateSettings({ [key]: checked })}
+                      aria-label={`اعلان ${label}`}
                     />
                   </div>
                 ))}
@@ -276,85 +303,95 @@ const Notifications = () => {
           )}
 
           {loading ? (
-            <div className="flex justify-center py-16">
+            <div className="flex justify-center py-16" role="status" aria-label="در حال بارگذاری">
               <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
-                <BellOff size={20} className="text-muted-foreground/35" />
+                <BellOff size={20} className="text-muted-foreground/35" aria-hidden="true" />
               </div>
               <p className="text-[12px] text-muted-foreground/60">هنوز اعلانی ندارید</p>
             </div>
           ) : (
-            <div>
-              {notifications.map((notification, index) => {
-                const extra = extras[notification.id];
-                return (
-                  <div
-                    key={notification.id}
-                    className={cn(
-                      "flex items-start gap-2.5 px-5 py-3 border-b border-border/30 transition-colors relative group",
-                      !notification.is_read && "bg-primary/[0.025]",
-                      index < 8 && "animate-slide-up"
-                    )}
-                    style={index < 8 ? { animationDelay: `${index * 20}ms` } : undefined}
-                  >
-                    <Link
-                      to={
-                        notification.type === "follow"
-                          ? `/profile/${notification.actor_id}`
-                          : notification.article_id
-                          ? `/article/${notification.article_id}`
-                          : "#"
-                      }
-                      onClick={() => !notification.is_read && markAsRead(notification.id)}
-                      className="flex items-start gap-2.5 flex-1 min-w-0"
-                    >
-                      {/* Actor avatar */}
-                      <div className="relative shrink-0 mt-0.5">
-                        {notification.actor?.avatar_url ? (
-                          <img
-                            src={notification.actor.avatar_url}
-                            alt=""
-                            className="w-8 h-8 rounded-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-muted-foreground/60">
-                              {notification.actor?.display_name?.charAt(0) || "?"}
-                            </span>
-                          </div>
-                        )}
-                        {/* Type badge on avatar */}
-                        <div className="absolute -bottom-0.5 -left-0.5 w-[18px] h-[18px] rounded-full bg-background flex items-center justify-center shadow-sm border border-border/30 overflow-hidden">
-                          {getNotificationIcon(notification.type, extra?.reactionType)}
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12.5px] leading-relaxed">
-                          {getNotificationText(
-                            notification.type,
-                            notification.actor?.display_name || "کاربر",
-                            notification.article?.title,
-                            extra
-                          )}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground/35 mt-0.5">
-                          {getRelativeTime(notification.created_at)}
-                        </p>
-                      </div>
-                    </Link>
-
-                    {/* Unread dot */}
-                    {!notification.is_read && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary/60 mt-2.5 shrink-0" />
-                    )}
+            <div role="list" aria-label="لیست اعلان‌ها">
+              {groups.map((group) => (
+                <div key={group.label}>
+                  {/* Time group header */}
+                  <div className="sticky top-[6.25rem] z-20 bg-muted/50 backdrop-blur-sm px-5 py-1.5 border-b border-border/20">
+                    <span className="text-[10.5px] font-semibold text-muted-foreground/50">{group.label}</span>
                   </div>
-                );
-              })}
+
+                  {group.items.map((notification, index) => {
+                    const extra = extras[notification.id];
+                    return (
+                      <div
+                        key={notification.id}
+                        role="listitem"
+                        className={cn(
+                          "flex items-start gap-2.5 px-5 py-3 border-b border-border/30 transition-colors relative group",
+                          !notification.is_read && "bg-primary/[0.025]",
+                          index < 8 && "animate-slide-up"
+                        )}
+                        style={index < 8 ? { animationDelay: `${index * 20}ms` } : undefined}
+                      >
+                        <Link
+                          to={
+                            notification.type === "follow"
+                              ? `/profile/${notification.actor_id}`
+                              : notification.article_id
+                              ? `/article/${notification.article_id}`
+                              : "#"
+                          }
+                          onClick={() => !notification.is_read && markAsRead(notification.id)}
+                          className="flex items-start gap-2.5 flex-1 min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md"
+                          aria-label={`اعلان از ${notification.actor?.display_name || "کاربر"}`}
+                        >
+                          {/* Actor avatar */}
+                          <div className="relative shrink-0 mt-0.5">
+                            {notification.actor?.avatar_url ? (
+                              <img
+                                src={notification.actor.avatar_url}
+                                alt=""
+                                className="w-8 h-8 rounded-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                <span className="text-[10px] font-bold text-muted-foreground/60">
+                                  {notification.actor?.display_name?.charAt(0) || "?"}
+                                </span>
+                              </div>
+                            )}
+                            <div className="absolute -bottom-0.5 -left-0.5 w-[18px] h-[18px] rounded-full bg-background flex items-center justify-center shadow-sm border border-border/30 overflow-hidden">
+                              {getNotificationIcon(notification.type, extra?.reactionType)}
+                            </div>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12.5px] leading-relaxed">
+                              {getNotificationText(
+                                notification.type,
+                                notification.actor?.display_name || "کاربر",
+                                notification.article?.title,
+                                extra
+                              )}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/35 mt-0.5">
+                              {getRelativeTime(notification.created_at)}
+                            </p>
+                          </div>
+                        </Link>
+
+                        {/* Unread dot */}
+                        {!notification.is_read && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/60 mt-2.5 shrink-0" aria-label="خوانده نشده" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           )}
         </div>

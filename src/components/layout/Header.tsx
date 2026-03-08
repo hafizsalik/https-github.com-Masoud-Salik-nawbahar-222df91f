@@ -77,7 +77,8 @@ export function Header() {
         <div className="flex items-center gap-0.5">
           <Link 
             to="/notifications" 
-            className="relative flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground transition-colors"
+            className="relative flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md"
+            aria-label={`اعلان‌ها${unreadCount > 0 ? ` - ${toPersianNumber(unreadCount)} خوانده نشده` : ''}`}
           >
             <Bell size={19} strokeWidth={1.5} />
             {unreadCount > 0 && (

@@ -72,7 +72,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   };
 
   return (
-    <article className="group">
+    <article className="group" aria-label={article.title}>
       {article.parent_title && article.parent_article_id && (
         <Link
           to={`/article/${article.parent_article_id}`}
