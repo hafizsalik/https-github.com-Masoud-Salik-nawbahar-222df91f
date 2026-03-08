@@ -39,8 +39,9 @@ export function ArticleCardMetrics({
   const buildReactionLabel = (): string | null => {
     if (displayCount === 0) return null;
 
+    // Before fetch completes, show count from article data
     if (totalCount === 0 && reactionCount > 0) {
-      return `${toPersianNumber(reactionCount)} نفر`;
+      return `${toPersianNumber(reactionCount)} واکنش`;
     }
 
     const names: string[] = [];
@@ -49,7 +50,7 @@ export function ArticleCardMetrics({
       if (!names.includes(n)) names.push(n);
     });
 
-    if (names.length === 0) return `${toPersianNumber(displayCount)} نفر`;
+    if (names.length === 0) return `${toPersianNumber(displayCount)} واکنش`;
 
     const shown = names.slice(0, 2);
     const remaining = Math.max(displayCount - shown.length, 0);
