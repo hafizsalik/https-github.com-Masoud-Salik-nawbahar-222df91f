@@ -64,21 +64,18 @@ export default defineConfig(({ mode }) => ({
           {
             src: "/screenshots/mobile-home.png",
             sizes: "750x1334",
-            type: "image/png",
             form_factor: "narrow",
             label: "صفحه اصلی نوبهار",
           },
           {
             src: "/screenshots/mobile-article.png",
             sizes: "750x1334",
-            type: "image/png",
             form_factor: "narrow",
             label: "مشاهده مقاله",
           },
           {
             src: "/screenshots/desktop-home.png",
             sizes: "1920x1080",
-            type: "image/png",
             form_factor: "wide",
             label: "صفحه اصلی دسکتاپ",
           },
