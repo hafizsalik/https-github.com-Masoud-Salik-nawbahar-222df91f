@@ -40,21 +40,16 @@ const scoreLabels = [
   { key: "innovation", label: "نوآوری", icon: Lightbulb, max: 5, color: "text-rose-500" },
 ];
 
-// AI pre-review scoring based on content analysis
-function generateAIScores(content: string, title: string) {
+// Fallback local AI scores (used if edge function hasn't run yet)
+function fallbackAIScores(content: string, title: string) {
   const wordCount = content.split(/\s+/).length;
   const hasScientificTerms = /علم|تحقیق|مطالعه|پژوهش|بررسی|آمار|داده|نتیجه|روش/i.test(content);
-  const hasEthicalTerms = /اخلاق|ارزش|احترام|مسئولیت|انصاف|عدالت/i.test(content);
-  const hasReferences = /منبع|مرجع|کتاب|مقاله|نقل/i.test(content);
   const hasParagraphs = (content.match(/\n\n/g) || []).length >= 3;
-  const hasProperTitle = title.length >= 10 && title.length <= 100;
-  
-  const science = Math.min(15, (hasScientificTerms ? 10 : 6) + (hasReferences ? 3 : 0) + Math.floor(Math.random() * 3));
-  const ethics = Math.min(10, (hasEthicalTerms ? 7 : 5) + Math.floor(Math.random() * 2));
-  const writing = Math.min(10, (hasParagraphs ? 6 : 4) + (wordCount > 300 ? 2 : 0) + Math.floor(Math.random() * 2));
-  const timing = Math.min(10, 5 + Math.floor(Math.random() * 3));
-  const innovation = Math.min(5, (hasProperTitle && content.length > 1000 ? 3 : 2) + Math.floor(Math.random() * 2));
-  
+  const science = Math.min(15, (hasScientificTerms ? 8 : 5));
+  const ethics = Math.min(10, 5);
+  const writing = Math.min(10, (hasParagraphs ? 6 : 4) + (wordCount > 300 ? 2 : 0));
+  const timing = Math.min(10, 5);
+  const innovation = Math.min(5, title.length > 10 ? 3 : 2);
   return { science, ethics, writing, timing, innovation };
 }
 

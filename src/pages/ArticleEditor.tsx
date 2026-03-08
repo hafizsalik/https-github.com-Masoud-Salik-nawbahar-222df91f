@@ -103,7 +103,7 @@ const ArticleEditor = () => {
         coverImageUrl = urlData.publicUrl;
       }
 
-      const { error } = await supabase.from("articles").insert({
+      const { data: insertedArticle, error } = await supabase.from("articles").insert({
         title: title.trim(),
         content: content.trim(),
         author_id: user.id,
@@ -111,13 +111,20 @@ const ArticleEditor = () => {
         cover_image_url: coverImageUrl,
         parent_article_id: responseToId || null,
         tags,
-      });
+      }).select("id").single();
 
       if (error) throw error;
 
       if (!responseToId) localStorage.removeItem(DRAFT_KEY);
       toast({ title: "✅ موفق!", description: responseToId ? "پاسخ شما منتشر شد" : "مقاله شما منتشر شد" });
       navigate("/");
+
+      // Trigger AI scoring in background
+      if (insertedArticle?.id) {
+        supabase.functions.invoke("ai-score-article", {
+          body: { title: title.trim(), content: content.trim(), articleId: insertedArticle.id },
+        }).catch(console.error);
+      }
     } catch (error: any) {
       toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
     } finally {
