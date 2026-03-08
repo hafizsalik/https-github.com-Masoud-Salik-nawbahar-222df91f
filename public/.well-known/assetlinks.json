@@ -3,8 +3,8 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "app.lovable.nawbahar",
-      "sha256_cert_fingerprints": []
+      "package_name": "app.lovable.nawbahar.twa",
+      "sha256_cert_fingerprints": ["50:FC:30:35:0C:C5:F4:56:25:36:F7:C3:17:A9:8C:1E:56:B4:F6:8D:88:07:80:D8:A1:E4:24:9A:C2:9A:F1:29"]
     }
   }
 ]
