@@ -118,18 +118,21 @@ export default defineConfig(({ mode }) => ({
           {
             src: "/screenshots/desktop-home.png",
             sizes: "1280x720",
+            type: "image/png",
             form_factor: "wide",
             label: "صفحه اصلی نوبهار",
           },
           {
             src: "/screenshots/mobile-home.png",
             sizes: "390x844",
+            type: "image/png",
             form_factor: "narrow",
             label: "صفحه اصلی موبایل",
           },
           {
             src: "/screenshots/mobile-article.png",
             sizes: "390x844",
+            type: "image/png",
             form_factor: "narrow",
             label: "مشاهده مقاله",
           },
