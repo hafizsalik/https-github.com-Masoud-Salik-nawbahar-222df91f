@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { sanitizeError, validation } from "@/lib/errorHandler";
 
 const Auth = () => {
@@ -35,7 +35,7 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast({ title: "خوش آمدید! 👋", description: "با موفقیت وارد شدید" });
+        toast({ title: "خوش آمدید! 👋" });
         navigate("/");
       } else {
         const { error } = await supabase.auth.signUp({
@@ -47,7 +47,7 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast({ title: "ثبت‌نام موفق! ✅", description: "لطفاً ایمیل خود را تأیید کنید" });
+        toast({ title: "ثبت‌نام موفق ✅", description: "لطفاً ایمیل خود را تأیید کنید" });
       }
     } catch (error: any) {
       toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
@@ -57,50 +57,44 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-48 h-48 bg-accent/5 rounded-full blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-sm animate-fade-in relative z-10">
+    <div className="min-h-screen bg-background flex items-center justify-center p-5">
+      <div className="w-full max-w-sm animate-fade-in">
         {/* Back */}
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          className="flex items-center gap-1.5 text-muted-foreground/45 hover:text-foreground mb-10 transition-colors"
         >
-          <ArrowLeft size={18} />
-          <span className="text-sm">بازگشت</span>
+          <ArrowRight size={18} strokeWidth={1.5} />
+          <span className="text-[13px]">بازگشت</span>
         </button>
 
         {/* Brand */}
-        <div className="text-center mb-10">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center mx-auto mb-5 animate-scale-in border border-primary/10">
-            <span className="text-4xl font-black gradient-text">ن</span>
+        <div className="mb-10">
+          <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center mb-4">
+            <span className="text-[14px] font-black text-primary-foreground leading-none">ن</span>
           </div>
-          <h1 className="text-3xl font-black text-foreground">نوبهار</h1>
-          <p className="text-muted-foreground text-sm mt-2">
-            {isLogin ? "وارد حساب خود شوید" : "به جامعه ما بپیوندید"}
+          <h1 className="text-[22px] font-extrabold text-foreground">
+            {isLogin ? "ورود به نوبهار" : "عضویت در نوبهار"}
+          </h1>
+          <p className="text-[13px] text-muted-foreground/50 mt-1.5">
+            {isLogin ? "وارد حساب خود شوید" : "حساب جدید بسازید"}
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleAuth} className="space-y-4">
           {!isLogin && (
-            <div className="space-y-2 animate-slide-down">
-              <Label htmlFor="displayName" className="text-foreground text-sm font-semibold">
-                نام نمایشی
-              </Label>
+            <div className="space-y-1.5 animate-slide-down">
+              <Label htmlFor="displayName" className="text-[12px] text-muted-foreground">نام نمایشی</Label>
               <div className="relative">
-                <User className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <User className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                 <Input
                   id="displayName"
                   type="text"
                   placeholder="نام شما"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="pr-10 h-12 rounded-xl border-border/60 focus:border-primary/40"
+                  className="pr-9 h-11 bg-muted/30 border-0 rounded-lg text-[13px] focus:ring-1 focus:ring-primary/20"
                   required={!isLogin}
                   autoComplete="name"
                 />
@@ -108,17 +102,17 @@ const Auth = () => {
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-foreground text-sm font-semibold">ایمیل</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-[12px] text-muted-foreground">ایمیل</Label>
             <div className="relative">
-              <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
               <Input
                 id="email"
                 type="email"
                 placeholder="example@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pr-10 h-12 rounded-xl border-border/60 focus:border-primary/40"
+                className="pr-9 h-11 bg-muted/30 border-0 rounded-lg text-[13px] focus:ring-1 focus:ring-primary/20"
                 dir="ltr"
                 required
                 autoComplete="email"
@@ -126,17 +120,17 @@ const Auth = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-foreground text-sm font-semibold">رمز عبور</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-[12px] text-muted-foreground">رمز عبور</Label>
             <div className="relative">
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pr-10 pl-10 h-12 rounded-xl border-border/60 focus:border-primary/40"
+                className="pr-9 pl-9 h-11 bg-muted/30 border-0 rounded-lg text-[13px] focus:ring-1 focus:ring-primary/20"
                 dir="ltr"
                 required
                 minLength={6}
@@ -145,23 +139,22 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={showPassword ? "مخفی کردن رمز" : "نمایش رمز"}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-foreground transition-colors"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
           <Button
             type="submit"
-            className="w-full h-12 text-base font-semibold btn-press rounded-xl mt-2"
+            className="w-full h-11 text-[14px] font-semibold rounded-lg mt-2"
             disabled={loading}
           >
             {loading ? (
               <span className="flex items-center gap-2">
                 <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                لطفاً صبر کنید...
+                صبر کنید...
               </span>
             ) : isLogin ? "ورود" : "ثبت‌نام"}
           </Button>
@@ -172,18 +165,14 @@ const Auth = () => {
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
-            className="text-primary hover:text-accent text-sm transition-colors font-medium"
+            className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
           >
             {isLogin ? "حساب ندارید؟ ثبت‌نام کنید" : "حساب دارید؟ وارد شوید"}
           </button>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground/60">
-          با ورود یا ثبت‌نام، با{" "}
-          <a href="#" className="underline hover:text-foreground">شرایط استفاده</a>
-          {" "}و{" "}
-          <a href="#" className="underline hover:text-foreground">حریم خصوصی</a>
-          {" "}موافقت می‌کنید.
+        <p className="mt-6 text-center text-[10px] text-muted-foreground/30">
+          با ورود، با شرایط استفاده و حریم خصوصی موافقت می‌کنید.
         </p>
       </div>
     </div>

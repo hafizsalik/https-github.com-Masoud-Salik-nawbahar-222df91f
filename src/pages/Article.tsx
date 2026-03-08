@@ -134,19 +134,19 @@ const Article = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between px-4 h-12 max-w-screen-md mx-auto">
+      {/* Header — matches main header style */}
+      <header className="sticky top-0 z-50 bg-background border-b border-border">
+        <div className="flex items-center justify-between px-4 h-11 max-w-screen-md mx-auto">
           <button onClick={() => navigate(-1)} className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowRight size={22} strokeWidth={1.5} />
           </button>
           <div className="flex items-center gap-1">
-            <button onClick={handleShare} className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted">
-              <Share2 size={17} strokeWidth={1.5} />
+            <button onClick={handleShare} className="p-2 text-muted-foreground/45 hover:text-foreground transition-colors">
+              <Share2 size={18} strokeWidth={1.5} />
             </button>
             {isAdmin && (
-              <Button variant="ghost" size="icon" onClick={() => setRatingModalOpen(true)} className="text-muted-foreground h-8 w-8">
-                <Star size={17} strokeWidth={1.5} />
+              <Button variant="ghost" size="icon" onClick={() => setRatingModalOpen(true)} className="text-muted-foreground/45 h-8 w-8">
+                <Star size={18} strokeWidth={1.5} />
               </Button>
             )}
             <ArticleActionsMenu articleId={article.id} authorId={article.author_id} articleTitle={article.title} />
@@ -160,33 +160,33 @@ const Article = () => {
         {parentArticle && (
           <Link
             to={`/article/${parentArticle.id}`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors bg-primary/5 px-3 py-2 rounded-lg"
+            className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-primary mb-6 transition-colors"
           >
-            <CornerUpRight size={16} strokeWidth={1.5} className="text-primary" />
+            <CornerUpRight size={12} strokeWidth={1.5} className="text-primary/50" />
             <span>در پاسخ به:</span>
-            <span className="text-foreground font-medium">{parentArticle.title}</span>
+            <span className="text-foreground font-medium">{parentArticle.title.slice(0, 40)}{parentArticle.title.length > 40 ? "…" : ""}</span>
           </Link>
         )}
 
         {/* Author Section */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2.5">
             <Link to={`/profile/${article.author_id}`}>
               {article.author?.avatar_url ? (
-                <img src={article.author.avatar_url} alt={article.author.display_name} className="w-11 h-11 rounded-full object-cover ring-2 ring-primary/10" />
+                <img src={article.author.avatar_url} alt={article.author.display_name} className="w-9 h-9 rounded-full object-cover" />
               ) : (
-                <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary font-medium text-lg">{article.author?.display_name?.charAt(0)}</span>
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-bold text-sm">{article.author?.display_name?.charAt(0)}</span>
                 </div>
               )}
             </Link>
             <div>
-              <Link to={`/profile/${article.author_id}`} className="font-medium text-foreground hover:underline">
+              <Link to={`/profile/${article.author_id}`} className="text-[13px] font-medium text-foreground hover:underline">
                 {article.author?.display_name}
               </Link>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/50 mt-0.5">
                 <span>{formatSolarShort(article.created_at)}</span>
-                <span className="text-muted-foreground/40">·</span>
+                <span className="text-muted-foreground/20">·</span>
                 <span>{toPersianNumber(readTime)} دقیقه مطالعه</span>
               </div>
             </div>
@@ -195,11 +195,11 @@ const Article = () => {
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-foreground leading-relaxed mb-6">{article.title}</h1>
+        <h1 className="text-[22px] font-extrabold text-foreground leading-[1.7] mb-5">{article.title}</h1>
 
         {/* Cover Image */}
         {article.cover_image_url && (
-          <div className="rounded-xl overflow-hidden mb-8">
+          <div className="rounded-lg overflow-hidden mb-8">
             <img src={article.cover_image_url} alt={article.title} className="w-full object-cover" loading="lazy" />
           </div>
         )}
@@ -211,12 +211,12 @@ const Article = () => {
 
         {/* Tags */}
         {article.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-8">
+          <div className="flex flex-wrap gap-1.5 mt-8">
             {article.tags.map(tag => (
               <Link
                 key={tag}
                 to={`/explore?tag=${encodeURIComponent(tag)}`}
-                className="px-3 py-1.5 bg-muted text-muted-foreground rounded-full text-xs hover:bg-primary/10 hover:text-primary transition-colors"
+                className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-[11px] hover:bg-primary/10 hover:text-primary transition-colors"
               >
                 #{tag}
               </Link>
@@ -234,7 +234,7 @@ const Article = () => {
         <ResponseArticles responses={responses} />
 
         {/* Comments Section */}
-        <div id="comments" className="mt-10 pt-8 border-t border-border">
+        <div id="comments" className="mt-8 pt-6 border-t border-border">
           <CommentSection comments={comments} loading={commentsLoading} submitting={submitting} userId={userId} onAddComment={addComment} onDeleteComment={deleteComment} />
         </div>
       </main>

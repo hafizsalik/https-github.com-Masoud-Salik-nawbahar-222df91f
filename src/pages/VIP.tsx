@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Crown, Trophy, Award, Plus, Edit3, Trash2, Save } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Crown, Plus, Edit3, Trash2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +8,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
+import { getRelativeTime } from "@/lib/relativeTime";
 
 interface VIPPost {
   id: string;
@@ -52,13 +53,13 @@ const VIP = () => {
         .update({ title: editPost.title, content: editPost.content, type: editPost.type || "announcement" })
         .eq("id", editPost.id);
       if (error) { toast({ title: "خطا", description: error.message, variant: "destructive" }); return; }
-      toast({ title: "✅ ویرایش شد" });
+      toast({ title: "ویرایش شد ✅" });
     } else {
       const { error } = await supabase
         .from("vip_posts")
         .insert({ title: editPost.title, content: editPost.content, type: editPost.type || "announcement", author_id: user?.id });
       if (error) { toast({ title: "خطا", description: error.message, variant: "destructive" }); return; }
-      toast({ title: "✅ مطلب اضافه شد" });
+      toast({ title: "مطلب اضافه شد ✅" });
     }
     setEditPost({});
     setIsEditing(false);
@@ -78,144 +79,106 @@ const VIP = () => {
 
   return (
     <AppLayout>
-      <div className="p-4 space-y-5 animate-fade-in">
-        {/* Hero */}
-        <div className="text-center py-8 px-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-2xl border border-primary/10 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-4 right-8 w-16 h-16 bg-primary/20 rounded-full blur-2xl" />
-            <div className="absolute bottom-6 left-10 w-20 h-20 bg-accent/20 rounded-full blur-2xl" />
-          </div>
-          <div className="relative z-10">
-            <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-4">
-              <Crown size={32} className="text-primary" />
-            </div>
-            <h1 className="text-xl font-black text-foreground mb-2">محتوای ویژه</h1>
-            <p className="text-muted-foreground text-xs max-w-xs mx-auto leading-relaxed">
-              سرمقاله‌ها، مسابقات و اطلاعیه‌های ویژه نوبهار
-            </p>
-          </div>
+      <div className="animate-fade-in">
+        {/* Header */}
+        <div className="sticky top-11 z-30 bg-background border-b border-border px-5 py-3 flex items-center justify-between">
+          <h1 className="text-[15px] font-bold flex items-center gap-2">
+            <Crown size={17} strokeWidth={1.5} className="text-muted-foreground/45" />
+            محتوای ویژه
+          </h1>
+          {isAdmin && (
+            <button
+              onClick={() => { setIsEditing(true); setEditPost({ type: "announcement" }); }}
+              className="p-2 text-muted-foreground/45 hover:text-foreground transition-colors"
+            >
+              <Plus size={18} strokeWidth={1.5} />
+            </button>
+          )}
         </div>
-
-        {/* Admin Add Button */}
-        {isAdmin && (
-          <Button
-            onClick={() => { setIsEditing(true); setEditPost({ type: "announcement" }); }}
-            className="w-full gap-2"
-            variant="outline"
-          >
-            <Plus size={16} />
-            افزودن مطلب جدید
-          </Button>
-        )}
 
         {/* Edit Form */}
         {isAdmin && isEditing && (
-          <Card className="border-primary/30">
-            <CardContent className="pt-4 space-y-3">
-              <Input
-                placeholder="عنوان"
-                value={editPost.title || ""}
-                onChange={(e) => setEditPost(prev => ({ ...prev, title: e.target.value }))}
-              />
-              <Textarea
-                placeholder="محتوا..."
-                value={editPost.content || ""}
-                onChange={(e) => setEditPost(prev => ({ ...prev, content: e.target.value }))}
-                className="min-h-[100px]"
-              />
-              <div className="flex gap-2">
-                {(["announcement", "editorial", "competition"] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setEditPost(prev => ({ ...prev, type }))}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                      editPost.type === type ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {typeLabels[type]}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="ghost" size="sm" onClick={() => { setIsEditing(false); setEditPost({}); }}>انصراف</Button>
-                <Button size="sm" onClick={handleSave} className="gap-1.5">
-                  <Save size={14} />
-                  ذخیره
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="px-5 py-4 border-b border-border space-y-3 animate-slide-down">
+            <Input
+              placeholder="عنوان"
+              value={editPost.title || ""}
+              onChange={(e) => setEditPost(prev => ({ ...prev, title: e.target.value }))}
+              className="bg-muted/30 border-0 h-9 text-[13px]"
+            />
+            <Textarea
+              placeholder="محتوا..."
+              value={editPost.content || ""}
+              onChange={(e) => setEditPost(prev => ({ ...prev, content: e.target.value }))}
+              className="bg-muted/30 border-0 min-h-[80px] text-[13px]"
+            />
+            <div className="flex gap-1.5">
+              {(["announcement", "editorial", "competition"] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setEditPost(prev => ({ ...prev, type }))}
+                  className={cn(
+                    "px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors",
+                    editPost.type === type ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground"
+                  )}
+                >
+                  {typeLabels[type]}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" size="sm" onClick={() => { setIsEditing(false); setEditPost({}); }} className="text-[12px] h-8">انصراف</Button>
+              <Button size="sm" onClick={handleSave} className="text-[12px] h-8 gap-1">
+                <Save size={12} />
+                ذخیره
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* Posts */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-7 h-7 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="flex justify-center py-16">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : posts.length > 0 ? (
-          <div className="space-y-3">
+          <div>
             {posts.map((post) => (
-              <Card key={post.id}>
-                <CardHeader className="pb-2 flex-row items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+              <div key={post.id} className="px-5 py-5 border-b border-border/40 animate-slide-up">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-wider">
                       {typeLabels[post.type] || post.type}
                     </span>
-                    <CardTitle className="text-sm mt-2">{post.title}</CardTitle>
+                    <h3 className="text-[15px] font-extrabold text-foreground leading-relaxed mt-1">{post.title}</h3>
+                    <p className="text-[13px] text-muted-foreground/60 leading-[1.9] mt-2 whitespace-pre-wrap">{post.content}</p>
+                    <p className="text-[10px] text-muted-foreground/30 mt-3">{getRelativeTime(post.created_at)}</p>
                   </div>
                   {isAdmin && (
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost" size="icon" className="h-7 w-7"
+                    <div className="flex gap-0.5 shrink-0">
+                      <button
                         onClick={() => { setEditPost(post); setIsEditing(true); }}
+                        className="p-1.5 text-muted-foreground/30 hover:text-foreground transition-colors"
                       >
                         <Edit3 size={13} />
-                      </Button>
-                      <Button
-                        variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                      </button>
+                      <button
                         onClick={() => handleDelete(post.id)}
+                        className="p-1.5 text-muted-foreground/30 hover:text-destructive transition-colors"
                       >
                         <Trash2 size={13} />
-                      </Button>
+                      </button>
                     </div>
                   )}
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-7 whitespace-pre-wrap">{post.content}</p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
-          <div className="space-y-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Trophy size={16} className="text-primary" />
-                  مسابقات
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-6 bg-muted/20 rounded-lg border border-dashed border-border/50">
-                  <Trophy size={28} className="text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground">به زودی اولین مسابقه نویسندگی اعلام می‌شود</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Award size={16} className="text-primary" />
-                  سرمقاله‌ها
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-6 bg-muted/20 rounded-lg border border-dashed border-border/50">
-                  <Award size={28} className="text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground">سرمقاله‌های منتخب به زودی منتشر می‌شوند</p>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center mb-4">
+              <Crown size={24} className="text-muted-foreground/25" />
+            </div>
+            <p className="text-[13px] text-muted-foreground/40">محتوای ویژه به زودی منتشر می‌شود</p>
           </div>
         )}
       </div>
