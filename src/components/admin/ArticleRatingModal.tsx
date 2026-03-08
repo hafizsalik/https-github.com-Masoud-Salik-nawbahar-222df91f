@@ -65,7 +65,6 @@ export function ArticleRatingModal({
           editorial_score_writing: scores.writing,
           editorial_score_timing: scores.timing,
           editorial_score_innovation: scores.innovation,
-          total_feed_rank: totalScore,
         })
         .eq("id", articleId);
 
