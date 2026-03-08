@@ -42,14 +42,26 @@ export default defineConfig(({ mode }) => ({
         categories: ["news", "social", "education", "lifestyle"],
         icons: [
           {
-            src: "/pwa-512x512.png",
-            sizes: "any",
+            src: "/pwa-192x192.png",
+            sizes: "192x192 1024x1024",
             type: "image/png",
             purpose: "any",
           },
           {
+            src: "/pwa-512x512.png",
+            sizes: "512x512 1024x1024",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-maskable-192x192.png",
+            sizes: "192x192 1024x1024",
+            type: "image/png",
+            purpose: "maskable",
+          },
+          {
             src: "/pwa-maskable-512x512.png",
-            sizes: "any",
+            sizes: "512x512 1024x1024",
             type: "image/png",
             purpose: "maskable",
           },
