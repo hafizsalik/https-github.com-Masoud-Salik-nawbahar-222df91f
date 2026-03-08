@@ -6,6 +6,7 @@ import { useComments } from "@/hooks/useComments";
 import { useResponseArticles } from "@/hooks/useResponseArticles";
 import { useCardReactions } from "@/hooks/useCardReactions";
 import { ArticleActionsMenu } from "./ArticleActionsMenu";
+import { FollowButton } from "@/components/FollowButton";
 import { cn } from "@/lib/utils";
 import { SlideDownComments } from "./SlideDownComments";
 import { formatSolarShort } from "@/lib/solarHijri";
@@ -36,7 +37,7 @@ function isArticleRead(articleId: string): boolean {
   }
 }
 
-export function ArticleCard({ article, onDelete: _onDelete }: ArticleCardProps) {
+export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   const navigate = useNavigate();
   const {
     comments,
@@ -91,28 +92,33 @@ export function ArticleCard({ article, onDelete: _onDelete }: ArticleCardProps) 
 
       <Link to={`/article/${article.id}`} className="block px-5 pt-5 pb-1">
         <div className="flex items-center justify-between mb-2.5">
-          <button onClick={handleAuthorClick} className="flex items-center gap-1.5 group/author min-w-0">
-            {article.author?.avatar_url ? (
-              <img
-                src={article.author.avatar_url}
-                alt=""
-                className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-primary text-[8px] font-bold">{article.author?.display_name?.charAt(0)}</span>
-              </div>
-            )}
-            <span className="text-[11.5px] text-foreground/55 group-hover/author:text-primary transition-colors font-medium truncate max-w-[80px]">
-              {article.author?.display_name}
-            </span>
+          <div className="flex items-center gap-1.5 group/author min-w-0">
+            <button onClick={handleAuthorClick} className="flex items-center gap-1.5 min-w-0">
+              {article.author?.avatar_url ? (
+                <img
+                  src={article.author.avatar_url}
+                  alt=""
+                  className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-primary text-[8px] font-bold">{article.author?.display_name?.charAt(0)}</span>
+                </div>
+              )}
+              <span className="text-[11.5px] text-foreground/55 group-hover/author:text-primary transition-colors font-medium truncate max-w-[80px]">
+                {article.author?.display_name}
+              </span>
+            </button>
             <span className="text-muted-foreground/20 text-[10px]">·</span>
             <span className="text-[10.5px] text-muted-foreground/40 font-normal">{formatSolarShort(article.created_at)}</span>
-          </button>
+            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="flex-shrink-0">
+              <FollowButton userId={article.author_id} size="sm" className="h-5 px-2 text-[10px] gap-1" />
+            </div>
+          </div>
 
           <div onClick={(e) => e.preventDefault()} className="flex-shrink-0">
-            <ArticleActionsMenu articleId={article.id} authorId={article.author_id} articleTitle={article.title} />
+            <ArticleActionsMenu articleId={article.id} authorId={article.author_id} articleTitle={article.title} onDelete={onDelete} />
           </div>
         </div>
 
@@ -154,7 +160,6 @@ export function ArticleCard({ article, onDelete: _onDelete }: ArticleCardProps) 
           responseCount={responseCount}
           isRead={hasBeenRead}
           commentsOpen={showComments}
-          tag={article.tags?.[0] || null}
           onCommentClick={handleCommentClick}
           onResponseClick={handleResponseClick}
           reactionSummary={reactionSummary}

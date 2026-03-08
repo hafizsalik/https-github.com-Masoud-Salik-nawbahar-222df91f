@@ -21,7 +21,6 @@ export function ArticleCardMetrics({
   responseCount,
   isRead,
   commentsOpen,
-  tag,
   onCommentClick,
   onResponseClick,
   reactionSummary,
@@ -45,16 +44,13 @@ export function ArticleCardMetrics({
 
   return (
     <div className="mt-3 pb-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
         <div className="flex items-center gap-4">
-          {/* Comment button with count or label */}
           <button
             onClick={onCommentClick}
             className={cn(
               "flex items-center gap-1 text-[12px] transition-colors",
-              commentsOpen
-                ? "text-foreground"
-                : "text-muted-foreground hover:text-foreground"
+              commentsOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
             <MessageCircle size={14} strokeWidth={1.5} />
@@ -63,7 +59,6 @@ export function ArticleCardMetrics({
             </span>
           </button>
 
-          {/* Response articles indicator */}
           {responseCount > 0 && (
             <button
               onClick={onResponseClick}
@@ -74,10 +69,8 @@ export function ArticleCardMetrics({
             </button>
           )}
 
-          {/* Reaction picker */}
           <ReactionPicker userReaction={userReaction} onReact={onReact} />
 
-          {/* Inline reaction summary: top emojis + names */}
           {totalCount > 0 && (
             <div className="flex items-center gap-1">
               <div className="flex items-center -space-x-0.5">
@@ -102,10 +95,6 @@ export function ArticleCardMetrics({
             <CheckCheck size={12} strokeWidth={2} className="text-primary/35" />
           )}
         </div>
-
-        {tag && (
-          <span className="text-muted-foreground/40 text-[10px]">{tag}</span>
-        )}
       </div>
     </div>
   );
