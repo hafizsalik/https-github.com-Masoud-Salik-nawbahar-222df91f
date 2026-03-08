@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, Send, ThumbsUp, CornerDownRight, Trash2, Flag, MoreVertical } from "lucide-react";
+import { ChevronUp, Send, ThumbsUp, CornerDownRight, Trash2, Flag, MoreVertical, Globe } from "lucide-react";
 import { getRelativeTime } from "@/lib/relativeTime";
-import { cn } from "@/lib/utils";
+import { cn, toPersianNumber } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,6 +57,7 @@ export function SlideDownComments({
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
   const [likedComments, setLikedComments] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const topLevelComments = comments.filter(c => !c.parent_id);
   const getReplies = (parentId: string) => comments.filter(c => c.parent_id === parentId);
@@ -65,6 +67,10 @@ export function SlideDownComments({
     if (success) {
       setNewComment("");
     }
+  };
+
+  const handlePublishAsResponse = () => {
+    navigate(`/write?response_to=${articleId}`);
   };
 
   const handleReplySubmit = async (parentId: string) => {
@@ -81,17 +87,13 @@ export function SlideDownComments({
       toast({ title: "برای پسندیدن نظر وارد شوید", variant: "destructive" });
       return;
     }
-
     const isLiked = likedComments[commentId];
-    
     if (isLiked) {
       await supabase.from("comment_likes").delete().eq("comment_id", commentId).eq("user_id", userId);
       setLikedComments(prev => ({ ...prev, [commentId]: false }));
     } else {
       const { error } = await supabase.from("comment_likes").insert({ comment_id: commentId, user_id: userId });
-      if (!error) {
-        setLikedComments(prev => ({ ...prev, [commentId]: true }));
-      }
+      if (!error) setLikedComments(prev => ({ ...prev, [commentId]: true }));
     }
   };
 
@@ -100,19 +102,14 @@ export function SlideDownComments({
       toast({ title: "برای گزارش نظر وارد شوید", variant: "destructive" });
       return;
     }
-
-    const { error } = await supabase.from("reported_comments").insert({ 
-      comment_id: commentId, 
+    const { error } = await supabase.from("reported_comments").insert({
+      comment_id: commentId,
       reporter_id: userId,
       reason: "گزارش توسط کاربر"
     });
-
     if (error) {
-      if (error.code === "23505") {
-        toast({ title: "قبلاً گزارش کرده‌اید" });
-      } else {
-        toast({ title: "خطا در گزارش", variant: "destructive" });
-      }
+      if (error.code === "23505") toast({ title: "قبلاً گزارش کرده‌اید" });
+      else toast({ title: "خطا در گزارش", variant: "destructive" });
     } else {
       toast({ title: "نظر گزارش شد" });
     }
@@ -121,63 +118,78 @@ export function SlideDownComments({
   if (!isOpen) return null;
 
   return (
-    <div className="border-t border-border bg-muted/30 animate-fade-in">
+    <div className="bg-muted/20 animate-slide-up">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <span className="text-sm font-medium text-foreground">
-          نظرات {comments.length > 0 && `(${comments.length})`}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50">
+        <span className="text-[13px] font-semibold text-foreground">
+          نظرات {comments.length > 0 && <span className="text-muted-foreground font-normal">({toPersianNumber(comments.length)})</span>}
         </span>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1">
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 transition-colors">
           <ChevronUp size={18} strokeWidth={1.5} />
         </button>
       </div>
 
       {/* Comment Input */}
-      <div className="px-4 py-3 border-b border-border">
+      <div className="px-4 py-3 border-b border-border/30">
         <div className="flex gap-2">
           <Textarea
             placeholder={userId ? "نظر خود را بنویسید..." : "برای ثبت نظر وارد شوید"}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             disabled={!userId || submitting}
-            className="min-h-[60px] resize-none text-sm"
+            className="min-h-[50px] resize-none text-sm bg-background/50"
           />
-          <Button
-            onClick={handleSubmit}
-            disabled={!userId || !newComment.trim() || submitting}
-            size="icon"
-            className="shrink-0"
-          >
-            <Send size={16} />
-          </Button>
+          <div className="flex flex-col gap-1">
+            <Button
+              onClick={handleSubmit}
+              disabled={!userId || !newComment.trim() || submitting}
+              size="icon"
+              className="shrink-0 h-8 w-8"
+            >
+              <Send size={14} />
+            </Button>
+            <Button
+              onClick={handlePublishAsResponse}
+              variant="ghost"
+              size="icon"
+              className="shrink-0 h-8 w-8 text-primary"
+              title="انتشار به عنوان پاسخ عمومی"
+            >
+              <Globe size={14} />
+            </Button>
+          </div>
         </div>
+        <p className="text-[10px] text-muted-foreground/50 mt-1.5 flex items-center gap-1">
+          <Globe size={9} />
+          برای نشر عمومی نظر، دکمه 🌐 را بزنید
+        </p>
       </div>
 
       {/* Comments List */}
       <div className="max-h-[300px] overflow-y-auto">
         {loading ? (
           <div className="flex justify-center py-6">
-            <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full" />
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center py-6 text-sm text-muted-foreground">
+          <div className="text-center py-6 text-sm text-muted-foreground animate-fade-in">
             هنوز نظری ثبت نشده است
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {topLevelComments.map((comment) => {
+          <div className="divide-y divide-border/30">
+            {topLevelComments.map((comment, i) => {
               const replies = getReplies(comment.id);
               const isExpanded = expandedReplies[comment.id];
-              
+
               return (
-                <div key={comment.id} className="px-4 py-3">
+                <div
+                  key={comment.id}
+                  className="px-4 py-3 animate-fade-in"
+                  style={{ animationDelay: `${i * 40}ms` }}
+                >
                   <div className="flex items-start gap-2">
                     {comment.author?.avatar_url ? (
-                      <img
-                        src={comment.author.avatar_url}
-                        alt=""
-                        className="w-7 h-7 rounded-full object-cover shrink-0"
-                      />
+                      <img src={comment.author.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
                     ) : (
                       <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <span className="text-primary text-xs font-medium">
@@ -194,13 +206,13 @@ export function SlideDownComments({
                           {getRelativeTime(comment.created_at)}
                         </span>
                       </div>
-                      <p className="text-sm text-foreground leading-relaxed mt-1">
+                      <p className="text-[13px] text-foreground leading-relaxed mt-1">
                         {comment.content}
                       </p>
-                      
+
                       {/* Comment Actions */}
                       <div className="flex items-center gap-3 mt-2">
-                        <button 
+                        <button
                           onClick={() => handleLikeComment(comment.id)}
                           className={cn(
                             "flex items-center gap-1 text-xs transition-colors",
@@ -210,8 +222,8 @@ export function SlideDownComments({
                           <ThumbsUp size={12} strokeWidth={1.5} fill={likedComments[comment.id] ? "currentColor" : "none"} />
                           <span>پسندیدن</span>
                         </button>
-                        
-                        <button 
+
+                        <button
                           onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
@@ -242,12 +254,12 @@ export function SlideDownComments({
 
                       {/* Reply Input */}
                       {replyingTo === comment.id && (
-                        <div className="mt-3 flex gap-2">
+                        <div className="mt-3 flex gap-2 animate-fade-in">
                           <Textarea
                             placeholder="پاسخ شما..."
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
-                            className="min-h-[50px] resize-none text-xs"
+                            className="min-h-[50px] resize-none text-xs bg-background/50"
                           />
                           <Button
                             onClick={() => handleReplySubmit(comment.id)}
@@ -263,16 +275,15 @@ export function SlideDownComments({
                       {replies.length > 0 && (
                         <div className="mt-3">
                           {!isExpanded && (
-                            <button 
+                            <button
                               onClick={() => setExpandedReplies(prev => ({ ...prev, [comment.id]: true }))}
-                              className="text-xs text-primary"
+                              className="text-xs text-primary hover:underline"
                             >
-                              مشاهده {replies.length} پاسخ
+                              مشاهده {toPersianNumber(replies.length)} پاسخ
                             </button>
                           )}
-                          
                           {isExpanded && (
-                            <div className="space-y-3 border-r-2 border-border pr-3">
+                            <div className="space-y-3 border-r-2 border-primary/15 pr-3 animate-fade-in">
                               {replies.map((reply) => (
                                 <div key={reply.id} className="flex items-start gap-2">
                                   {reply.author?.avatar_url ? (
@@ -299,9 +310,9 @@ export function SlideDownComments({
                                   </div>
                                 </div>
                               ))}
-                              <button 
+                              <button
                                 onClick={() => setExpandedReplies(prev => ({ ...prev, [comment.id]: false }))}
-                                className="text-xs text-muted-foreground"
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                               >
                                 بستن پاسخ‌ها
                               </button>
