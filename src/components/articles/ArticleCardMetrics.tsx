@@ -33,7 +33,7 @@ export function ArticleCardMetrics({
         {/* Left: icons (filled style) */}
         <div className="flex items-center gap-5">
           <span className="flex items-center gap-1 text-[11px] text-foreground/40">
-            <Eye size={15} strokeWidth={1.7} fill="currentColor" className="opacity-60" />
+            <Eye size={15} strokeWidth={0} fill="currentColor" />
             {viewCount > 0 && <span>{viewCount}</span>}
           </span>
 
