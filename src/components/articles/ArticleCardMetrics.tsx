@@ -1,4 +1,4 @@
-import { Eye, MessageCircle, CornerDownLeft, CheckCheck } from "lucide-react";
+import { Eye, MessageSquareText, Reply, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ArticleCardMetricsProps {
@@ -21,19 +21,21 @@ export function ArticleCardMetrics({
   onResponseClick,
 }: ArticleCardMetricsProps) {
   return (
-    <div className="flex items-center justify-between mt-4">
-      {/* Left: read status */}
-      <div className="flex items-center gap-1">
+    <div className="flex items-center justify-between mt-3.5">
+      {/* Left: read indicator */}
+      <div className="flex items-center gap-1.5">
         {isRead && (
-          <CheckCheck size={14} strokeWidth={1.8} className="text-primary/50" />
+          <span className="flex items-center gap-1 text-[10.5px] text-muted-foreground/35">
+            <CheckCheck size={13} strokeWidth={2} className="text-primary/40" />
+          </span>
         )}
       </div>
 
-      {/* Right: metrics row — minimal, filled icons, no borders */}
-      <div className="flex items-center gap-5">
+      {/* Right: Medium-style metrics — bold rounded icons, no borders */}
+      <div className="flex items-center gap-4">
         {viewCount > 0 && (
-          <span className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground/45">
-            <Eye size={15} strokeWidth={1.5} className="fill-muted-foreground/15" />
+          <span className="flex items-center gap-1 text-[11px] text-muted-foreground/40">
+            <Eye size={16} strokeWidth={1.8} />
             <span>{viewCount}</span>
           </span>
         )}
@@ -41,9 +43,9 @@ export function ArticleCardMetrics({
         {responseCount > 0 && (
           <button
             onClick={onResponseClick}
-            className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground/45 hover:text-primary/60 transition-colors"
+            className="flex items-center gap-1 text-[11px] text-muted-foreground/40 hover:text-foreground/60 transition-colors"
           >
-            <CornerDownLeft size={15} strokeWidth={1.5} />
+            <Reply size={16} strokeWidth={1.8} />
             <span>{responseCount}</span>
           </button>
         )}
@@ -51,17 +53,18 @@ export function ArticleCardMetrics({
         <button
           onClick={onCommentClick}
           className={cn(
-            "flex items-center gap-1.5 text-[11.5px] transition-colors",
+            "flex items-center gap-1 text-[11px] transition-colors",
             commentsOpen
-              ? "text-primary/70"
-              : "text-muted-foreground/45 hover:text-primary/60"
+              ? "text-foreground/70"
+              : "text-muted-foreground/40 hover:text-foreground/60"
           )}
         >
-          <MessageCircle
-            size={15}
-            strokeWidth={1.5}
+          <MessageSquareText
+            size={16}
+            strokeWidth={1.8}
             className={cn(
-              commentsOpen ? "fill-primary/20" : "fill-muted-foreground/10"
+              "transition-colors",
+              commentsOpen && "fill-primary/15"
             )}
           />
           {commentCount > 0 && <span>{commentCount}</span>}
