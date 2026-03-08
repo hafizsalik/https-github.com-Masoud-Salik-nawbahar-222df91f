@@ -55,20 +55,15 @@ export function Header() {
       <div className="flex items-center justify-between px-4 h-11 max-w-lg mx-auto">
         <Link to="/" className="flex items-center gap-2 group">
           {/* Premium logo mark */}
-          <div className="relative w-7 h-7">
-            <div
-              className="absolute inset-0 rounded-lg"
-              style={{
-                background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8))",
-                boxShadow: "0 2px 8px -2px hsl(var(--primary) / 0.4)",
-              }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[14px] font-black text-primary-foreground leading-none select-none" style={{ marginTop: "1px" }}>
-                ن
-              </span>
-            </div>
-          </div>
+           <div className="relative w-7 h-7">
+             <div
+               className="absolute inset-0 rounded-lg"
+               style={{
+                 background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8))",
+                 boxShadow: "0 2px 8px -2px hsl(var(--primary) / 0.4)",
+               }}
+             />
+           </div>
           <span className="text-[15px] font-extrabold tracking-tight text-foreground leading-none">
             نوبهار
           </span>
