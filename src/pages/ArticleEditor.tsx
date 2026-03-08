@@ -37,6 +37,7 @@ interface AIResult {
 const ArticleEditor = () => {
   const [searchParams] = useSearchParams();
   const responseToId = searchParams.get("response_to");
+  const editId = searchParams.get("edit");
   
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -47,6 +48,7 @@ const ArticleEditor = () => {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [parentArticle, setParentArticle] = useState<{ id: string; title: string } | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   // AI Review state
   const [reviewState, setReviewState] = useState<"idle" | "reviewing" | "result">("idle");
@@ -58,9 +60,32 @@ const ArticleEditor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Load draft on mount
+  // Load existing article for editing
   useEffect(() => {
-    if (!responseToId) {
+    if (editId) {
+      setIsEditMode(true);
+      supabase.from("articles")
+        .select("title, content, tags, cover_image_url, parent_article_id")
+        .eq("id", editId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setTitle(data.title || "");
+            setContent(data.content || "");
+            setTags(data.tags || []);
+            if (data.cover_image_url) setCoverPreview(data.cover_image_url);
+            if (data.parent_article_id) {
+              supabase.from("articles").select("id, title").eq("id", data.parent_article_id).maybeSingle()
+                .then(({ data: parent }) => { if (parent) setParentArticle(parent); });
+            }
+          }
+        });
+    }
+  }, [editId]);
+
+  // Load draft on mount (only for new articles)
+  useEffect(() => {
+    if (!responseToId && !editId) {
       const savedDraft = localStorage.getItem(DRAFT_KEY);
       if (savedDraft) {
         try {
@@ -71,7 +96,7 @@ const ArticleEditor = () => {
         } catch (e) { /* ignore */ }
       }
     }
-  }, [responseToId]);
+  }, [responseToId, editId]);
 
   // Auto-save draft
   useEffect(() => {
