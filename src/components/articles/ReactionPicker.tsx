@@ -113,7 +113,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, summaryText, on
         <ThumbsUp
           size={14}
           strokeWidth={1.5}
-          fill={isLiked ? "currentColor" : "none"}
+          fill={isReacted ? "currentColor" : "none"}
         />
       </button>
 
