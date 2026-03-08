@@ -39,38 +39,52 @@ export function ArticleCardMetrics({
     ? topTypes.slice(0, 2)
     : (reactionCount > 0 ? ["like"] : []);
 
-  const buildReactorText = () => {
-    if (displayCount === 0) return null;
-    if (totalCount === 0 && reactionCount > 0) return toPersianNumber(reactionCount);
+  // Build the text that appears NEXT to the reaction button
+  // No reaction yet → "پسند"
+  // Has reactions → "شما، احمد سالک و ۱۰۰ نفر دیگر" with 1-2 emojis
+  const buildReactionLabel = (): { emojis: ReactionKey[]; text: string } => {
+    if (displayCount === 0) {
+      return { emojis: [], text: "پسند" };
+    }
+
+    // Before full fetch, show count
+    if (totalCount === 0 && reactionCount > 0) {
+      return { emojis: displayTopTypes, text: `${toPersianNumber(reactionCount)} نفر` };
+    }
 
     const names: string[] = [];
     if (userReaction) names.push("شما");
     reactorNames.forEach((n) => { if (!names.includes(n)) names.push(n); });
 
-    if (names.length === 0) return toPersianNumber(displayCount);
+    if (names.length === 0 && displayCount > 0) {
+      return { emojis: displayTopTypes, text: `${toPersianNumber(displayCount)} نفر` };
+    }
 
     const shown = names.slice(0, 2);
     const remaining = Math.max(displayCount - shown.length, 0);
     let text = shown.join("، ");
     if (remaining > 0) text += ` و ${toPersianNumber(remaining)} نفر دیگر`;
-    return text;
+
+    return { emojis: displayTopTypes, text };
   };
 
-  const reactorText = buildReactorText();
+  const { emojis, text: reactionText } = buildReactionLabel();
 
-  const handleReactionSummaryClick = (e: React.MouseEvent) => {
+  const handleSummaryClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onReactionHover?.();
-    setShowReactionDetails(true);
+    if (displayCount > 0) {
+      onReactionHover?.();
+      setShowReactionDetails(true);
+    }
   };
 
   return (
     <>
       <div className="mt-3 pb-4">
         <div className="flex items-center justify-between">
-          {/* Left: comment + reaction picker */}
           <div className="flex items-center gap-4">
+            {/* Comment button */}
             <button
               onClick={onCommentClick}
               className={cn(
@@ -84,26 +98,26 @@ export function ArticleCardMetrics({
               </span>
             </button>
 
-            <ReactionPicker
-              userReaction={userReaction}
-              onReact={onReact}
-              onHover={onReactionHover}
-            />
-          </div>
+            {/* Reaction: picker button + inline summary */}
+            <div className="flex items-center gap-1.5">
+              <ReactionPicker
+                userReaction={userReaction}
+                onReact={onReact}
+                onHover={onReactionHover}
+                hideLabel
+              />
 
-          {/* Right: emoji summary + names */}
-          <div className="flex items-center gap-1">
-            {displayCount > 0 && (
+              {/* Emoji badges + text label (replaces "پسند") */}
               <button
-                onClick={handleReactionSummaryClick}
-                className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                onClick={displayCount > 0 ? handleSummaryClick : (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); onReact("like"); }}
+                className="flex items-center gap-1 hover:opacity-80 transition-opacity min-w-0"
               >
-                {displayTopTypes.length > 0 && (
-                  <div className="flex items-center -space-x-1">
-                    {displayTopTypes.map((type) => (
+                {emojis.length > 0 && (
+                  <div className="flex items-center -space-x-1 flex-shrink-0">
+                    {emojis.map((type) => (
                       <span
                         key={type}
-                        className="w-[17px] h-[17px] flex items-center justify-center rounded-full text-[10.5px] leading-none border-[1.5px] border-background"
+                        className="w-[16px] h-[16px] flex items-center justify-center rounded-full text-[10px] leading-none border-[1.5px] border-background"
                         style={{ background: "hsl(var(--muted))" }}
                         role="img"
                         aria-label={type}
@@ -113,18 +127,16 @@ export function ArticleCardMetrics({
                     ))}
                   </div>
                 )}
-                {reactorText && (
-                  <span className="text-[10px] text-muted-foreground/55 truncate max-w-[140px] mr-0.5">
-                    {reactorText}
-                  </span>
-                )}
+                <span className="text-[11px] text-muted-foreground/60 truncate max-w-[150px]">
+                  {reactionText}
+                </span>
               </button>
-            )}
-
-            {isRead && (
-              <CheckCheck size={12} strokeWidth={2} className="text-primary/35 mr-1" />
-            )}
+            </div>
           </div>
+
+          {isRead && (
+            <CheckCheck size={12} strokeWidth={2} className="text-primary/35" />
+          )}
         </div>
       </div>
 

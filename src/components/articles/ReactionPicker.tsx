@@ -7,9 +7,11 @@ interface ReactionPickerProps {
   userReaction: ReactionKey | null;
   onReact: (type: ReactionKey) => void;
   onHover?: () => void;
+  /** Hide the text label next to the icon */
+  hideLabel?: boolean;
 }
 
-export function ReactionPicker({ userReaction, onReact, onHover }: ReactionPickerProps) {
+export function ReactionPicker({ userReaction, onReact, onHover, hideLabel }: ReactionPickerProps) {
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const longPressRef = useRef(false);
@@ -107,9 +109,11 @@ export function ReactionPicker({ userReaction, onReact, onHover }: ReactionPicke
         ) : (
           <ThumbsUp size={14} strokeWidth={1.5} />
         )}
-        <span className="text-[11.5px]">
-          {userReaction ? REACTION_LABELS[userReaction] : "پسند"}
-        </span>
+        {!hideLabel && (
+          <span className="text-[11.5px]">
+            {userReaction ? REACTION_LABELS[userReaction] : "پسند"}
+          </span>
+        )}
       </button>
 
       {open && (
