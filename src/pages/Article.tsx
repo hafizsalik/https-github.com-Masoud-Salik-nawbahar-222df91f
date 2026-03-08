@@ -6,7 +6,7 @@ import { formatSolarShort } from "@/lib/solarHijri";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useComments } from "@/hooks/useComments";
-import { useReactions } from "@/hooks/useReactions";
+import { useCardReactions } from "@/hooks/useCardReactions";
 import { useResponseArticles } from "@/hooks/useResponseArticles";
 import { useViewCount } from "@/hooks/useViewCount";
 import { useEngagementTracking } from "@/hooks/useEngagementTracking";
@@ -55,7 +55,7 @@ const Article = () => {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
   const { viewCount } = useViewCount(id || "");
-  const { userReaction, likedCount, dislikedCount, setReaction } = useReactions(id || "");
+  const { summary: reactionSummary, toggleReaction } = useCardReactions(id || "");
   const { responses, responseCount, parentArticle } = useResponseArticles(id || "");
   
   const contentLength = article?.content?.length || 0;
@@ -258,7 +258,7 @@ const Article = () => {
         )}
 
         {/* Reactions */}
-        <ArticleReactions userReaction={userReaction} likedCount={likedCount} dislikedCount={dislikedCount} onReaction={setReaction} />
+        <ArticleReactions articleId={article.id} summary={reactionSummary} onReact={toggleReaction} />
 
         {/* Bottom Signals */}
         <ArticleBottomSignals viewCount={viewCount} commentCount={comments.length} responseCount={responseCount} />
