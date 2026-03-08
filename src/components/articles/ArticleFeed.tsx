@@ -64,11 +64,9 @@ export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadM
           className="animate-fade-in"
           style={{ animationDelay: `${Math.min(index * 25, 120)}ms` }}
         >
-          <div className="mx-3 sm:mx-0 bg-card rounded-xl shadow-card">
-            <ArticleCard article={article} onDelete={onRefresh} />
-          </div>
+          <ArticleCard article={article} onDelete={onRefresh} />
           {index < articles.length - 1 && (
-            <div className="h-2.5" />
+            <div className="mx-5 border-b border-border" />
           )}
         </div>
       ))}
