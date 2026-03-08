@@ -42,7 +42,6 @@ export function Header() {
     localStorage.setItem('textSize', textSize);
   }, [textSize]);
 
-  // Close menu on outside click
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
@@ -70,36 +69,47 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 bg-background border-b border-border safe-top">
       <div className="flex items-center justify-between px-4 h-11 max-w-lg mx-auto">
-        <Link to="/" className="flex items-center gap-1.5">
-          <div className="w-6.5 h-6.5 rounded-md bg-primary flex items-center justify-center">
-            <span className="text-[13px] font-black text-primary-foreground leading-none">ن</span>
+        <Link to="/" className="flex items-center gap-2 group">
+          {/* Premium logo mark */}
+          <div className="relative w-7 h-7">
+            <div
+              className="absolute inset-0 rounded-lg"
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8))",
+                boxShadow: "0 2px 8px -2px hsl(var(--primary) / 0.4)",
+              }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[14px] font-black text-primary-foreground leading-none select-none" style={{ marginTop: "1px" }}>
+                ن
+              </span>
+            </div>
           </div>
-          <span className="text-[15px] font-black tracking-tight text-foreground leading-none">
+          <span className="text-[15px] font-extrabold tracking-tight text-foreground leading-none">
             نوبهار
           </span>
         </Link>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <Link 
             to="/notifications" 
-            className="relative flex items-center justify-center w-9 h-9 text-muted-foreground/45 hover:text-foreground transition-colors"
+            className="relative flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Bell size={20} strokeWidth={1.5} />
+            <Bell size={19} strokeWidth={1.5} />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center text-[7px] font-bold text-accent-foreground bg-accent rounded-full px-0.5 ring-2 ring-background">
+              <span className="absolute top-1 right-0.5 min-w-[16px] h-[16px] flex items-center justify-center text-[8px] font-bold text-accent-foreground bg-accent rounded-full px-0.5 ring-2 ring-background">
                 {unreadCount > 9 ? "۹+" : toPersianNumber(unreadCount)}
               </span>
             )}
           </Link>
 
-          {/* Settings Menu */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center justify-center w-9 h-9 text-muted-foreground/45 hover:text-foreground transition-colors"
+              className="flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground transition-colors"
               aria-label="منو"
             >
-              <Menu size={19} strokeWidth={1.75} className="transition-opacity duration-200" />
+              <Menu size={19} strokeWidth={1.75} />
             </button>
 
             {menuOpen && (
@@ -148,7 +158,6 @@ export function Header() {
                   </div>
                 </div>
 
-                {/* Admin Panel */}
                 {isAdmin && (
                   <button
                     onClick={() => { setMenuOpen(false); navigate("/admin"); }}
@@ -159,7 +168,6 @@ export function Header() {
                   </button>
                 )}
 
-                {/* About */}
                 <button
                   onClick={() => { setMenuOpen(false); navigate("/about"); }}
                   className="w-full px-4 py-3 flex items-center gap-2.5 text-[12.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/50"
@@ -168,7 +176,6 @@ export function Header() {
                   درباره نوبهار
                 </button>
 
-                {/* Install */}
                 <button
                   onClick={() => { setMenuOpen(false); navigate("/install"); }}
                   className="w-full px-4 py-3 flex items-center gap-2.5 text-[12.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/50"
@@ -181,7 +188,6 @@ export function Header() {
                   نصب اپلیکیشن
                 </button>
 
-                {/* Sign Out */}
                 {user && (
                   <button
                     onClick={handleSignOut}

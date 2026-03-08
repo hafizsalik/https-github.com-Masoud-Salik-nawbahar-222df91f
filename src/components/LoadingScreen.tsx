@@ -10,79 +10,108 @@ export function LoadingScreen() {
 
   return (
     <div
-      className="flex flex-col items-center justify-center py-24 gap-8 transition-opacity duration-500"
+      className="flex flex-col items-center justify-center py-28 gap-6 transition-opacity duration-500"
       style={{ opacity: show ? 1 : 0 }}
     >
-      {/* Logo mark with elegant animation */}
-      <div className="relative w-20 h-20">
-        {/* Outer breathing ring */}
+      {/* Animated logo container */}
+      <div className="relative w-24 h-24">
+        {/* Pulsing glow */}
         <div
-          className="absolute inset-0 rounded-2xl border-2 border-primary/15"
+          className="absolute inset-0 rounded-[22px]"
           style={{
-            animation: "splash-breathe 2s ease-in-out infinite",
+            background: "radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, transparent 70%)",
+            animation: "hesab-glow 2s ease-in-out infinite",
           }}
         />
 
-        {/* Rotating gradient arc */}
-        <div className="absolute inset-0">
-          <svg className="w-20 h-20" viewBox="0 0 80 80" style={{ animation: "splash-spin 2s linear infinite" }}>
-            <defs>
-              <linearGradient id="arc-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.7" />
-                <stop offset="50%" stopColor="hsl(var(--accent))" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <rect x="3" y="3" width="74" height="74" rx="16" ry="16" fill="none" stroke="url(#arc-grad)" strokeWidth="2" strokeDasharray="100 200" />
-          </svg>
-        </div>
+        {/* Rotating ring segments */}
+        <svg className="absolute inset-0 w-24 h-24" viewBox="0 0 96 96">
+          <defs>
+            <linearGradient id="ring1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="ring2" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* Primary ring */}
+          <rect
+            x="6" y="6" width="84" height="84" rx="20" ry="20"
+            fill="none" stroke="url(#ring1)" strokeWidth="2"
+            strokeDasharray="80 260"
+            style={{ animation: "hesab-ring-spin 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite" }}
+          />
+          {/* Secondary ring */}
+          <rect
+            x="6" y="6" width="84" height="84" rx="20" ry="20"
+            fill="none" stroke="url(#ring2)" strokeWidth="1.5"
+            strokeDasharray="60 280"
+            style={{ animation: "hesab-ring-spin 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite reverse" }}
+          />
+        </svg>
 
-        {/* Center letter with scale-in */}
+        {/* Static subtle border */}
+        <div
+          className="absolute inset-[8px] rounded-[16px] border border-primary/8"
+        />
+
+        {/* Center letter */}
         <div
           className="absolute inset-0 flex items-center justify-center"
-          style={{ animation: "splash-letter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both" }}
+          style={{ animation: "hesab-letter-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both" }}
         >
-          <span className="text-[28px] font-black text-primary select-none">ن</span>
+          <span
+            className="text-[32px] font-black text-primary select-none"
+            style={{ animation: "hesab-letter-breathe 3s ease-in-out 1s infinite" }}
+          >
+            ن
+          </span>
         </div>
       </div>
 
-      {/* Brand name fade-in */}
-      <div style={{ animation: "splash-fade-up 0.5s ease-out 0.3s both" }}>
+      {/* Brand name */}
+      <div style={{ animation: "hesab-fade-up 0.6s ease-out 0.4s both" }}>
         <span className="text-lg font-bold text-foreground tracking-wide">نوبهار</span>
       </div>
 
-      {/* Elegant progress bar */}
-      <div className="w-20 h-[2px] bg-muted rounded-full overflow-hidden">
+      {/* Premium shimmer progress bar */}
+      <div className="w-24 h-[3px] bg-muted/50 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full"
           style={{
-            background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)))",
-            animation: "splash-bar 1.4s ease-in-out infinite",
+            background: "linear-gradient(90deg, transparent, hsl(var(--primary)), hsl(var(--accent)), transparent)",
+            backgroundSize: "200% 100%",
+            animation: "hesab-shimmer 1.5s ease-in-out infinite",
           }}
         />
       </div>
 
       <style>{`
-        @keyframes splash-breathe {
-          0%, 100% { transform: scale(1); opacity: 0.3; }
-          50% { transform: scale(1.08); opacity: 0.6; }
+        @keyframes hesab-glow {
+          0%, 100% { transform: scale(1); opacity: 0.5; }
+          50% { transform: scale(1.15); opacity: 1; }
         }
-        @keyframes splash-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes hesab-ring-spin {
+          0% { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: -340; }
         }
-        @keyframes splash-letter {
-          0% { transform: scale(0.5); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes hesab-letter-in {
+          0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
-        @keyframes splash-fade-up {
-          0% { transform: translateY(8px); opacity: 0; }
+        @keyframes hesab-letter-breathe {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.06); }
+        }
+        @keyframes hesab-fade-up {
+          0% { transform: translateY(12px); opacity: 0; }
           100% { transform: translateY(0); opacity: 1; }
         }
-        @keyframes splash-bar {
-          0% { width: 0%; margin-left: 0; }
-          50% { width: 65%; margin-left: 15%; }
-          100% { width: 0%; margin-left: 100%; }
+        @keyframes hesab-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
         }
       `}</style>
     </div>
