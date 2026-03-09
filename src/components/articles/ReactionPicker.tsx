@@ -9,6 +9,7 @@ interface ReactionPickerProps {
   topTypes?: ReactionKey[];
   summaryText?: string;
   onSummaryClick?: (e: React.MouseEvent) => void;
+  fetched?: boolean;
 }
 
 export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summaryText, onSummaryClick }: ReactionPickerProps) {
