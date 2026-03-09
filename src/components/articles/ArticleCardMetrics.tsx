@@ -98,6 +98,7 @@ export function ArticleCardMetrics({
               topTypes={reactionSummary.topTypes}
               summaryText={reactionText || undefined}
               onSummaryClick={hasReactions ? handleSummaryClick : undefined}
+              fetched={reactionFetched}
             />
           </div>
 
