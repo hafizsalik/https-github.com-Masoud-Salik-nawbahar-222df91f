@@ -98,7 +98,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
                   loading="lazy"
                 />
               ) : (
-                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/20 to-accent/15 flex items-center justify-center flex-shrink-0">
                   <span className="text-primary text-[8px] font-bold">{article.author?.display_name?.charAt(0)}</span>
                 </div>
               )}
