@@ -83,8 +83,8 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
         </span>
       );
     }
-    // Always show stable 👍 — no topTypes switching
-    return <span className="text-[14px] leading-none opacity-45">👍</span>;
+    // Show stable 👍 only after data is fetched (no reaction) or before fetch
+    return <span className={cn("text-[14px] leading-none transition-opacity duration-300", fetched ? "opacity-45" : "opacity-20")}>👍</span>;
   };
 
   const handleSummaryClick = (e: React.MouseEvent) => {
