@@ -52,6 +52,8 @@ function App() {
               <Route path="/profile/:userId" element={<Profile />} />
               <Route path="/write" element={<Write />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/editor" element={<ArticleEditor />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/article/:id" element={<Article />} />
