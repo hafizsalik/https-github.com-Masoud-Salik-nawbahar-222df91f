@@ -15,6 +15,8 @@ const Bookmarks = lazy(() => import("./pages/Bookmarks"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Write = lazy(() => import("./pages/Write"));
 const Auth = lazy(() => import("./pages/Auth"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ArticleEditor = lazy(() => import("./pages/ArticleEditor"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Article = lazy(() => import("./pages/Article"));
