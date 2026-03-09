@@ -47,7 +47,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   } = useComments(article.id, { lazy: !showComments });
 
   // Lazy reactions — no fetch on mount, uses article.reaction_count for display
-  const { summary: reactionSummary, toggleReaction, ensureFetched } = useCardReactions(article.id);
+  const { summary: reactionSummary, toggleReaction, ensureFetched, fetched: reactionFetched } = useCardReactions(article.id);
 
   const viewCount = article.view_count || 0;
   const coverImage = article.cover_image_url || defaultCover;
@@ -98,7 +98,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
                   loading="lazy"
                 />
               ) : (
-                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/20 to-accent/15 flex items-center justify-center flex-shrink-0">
                   <span className="text-primary text-[8px] font-bold">{article.author?.display_name?.charAt(0)}</span>
                 </div>
               )}
@@ -158,6 +158,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
           onCommentClick={handleCommentClick}
           onResponseClick={handleResponseClick}
           reactionSummary={reactionSummary}
+          reactionFetched={reactionFetched}
           onReact={(type) => { toggleReaction(type); }}
           onReactionHover={ensureFetched}
         />

@@ -16,6 +16,7 @@ interface ArticleCardMetricsProps {
   onCommentClick: (e: React.MouseEvent) => void;
   onResponseClick: (e: React.MouseEvent) => void;
   reactionSummary: ReactionSummary;
+  reactionFetched?: boolean;
   onReact: (type: ReactionKey) => void;
   onReactionHover?: () => void;
 }
@@ -28,6 +29,7 @@ export function ArticleCardMetrics({
   commentsOpen,
   onCommentClick,
   reactionSummary,
+  reactionFetched,
   onReact,
   onReactionHover,
 }: ArticleCardMetricsProps) {
@@ -97,6 +99,7 @@ export function ArticleCardMetrics({
               topTypes={reactionSummary.topTypes}
               summaryText={reactionText || undefined}
               onSummaryClick={hasReactions ? handleSummaryClick : undefined}
+              fetched={reactionFetched}
             />
           </div>
 
