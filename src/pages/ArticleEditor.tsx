@@ -68,6 +68,7 @@ const ArticleEditor = () => {
   const [citationSearchQuery, setCitationSearchQuery] = useState("");
   const [showCitationSearch, setShowCitationSearch] = useState(false);
   const { results: citationResults, searching: citationSearching, searchArticles } = useArticleSearch();
+  const { stats: capacityStats, canPublish, loading: capacityLoading } = usePublishingCapacity();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textFileInputRef = useRef<HTMLInputElement>(null);
