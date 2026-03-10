@@ -59,6 +59,7 @@ const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
               <Route path="/about" element={<About />} />
               <Route path="/install" element={<Install />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
