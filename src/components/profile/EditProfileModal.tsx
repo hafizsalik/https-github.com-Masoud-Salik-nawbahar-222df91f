@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeError } from "@/lib/errorHandler";
 import {
   Dialog,
   DialogContent,
@@ -151,10 +152,10 @@ export function EditProfileModal({
 
       onUpdate();
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "خطا",
-        description: "مشکلی پیش آمد. لطفاً دوباره تلاش کنید",
+        description: sanitizeError(error),
         variant: "destructive",
       });
     } finally {

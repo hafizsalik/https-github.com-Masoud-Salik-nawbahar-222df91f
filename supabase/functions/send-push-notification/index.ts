@@ -11,7 +11,7 @@ async function generateJWT(header: object, payload: object, privateKeyPem: strin
   const enc = new TextEncoder();
   
   const b64url = (data: Uint8Array) => {
-    let b64 = btoa(String.fromCharCode(...data));
+    const b64 = btoa(String.fromCharCode(...data));
     return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   };
   const b64urlStr = (str: string) => b64url(enc.encode(str));

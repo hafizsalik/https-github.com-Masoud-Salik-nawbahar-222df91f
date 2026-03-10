@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ResponseArticle {
@@ -27,9 +27,9 @@ export function useResponseArticles(articleId: string) {
       fetchResponses();
       fetchParentArticle();
     }
-  }, [articleId]);
+  }, [articleId, fetchResponses, fetchParentArticle]);
 
-  const fetchResponses = async () => {
+  const fetchResponses = useCallback(async () => {
     setLoading(true);
     
     // Get response articles
@@ -66,9 +66,9 @@ export function useResponseArticles(articleId: string) {
     setResponses(responsesWithAuthors);
     setResponseCount(data.length);
     setLoading(false);
-  };
+  }, [articleId]);
 
-  const fetchParentArticle = async () => {
+  const fetchParentArticle = useCallback(async () => {
     // First get current article's parent_article_id
     const { data: currentArticle } = await supabase
       .from("articles")
@@ -89,7 +89,7 @@ export function useResponseArticles(articleId: string) {
       .maybeSingle();
 
     setParentArticle(parent);
-  };
+  }, [articleId]);
 
   return {
     responses,

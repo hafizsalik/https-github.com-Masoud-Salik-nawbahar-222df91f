@@ -28,7 +28,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
       }
     }
     prevReaction.current = userReaction;
-  }, [userReaction]);
+  }, [userReaction, justReacted]);
 
   useEffect(() => {
     if (!open) return;

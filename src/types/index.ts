@@ -72,8 +72,27 @@ export interface Comment {
   content: string;
   created_at: string;
   updated_at: string;
+  image_url?: string | null;
+  like_count?: number | null;
   author?: Profile;
   replies?: Comment[];
+}
+
+export interface Notification {
+  id: string;
+  actor_id: string;
+  article_id?: string | null;
+  created_at: string;
+  is_read: boolean;
+  type: string;
+  user_id: string;
+}
+
+export interface ContactMessage {
+  name: string;
+  email: string | null;
+  message: string;
+  user_id: string | null;
 }
 
 // Mock data with Persian content

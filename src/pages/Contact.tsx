@@ -32,12 +32,21 @@ const Contact = () => {
     }
 
     setSending(true);
-    const { error } = await supabase.from("contact_messages").insert({
-      name: name.trim(),
-      email: email.trim() || null,
-      message: message.trim(),
-      user_id: user?.id || null,
-    } as any);
+    type ContactMessageInsert = {
+      name: string;
+      email: string | null;
+      message: string;
+      user_id: string | null;
+    };
+
+    const { error } = await supabase
+      .from<ContactMessageInsert>("contact_messages")
+      .insert({
+        name: name.trim(),
+        email: email.trim() || null,
+        message: message.trim(),
+        user_id: user?.id || null,
+      });
 
     setSending(false);
     if (error) {

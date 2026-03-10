@@ -6,6 +6,16 @@ const VIEW_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
 export function useViewCount(articleId: string) {
   const [viewCount, setViewCount] = useState(0);
 
+  const fetchViewCount = useCallback(async () => {
+    const { data } = await supabase
+      .from("articles")
+      .select("view_count")
+      .eq("id", articleId)
+      .maybeSingle();
+
+    setViewCount(data?.view_count || 0);
+  }, [articleId]);
+
   useEffect(() => {
     if (articleId) {
       // Check if we should increment view count (rate limiting)
@@ -22,9 +32,7 @@ export function useViewCount(articleId: string) {
       // Fetch current view count
       fetchViewCount();
     }
-  }, [articleId]);
-
-  const fetchViewCount = async () => {
+  }, [articleId, fetchViewCount]);
     const { data } = await supabase
       .from("articles")
       .select("view_count")

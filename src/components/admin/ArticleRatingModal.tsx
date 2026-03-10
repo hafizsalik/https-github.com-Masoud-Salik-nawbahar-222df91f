@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeError } from "@/lib/errorHandler";
 import {
   Dialog,
   DialogContent,
@@ -98,10 +99,10 @@ export function ArticleRatingModal({
       });
 
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "خطا",
-        description: error.message || "مشکلی پیش آمد",
+        description: sanitizeError(error),
         variant: "destructive",
       });
     } finally {

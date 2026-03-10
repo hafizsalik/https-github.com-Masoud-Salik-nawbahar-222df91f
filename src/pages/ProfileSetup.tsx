@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeError } from "@/lib/errorHandler";
 import { compressProfileImage } from "@/lib/imageCompression";
 import { SEOHead } from "@/components/SEOHead";
 import nawbaharLogo from "@/assets/nawbahar-logo.png";
@@ -64,7 +65,12 @@ const ProfileSetup = () => {
         avatarUrl = urlData.publicUrl;
       }
 
-      const updates: Record<string, any> = {};
+      type ProfileUpdates = Partial<{
+        bio: string;
+        specialty: string;
+        avatar_url: string;
+      }>;
+      const updates: ProfileUpdates = {};
       if (bio.trim()) updates.bio = bio.trim();
       if (specialty.trim()) updates.specialty = specialty.trim();
       if (avatarUrl) updates.avatar_url = avatarUrl;
@@ -76,8 +82,8 @@ const ProfileSetup = () => {
 
       toast({ title: "پروفایل ذخیره شد ✅" });
       navigate("/");
-    } catch (error: any) {
-      toast({ title: "خطا", description: "مشکلی پیش آمد", variant: "destructive" });
+    } catch (error) {
+      toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
     } finally {
       setLoading(false);
     }

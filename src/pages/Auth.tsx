@@ -64,7 +64,7 @@ const Auth = () => {
       if (error) throw error;
       toast({ title: "خوش آمدید! 👋" });
       navigate("/");
-    } catch (error: any) {
+    } catch (error) {
       toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ const Auth = () => {
         title: "ثبت‌نام موفق ✅",
         description: "لینک تأیید به ایمیل شما ارسال شد. لطفاً ایمیل خود را بررسی کنید.",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
     } finally {
       setLoading(false);

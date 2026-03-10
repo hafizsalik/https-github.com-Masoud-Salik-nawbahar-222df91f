@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Star, CornerUpRight, Share2 } from "lucide-react";
@@ -90,27 +90,7 @@ const Article = () => {
 
   const { comments, loading: commentsLoading, submitting, userId, addComment, deleteComment } = useComments(id || "");
 
-  useEffect(() => {
-    if (id) fetchArticle(id);
-  }, [id]);
-
-  // Refetch when coming back online
-  useEffect(() => {
-    const handleOnline = () => {
-      if (id) fetchArticle(id);
-    };
-    window.addEventListener('app-online', handleOnline);
-    return () => window.removeEventListener('app-online', handleOnline);
-  }, [id]);
-
-  useEffect(() => {
-    if (window.location.hash === "#comments" && !loading) {
-      const el = document.getElementById("comments");
-      if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
-    }
-  }, [loading]);
-
-  const fetchArticle = async (articleId: string) => {
+  const fetchArticle = useCallback(async (articleId: string) => {
     setLoading(true);
 
     // If offline, try cache first
@@ -157,9 +137,22 @@ const Article = () => {
     setArticle(fullArticle);
     setLoading(false);
 
-    // Cache the article
-    cacheArticle(articleId, fullArticle);
-  };
+  // Refetch when coming back online
+  useEffect(() => {
+    const handleOnline = () => {
+      if (id) fetchArticle(id);
+    };
+    window.addEventListener('app-online', handleOnline);
+    return () => window.removeEventListener('app-online', handleOnline);
+  }, [id]);
+
+  useEffect(() => {
+    if (window.location.hash === "#comments" && !loading) {
+      const el = document.getElementById("comments");
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
+    }
+  }, [loading]);
+
 
   const handleShare = async () => {
     const url = `${window.location.origin}/article/${id}`;

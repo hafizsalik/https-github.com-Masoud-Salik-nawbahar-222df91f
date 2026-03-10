@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -26,18 +26,13 @@ export function FollowersList({ isOpen, onClose, userId, type }: FollowersListPr
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchUsers();
-    }
-  }, [isOpen, userId, type]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     
     // Use SECURITY DEFINER RPC functions to bypass follows RLS
-    const rpcName = type === "followers" ? "get_follower_ids" : "get_following_ids";
-    const { data: userIds } = await supabase.rpc(rpcName as any, { target_user_id: userId });
+    const rpcName: "get_follower_ids" | "get_following_ids" =
+      type === "followers" ? "get_follower_ids" : "get_following_ids";
+    const { data: userIds } = await supabase.rpc<string[]>(rpcName, { target_user_id: userId });
 
     if (userIds && (userIds as string[]).length > 0) {
       const { data: profiles } = await supabase
@@ -51,7 +46,13 @@ export function FollowersList({ isOpen, onClose, userId, type }: FollowersListPr
     }
     
     setLoading(false);
-  };
+  }, [isOpen, userId, type]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsers();
+    }
+  }, [isOpen, fetchUsers]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
