@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { formatSolarShort } from "@/lib/solarHijri";
@@ -27,7 +27,11 @@ interface RelatedArticlesProps {
 export function RelatedArticles({ articleId, tags, authorId }: RelatedArticlesProps) {
   const [articles, setArticles] = useState<RelatedArticle[]>([]);
 
-  const fetchRelated = useCallback(async () => {
+  useEffect(() => {
+    fetchRelated();
+  }, [articleId]);
+
+  const fetchRelated = async () => {
     const { data } = await supabase
       .from("articles")
       .select("id, title, content, cover_image_url, created_at, author_id, view_count")
@@ -102,10 +106,6 @@ export function RelatedArticles({ articleId, tags, authorId }: RelatedArticlesPr
       }))
     );
   };
-
-  useEffect(() => {
-    fetchRelated();
-  }, [fetchRelated]);
 
   if (articles.length === 0) return null;
 

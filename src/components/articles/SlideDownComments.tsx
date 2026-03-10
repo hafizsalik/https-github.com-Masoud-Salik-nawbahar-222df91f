@@ -5,7 +5,6 @@ import { ChevronUp, Send, ThumbsUp, CornerDownRight, Trash2, Flag, MoreVertical,
 import { getRelativeTime } from "@/lib/relativeTime";
 import { cn, toPersianNumber } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { sanitizeError } from "@/lib/errorHandler";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { compressArticleImage } from "@/lib/imageCompression";
@@ -169,8 +168,8 @@ export function SlideDownComments({
 
       setNewComment("");
       clearImage();
-    } catch (error) {
-      toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
+    } catch (error: any) {
+      toast({ title: "خطا", description: "مشکلی پیش آمد", variant: "destructive" });
       playErrorSound();
     } finally {
       setPublishingPublic(false);

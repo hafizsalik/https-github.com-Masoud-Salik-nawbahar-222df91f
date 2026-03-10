@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -37,31 +37,27 @@ interface DashboardStats {
   reportedComments: number;
 }
 
-interface ReportedComment {
-  id: string;
-  comment_id: string;
-  reporter_id: string;
-  created_at: string;
-  comments: {
-    id: string;
-    content: string;
-    user_id: string;
-    article_id: string;
-  } | null;
-}
-
 const AdminDashboard = () => {
   const [articles, setArticles] = useState<AdminArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<AdminArticle | null>(null);
-  const [activeTab, setActiveTab] = useState<"stats" | "reports" | "pending" | "published" | "rejected">("stats");
+  const [activeTab, setActiveTab] = useState("stats");
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [reportedComments, setReportedComments] = useState<ReportedComment[]>([]);
+  const [reportedComments, setReportedComments] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const checkAdminAccess = useCallback(async () => {
+  useEffect(() => { checkAdminAccess(); }, []);
+  useEffect(() => {
+    if (isAdmin) {
+      if (activeTab === "stats") fetchStats();
+      else if (activeTab === "reports") fetchReportedComments();
+      else fetchArticles(activeTab as "pending" | "published" | "rejected");
+    }
+  }, [isAdmin, activeTab]);
+
+  const checkAdminAccess = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { navigate("/auth"); return; }
     const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
@@ -70,9 +66,9 @@ const AdminDashboard = () => {
       navigate("/"); return;
     }
     setIsAdmin(true);
-  }, [navigate, toast]);
+  };
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = async () => {
     setLoading(true);
     const [
       { count: totalArticles },
@@ -106,9 +102,9 @@ const AdminDashboard = () => {
       reportedComments: reportedCommentsCount || 0,
     });
     setLoading(false);
-  }, []);
+  };
 
-  const fetchArticles = useCallback(async (status: "pending" | "published" | "rejected") => {
+  const fetchArticles = async (status: "pending" | "published" | "rejected") => {
     setLoading(true);
 
     const { data, error } = await supabase
@@ -126,8 +122,7 @@ const AdminDashboard = () => {
     const authorIds = [...new Set((data || []).map((a) => a.author_id))].filter(Boolean);
 
     if (authorIds.length === 0) {
-      const articlesData = (data as AdminArticle[]) || [];
-      setArticles(articlesData.map(item => ({ ...item, profiles: null })));
+      setArticles((data || []).map((item: any) => ({ ...item, profiles: null })));
       setLoading(false);
       return;
     }
@@ -139,17 +134,15 @@ const AdminDashboard = () => {
 
     if (profilesError) {
       console.error("Error fetching profiles for admin dashboard:", profilesError);
-      const articlesData = (data as AdminArticle[]) || [];
-      setArticles(articlesData.map(item => ({ ...item, profiles: null })));
+      setArticles((data || []).map((item: any) => ({ ...item, profiles: null })));
       setLoading(false);
       return;
     }
 
     const profilesMap = new Map((profiles || []).map((p) => [p.id, p]));
 
-    const articlesData = (data as AdminArticle[]) || [];
     setArticles(
-      articlesData.map(item => ({
+      (data || []).map((item: any) => ({
         ...item,
         profiles: profilesMap.get(item.author_id)
           ? { display_name: profilesMap.get(item.author_id)!.display_name }
@@ -157,26 +150,14 @@ const AdminDashboard = () => {
       }))
     );
     setLoading(false);
-  }, [toast]);
+  };
 
-  const fetchReportedComments = useCallback(async () => {
+  const fetchReportedComments = async () => {
     setLoading(true);
     const { data } = await supabase.from("reported_comments").select("*, comments(id, content, user_id, article_id)").order("created_at", { ascending: false });
-    setReportedComments((data as ReportedComment[]) || []);
+    setReportedComments(data || []);
     setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    checkAdminAccess();
-  }, [checkAdminAccess]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      if (activeTab === "stats") fetchStats();
-      else if (activeTab === "reports") fetchReportedComments();
-      else fetchArticles(activeTab as "pending" | "published" | "rejected");
-    }
-  }, [isAdmin, activeTab, fetchStats, fetchReportedComments, fetchArticles]);
+  };
 
   const handleDeleteComment = async (commentId: string) => {
     const { error } = await supabase.from("comments").delete().eq("id", commentId);
@@ -190,12 +171,8 @@ const AdminDashboard = () => {
 
   const handleReviewComplete = () => {
     setSelectedArticle(null);
-    if (activeTab !== "stats" && activeTab !== "reports") {
-      // activeTab is one of the valid statuses when not stats/reports
-      fetchArticles(activeTab);
-    } else {
-      fetchStats();
-    }
+    if (activeTab !== "stats" && activeTab !== "reports") fetchArticles(activeTab as any);
+    else fetchStats();
   };
 
   if (!isAdmin) {
@@ -339,7 +316,7 @@ function LoadingSpinner() {
   );
 }
 
-function EmptyState({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
+function EmptyState({ icon: Icon, text }: { icon: any; text: string }) {
   return (
     <div className="text-center py-14">
       <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
@@ -350,7 +327,7 @@ function EmptyState({ icon: Icon, text }: { icon: React.ElementType; text: strin
   );
 }
 
-function StatCard({ icon: Icon, label, value, variant = "default" }: { icon: React.ElementType; label: string; value: number; variant?: "default" | "warning" | "danger" }) {
+function StatCard({ icon: Icon, label, value, variant = "default" }: { icon: any; label: string; value: number; variant?: "default" | "warning" | "danger" }) {
   return (
     <div className={cn(
       "bg-card border rounded-xl p-4 transition-all duration-300 hover:shadow-md group",

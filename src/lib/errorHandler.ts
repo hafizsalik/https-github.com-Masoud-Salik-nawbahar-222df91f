@@ -1,16 +1,13 @@
 // Utility to sanitize error messages for users
 // Never expose raw database errors to users
 
-export function sanitizeError(error: unknown): string {
+export function sanitizeError(error: any): string {
   // Log original error for debugging
   console.error('Error:', error);
   
-  // Work with unknown by casting to a loose error shape for inspection
-  const err = error as { code?: string; message?: unknown };
-
   // Map known error codes to user-friendly messages
-  const errorCode = err?.code || '';
-  const errorMessage = (typeof err.message === 'string' ? err.message.toLowerCase() : '') || '';
+  const errorCode = error?.code || '';
+  const errorMessage = error?.message?.toLowerCase() || '';
   
   // Supabase/PostgreSQL error codes
   const errorMappings: Record<string, string> = {

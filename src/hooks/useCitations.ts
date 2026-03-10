@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CitedArticle {
@@ -17,9 +17,9 @@ export function useCitations(articleId: string) {
       fetchCitations();
       fetchCitationCount();
     }
-  }, [articleId, fetchCitations, fetchCitationCount]);
+  }, [articleId]);
 
-  const fetchCitations = useCallback(async () => {
+  const fetchCitations = async () => {
     const { data, error } = await supabase
       .from("citations")
       .select("cited_article_id")
@@ -67,9 +67,9 @@ export function useCitations(articleId: string) {
 
     setCitations(citedArticles);
     setLoading(false);
-  }, [articleId]);
+  };
 
-  const fetchCitationCount = useCallback(async () => {
+  const fetchCitationCount = async () => {
     // Count how many articles cite THIS article
     const { count } = await supabase
       .from("citations")
@@ -77,7 +77,7 @@ export function useCitations(articleId: string) {
       .eq("cited_article_id", articleId);
 
     setCitationCount(count || 0);
-  }, [articleId]);
+  };
 
   return { citations, citationCount, loading };
 }

@@ -9,9 +9,6 @@ declare global {
   interface WindowEventMap {
     'beforeinstallprompt': BeforeInstallPromptEvent;
   }
-  interface Navigator {
-    standalone?: boolean;
-  }
 }
 
 export function usePWAInstall() {
@@ -28,7 +25,7 @@ export function usePWAInstall() {
         return true;
       }
       // Method 2: iOS standalone
-      if (navigator.standalone === true) {
+      if ((navigator as any).standalone === true) {
         return true;
       }
       // Method 3: Android TWA

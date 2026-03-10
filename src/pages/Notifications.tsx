@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { OfflineFallback } from "@/components/OfflineFallback";
-import { useNotifications, Notification } from "@/hooks/useNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { REACTION_LABELS } from "@/hooks/useCardReactions";
 
 /** Fetch latest comment content by actor on article */
-function useNotificationExtras(notifications: Notification[]) {
+function useNotificationExtras(notifications: any[]) {
   const [extras, setExtras] = useState<Record<string, { commentPreview?: string; reactionType?: string }>>({});
 
   useEffect(() => {
@@ -163,12 +163,12 @@ function getNotificationText(
 }
 
 /** Group notifications by time period */
-function groupByTime(notifications: Notification[]) {
+function groupByTime(notifications: any[]) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const groups: { label: string; items: Notification[] }[] = [
+  const groups: { label: string; items: any[] }[] = [
     { label: "امروز", items: [] },
     { label: "این هفته", items: [] },
     { label: "قبل‌تر", items: [] },

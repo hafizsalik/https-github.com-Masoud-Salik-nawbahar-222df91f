@@ -6,7 +6,7 @@ interface SEOHeadProps {
   ogImage?: string;
   ogUrl?: string;
   ogType?: string;
-  jsonLd?: Record<string, unknown>;
+  jsonLd?: Record<string, any>;
   noIndex?: boolean;
 }
 

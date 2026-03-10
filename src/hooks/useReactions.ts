@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,14 +15,14 @@ export function useReactions(articleId: string) {
   useEffect(() => {
     checkAuth();
     fetchReactions();
-  }, [articleId, fetchReactions]);
+  }, [articleId]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setUserId(session?.user?.id || null);
   };
 
-  const fetchReactions = useCallback(async () => {
+  const fetchReactions = async () => {
     setLoading(true);
     
     const { data: { session } } = await supabase.auth.getSession();
@@ -58,7 +58,7 @@ export function useReactions(articleId: string) {
     }
 
     setLoading(false);
-  }, [articleId]);
+  };
 
   const setReaction = async (type: "liked" | "disliked") => {
     if (!userId) {

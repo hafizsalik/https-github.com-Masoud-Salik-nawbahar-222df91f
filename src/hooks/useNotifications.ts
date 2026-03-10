@@ -20,7 +20,6 @@ export interface Notification {
 }
 
 const NOTIFICATION_SETTINGS_KEY = 'nawbahar_notification_settings';
-const NOTIFICATIONS_CACHE_KEY = 'nawbahar_notifications_cache';
 
 export interface NotificationSettings {
   comments: boolean;
@@ -65,22 +64,6 @@ export function useNotifications() {
     }
 
     setLoading(true);
-
-    // If offline, try cache
-    if (!navigator.onLine) {
-      const cached = localStorage.getItem(NOTIFICATIONS_CACHE_KEY);
-      if (cached) {
-        try {
-          const { notifications: cachedNotifs, unreadCount: cachedUnread } = JSON.parse(cached);
-          setNotifications(cachedNotifs);
-          setUnreadCount(cachedUnread);
-          setLoading(false);
-          return;
-        } catch (e) {
-          console.warn('Failed to parse cached notifications');
-        }
-      }
-    }
 
     // Fetch all unread notifications
     const { data: unreadData } = await supabase
@@ -146,29 +129,12 @@ export function useNotifications() {
       : transformed;
 
     setNotifications(filtered);
-    const unread = filtered.filter(n => !n.is_read).length;
-    setUnreadCount(unread);
+    setUnreadCount(filtered.filter(n => !n.is_read).length);
     setLoading(false);
-
-    // Cache the data
-    localStorage.setItem(NOTIFICATIONS_CACHE_KEY, JSON.stringify({
-      notifications: filtered,
-      unreadCount: unread,
-      timestamp: Date.now()
-    }));
   }, [user, settings]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [fetchNotifications]);
-
-  // Refetch when coming back online
-  useEffect(() => {
-    const handleOnline = () => {
-      fetchNotifications();
-    };
-    window.addEventListener('app-online', handleOnline);
-    return () => window.removeEventListener('app-online', handleOnline);
   }, [fetchNotifications]);
 
   // Real-time subscription

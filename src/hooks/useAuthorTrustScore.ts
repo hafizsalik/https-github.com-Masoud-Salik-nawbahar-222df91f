@@ -28,7 +28,7 @@ export function useAuthorTrustScore(authorId: string | null) {
 
     // Get profile trust score
     const { data: profile } = await supabase
-      .from<{ trust_score: number | null; reputation_score: number | null }>("profiles")
+      .from("profiles")
       .select("trust_score, reputation_score")
       .eq("id", id)
       .maybeSingle();
@@ -50,7 +50,7 @@ export function useAuthorTrustScore(authorId: string | null) {
     }
 
     setStats({
-      trustScore: profile?.trust_score ?? 50,
+      trustScore: (profile as any)?.trust_score || 50,
       articleCount: articles?.length || 0,
       avgScore,
       reportCount: 0,

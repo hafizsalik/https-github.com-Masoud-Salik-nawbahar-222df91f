@@ -6,21 +6,6 @@
 
 const SYNC_QUEUE_KEY = 'nawbahar-sync-queue';
 
-
-// Extend service worker registration with sync/periodicSync typings
-interface ExtendedServiceWorkerRegistration extends ServiceWorkerRegistration {
-  sync?: {
-    register(tag: string): Promise<void>;
-  };
-  periodicSync?: {
-    register(tag: string, options?: { minInterval: number }): Promise<void>;
-  };
-}
-
-interface PeriodicSyncPermissionDescriptor extends PermissionDescriptor {
-  name: "periodic-background-sync";
-}
-
 /** Queue a failed request for background sync retry */
 export async function queueOfflineAction(url: string, options: RequestInit) {
   try {
@@ -30,9 +15,9 @@ export async function queueOfflineAction(url: string, options: RequestInit) {
     await cache.put(new Request(url, { method: options.method || 'POST' }), response);
 
     // Request a sync
-    const registration = (await navigator.serviceWorker.ready) as ExtendedServiceWorkerRegistration;
-    if (registration.sync) {
-      await registration.sync.register('nawbahar-offline-actions');
+    const registration = await navigator.serviceWorker.ready;
+    if ('sync' in registration) {
+      await (registration as any).sync.register('nawbahar-offline-actions');
     }
   } catch (err) {
     console.warn('[BackgroundSync] Failed to queue action:', err);
@@ -44,13 +29,13 @@ export async function registerPeriodicSync() {
   try {
     const registration = await navigator.serviceWorker.ready;
 
-    if (registration.periodicSync) {
+    if ('periodicSync' in registration) {
       const status = await navigator.permissions.query({
-        name: 'periodic-background-sync',
-      } as PeriodicSyncPermissionDescriptor);
+        name: 'periodic-background-sync' as any,
+      });
 
       if (status.state === 'granted') {
-        await registration.periodicSync.register('nawbahar-sync-articles', {
+        await (registration as any).periodicSync.register('nawbahar-sync-articles', {
           minInterval: 60 * 60 * 1000, // 1 hour
         });
         console.info('[PeriodicSync] Registered: nawbahar-sync-articles (1h interval)');

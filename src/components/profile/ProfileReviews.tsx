@@ -31,7 +31,11 @@ export function ProfileReviews({ profileId, isOwnProfile }: ProfileReviewsProps)
   const [submitting, setSubmitting] = useState(false);
   const [existingReview, setExistingReview] = useState<string | null>(null);
 
-  const fetchReviews = useCallback(async () => {
+  useEffect(() => {
+    fetchReviews();
+  }, [profileId]);
+
+  const fetchReviews = async () => {
     setLoading(true);
     const { data } = await supabase
       .from("profile_reviews")
@@ -65,11 +69,7 @@ export function ProfileReviews({ profileId, isOwnProfile }: ProfileReviewsProps)
       setReviews([]);
     }
     setLoading(false);
-  }, [profileId, user]);
-
-  useEffect(() => {
-    fetchReviews();
-  }, [fetchReviews]);
+  };
 
   const handleSubmit = async () => {
     if (!user || !text.trim()) return;

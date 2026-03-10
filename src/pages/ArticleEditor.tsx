@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -233,7 +232,7 @@ const ArticleEditor = () => {
       if (evalData.approved) {
         if (!responseToId && !isEditMode) localStorage.removeItem(DRAFT_KEY);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
       setReviewState("idle");
     } finally {
@@ -372,7 +371,7 @@ const ArticleEditor = () => {
   // Build highlighted content for proofreading overlay
   const getHighlightedContent = () => {
     if (!proofActive || proofIssues.length === 0) return null;
-    const result = content;
+    let result = content;
     const parts: { text: string; issue?: ProofIssue }[] = [];
     let remaining = result;
     
@@ -435,7 +434,7 @@ const ArticleEditor = () => {
       localStorage.removeItem(DRAFT_KEY);
       toast({ title: "✅ پیش‌نویس ذخیره شد" });
       navigate("/profile");
-    } catch (error) {
+    } catch (error: any) {
       toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
     } finally {
       setLoading(false);
@@ -468,26 +467,21 @@ const ArticleEditor = () => {
       const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
 
       if (isEditMode && editId) {
-        await supabase
-          .from<Database["public"]["Tables"]["articles"]["Update"]>("articles")
-          .update({
-            title: title.trim(), content: content.trim(), cover_image_url: coverImageUrl, tags,
-            status: "pending", scheduled_at: scheduledAt,
-          })
-          .eq("id", editId);
+        await supabase.from("articles").update({
+          title: title.trim(), content: content.trim(), cover_image_url: coverImageUrl, tags,
+          status: "pending", scheduled_at: scheduledAt,
+        } as any).eq("id", editId);
       } else {
-        await supabase
-          .from<Database["public"]["Tables"]["articles"]["Insert"]>("articles")
-          .insert({
-            title: title.trim(), content: content.trim(), author_id: user.id, status: "pending",
-            cover_image_url: coverImageUrl, parent_article_id: responseToId || null, tags,
-            scheduled_at: scheduledAt,
-          });
+        await supabase.from("articles").insert({
+          title: title.trim(), content: content.trim(), author_id: user.id, status: "pending",
+          cover_image_url: coverImageUrl, parent_article_id: responseToId || null, tags,
+          scheduled_at: scheduledAt,
+        } as any);
       }
       localStorage.removeItem(DRAFT_KEY);
       toast({ title: "✅ مقاله برای انتشار زمان‌بندی شد", description: `تاریخ: ${scheduledDate} ساعت: ${scheduledTime}` });
       navigate("/profile");
-    } catch (error) {
+    } catch (error: any) {
       toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
     } finally {
       setLoading(false);
