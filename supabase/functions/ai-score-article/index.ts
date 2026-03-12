@@ -23,14 +23,65 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(authHeader.replace('Bearer ', ''));
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const userId = claimsData.claims.sub;
 
-    const { title, content, articleId } = await req.json();
+    const { articleId } = await req.json();
+    if (!articleId) {
+      return new Response(JSON.stringify({ error: "articleId is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate articleId format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(articleId)) {
+      return new Response(JSON.stringify({ error: "Invalid article ID" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fetch article from DB and verify ownership
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const articleRes = await fetch(`${SUPABASE_URL}/rest/v1/articles?id=eq.${articleId}&select=title,content,author_id,status`, {
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    });
+    const articles = await articleRes.json();
+    if (!articles || articles.length === 0) {
+      return new Response(JSON.stringify({ error: "Article not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const article = articles[0];
+
+    // Check ownership: only the author can trigger AI scoring on their own article
+    if (article.author_id !== userId) {
+      return new Response(JSON.stringify({ error: "Forbidden: you can only score your own articles" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Only allow scoring on pending articles
+    if (article.status !== "pending") {
+      return new Response(JSON.stringify({ error: "Article is not in pending status" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const title = article.title;
+    const content = article.content;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -157,39 +208,26 @@ Article Content: ${content.slice(0, 4000)}`;
       ? (evaluation.rejection_reason || "کیفیت مقاله برای انتشار کافی نیست. لطفاً محتوا را بازبینی و بهبود دهید.")
       : "";
 
-    // Update article with scores and status
-    if (articleId) {
-      // Validate articleId is a valid UUID
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(articleId)) {
-        return new Response(JSON.stringify({ error: "Invalid article ID" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    // Update article with scores and status (articleId already validated above)
+    const updateBody: Record<string, unknown> = {
+      ai_score_science: scores.science,
+      ai_score_ethics: scores.ethics,
+      ai_score_writing: scores.writing,
+      ai_score_timing: scores.timing,
+      ai_score_innovation: scores.innovation,
+      status: approved ? "published" : "rejected",
+    };
 
-      const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-      const updateBody: Record<string, unknown> = {
-        ai_score_science: scores.science,
-        ai_score_ethics: scores.ethics,
-        ai_score_writing: scores.writing,
-        ai_score_timing: scores.timing,
-        ai_score_innovation: scores.innovation,
-        status: approved ? "published" : "rejected",
-      };
-
-      await fetch(`${SUPABASE_URL}/rest/v1/articles?id=eq.${articleId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify(updateBody),
-      });
-    }
+    await fetch(`${SUPABASE_URL}/rest/v1/articles?id=eq.${articleId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(updateBody),
+    });
 
     return new Response(JSON.stringify({ 
       approved, 
