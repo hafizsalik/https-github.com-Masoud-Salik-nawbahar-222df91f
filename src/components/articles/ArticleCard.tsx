@@ -47,7 +47,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   } = useComments(article.id, { lazy: !showComments });
 
   // Lazy reactions — no fetch on mount, uses article.reaction_count for display
-  const { summary: reactionSummary, toggleReaction, ensureFetched } = useCardReactions(article.id);
+  const { summary: reactionSummary, toggleReaction, ensureFetched } = useCardReactions(article.id, false);
 
   const viewCount = article.view_count || 0;
   const coverImage = article.cover_image_url || defaultCover;
