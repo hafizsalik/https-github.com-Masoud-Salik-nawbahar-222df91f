@@ -84,22 +84,40 @@ const ArticleEditor = () => {
   useEffect(() => {
     if (editId) {
       setIsEditMode(true);
-      supabase.from("articles")
-        .select("title, content, tags, cover_image_url, parent_article_id")
-        .eq("id", editId)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setTitle(data.title || "");
-            setContent(data.content || "");
-            setTags(data.tags || []);
-            if (data.cover_image_url) setCoverPreview(data.cover_image_url);
-            if (data.parent_article_id) {
-              supabase.from("articles").select("id, title").eq("id", data.parent_article_id).maybeSingle()
-                .then(({ data: parent }) => { if (parent) setParentArticle(parent); });
-            }
-          }
-        });
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        if (!session?.user) {
+          navigate("/auth");
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("articles")
+          .select("title, content, tags, cover_image_url, parent_article_id, author_id")
+          .eq("id", editId)
+          .maybeSingle();
+
+        if (error || !data) {
+          toast({ title: "مقاله پیدا نشد", variant: "destructive" });
+          navigate("/", { replace: true });
+          return;
+        }
+
+        if (data.author_id !== session.user.id) {
+          toast({ title: "دسترسی غیرمجاز", description: "تنها نویسنده مقاله می‌تواند آن را ویرایش کند.", variant: "destructive" });
+          navigate("/", { replace: true });
+          return;
+        }
+
+        setTitle(data.title || "");
+        setContent(data.content || "");
+        setTags(data.tags || []);
+        if (data.cover_image_url) setCoverPreview(data.cover_image_url);
+        if (data.parent_article_id) {
+          const { data: parent, error: parentError } = await supabase.from("articles").select("id, title").eq("id", data.parent_article_id).maybeSingle();
+          if (!parentError && parent) setParentArticle(parent);
+        }
+      });
+
       // Load existing citations
       supabase.from("citations").select("cited_article_id").eq("source_article_id", editId)
         .then(async ({ data }) => {
@@ -110,7 +128,7 @@ const ArticleEditor = () => {
           }
         });
     }
-  }, [editId]);
+  }, [editId, navigate, toast]);
 
   // Load draft on mount (only for new articles)
   useEffect(() => {
@@ -193,7 +211,7 @@ const ArticleEditor = () => {
           cover_image_url: coverImageUrl,
           tags,
           status: "pending",
-        }).eq("id", editId);
+        }).eq("id", editId).eq("author_id", user.id);
         if (error) throw error;
         articleId = editId;
       } else {
