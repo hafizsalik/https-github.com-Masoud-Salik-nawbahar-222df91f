@@ -1,0 +1,36 @@
+name: CI + Lovable Publish
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run lint --silent
+      - run: npm run build --silent
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Lovable config
+        run: |
+          if [ -z "${{ secrets.LOVABLE_API_KEY }}" ] || [ -z "${{ secrets.LOVABLE_PROJECT_ID }}" ]; then
+            echo "Lovable secrets are not configured; skipping publish."
+            exit 0
+          fi
+      - name: Publish to Lovable
+        run: |
+          echo "Publishing app to Lovable project ${{ secrets.LOVABLE_PROJECT_ID }}"
+          curl -sf -X POST "https://api.lovable.dev/v1/projects/${{ secrets.LOVABLE_PROJECT_ID }}/publish" \
+            -H "Authorization: Bearer ${{ secrets.LOVABLE_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            && echo "Lovable publish triggered" || (echo "Lovable publish failed" && exit 1)

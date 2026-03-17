@@ -30,13 +30,18 @@ const Index = () => {
       {loading ? (
         <LoadingScreen />
       ) : (
-        <ArticleFeed 
-          articles={articles} 
-          onRefresh={refetch}
-          hasMore={hasMore}
-          loadingMore={loadingMore}
-          onLoadMore={loadMore}
-        />
+        <>
+          <ArticleFeed 
+            articles={articles} 
+            onRefresh={refetch}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
+          />
+          <div className="mt-4 text-[10px] text-muted-foreground text-center">
+            نسخه برنامه: {import.meta.env.VITE_APP_VERSION || "unknown"}
+          </div>
+        </>
       )}
     </AppLayout>
   );
