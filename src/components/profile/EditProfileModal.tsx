@@ -102,7 +102,7 @@ export function EditProfileModal({
     }
     // Validate WhatsApp number (digits only)
     if (whatsapp.trim() && !/^\+?[0-9]{7,15}$/.test(whatsapp.trim().replace(/\s/g, ''))) {
-      toast({ title: "خطا", description: "شماره واتساپ نامعتبر است", variant: "destructive" });
+      toast({ title: "خطا", description: "شماره واتسپ نامعتبر است", variant: "destructive" });
       return;
     }
 
@@ -250,7 +250,7 @@ export function EditProfileModal({
                 <Input
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="شماره واتساپ (مثال: 93700000000)"
+                  placeholder="شماره واتسپ (مثال: 93700000000)"
                   className="h-9 text-sm"
                 />
               </div>

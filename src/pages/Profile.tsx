@@ -153,7 +153,7 @@ const Profile = () => {
               {profile.whatsapp_number && (
                 <a href={`https://wa.me/${encodeURIComponent(profile.whatsapp_number)}`} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all">
-                  <WhatsApp size={11} strokeWidth={1.5} /><span>واتساپ</span>
+                  <WhatsApp size={11} strokeWidth={1.5} /><span>واتسپ</span>
                 </a>
               )}
               {profile.facebook_url && (
