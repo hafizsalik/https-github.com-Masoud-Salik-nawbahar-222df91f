@@ -53,11 +53,6 @@ const InteractiveOnboardingModal: React.FC<InteractiveOnboardingModalProps> = ({
   };
 
   const handleNext = async () => {
-    if (currentStep === "completion") {
-      await handleSaveAndComplete();
-      return;
-    }
-
     const nextStepIndex = currentStepIndex + 1;
     if (nextStepIndex < steps.length) {
       setCurrentStep(steps[nextStepIndex]);
@@ -72,7 +67,7 @@ const InteractiveOnboardingModal: React.FC<InteractiveOnboardingModalProps> = ({
   };
 
   const handleSaveAndComplete = async () => {
-    if (!user) return;
+    if (!user || loading) return;
     
     setLoading(true);
     try {
@@ -100,8 +95,12 @@ const InteractiveOnboardingModal: React.FC<InteractiveOnboardingModalProps> = ({
       }
 
       toast({ title: "پروفایل شما با موفقیت تکمیل شد! 🎉" });
+      
+      // Close modal first, then navigate
       onClose();
-      navigate("/", { replace: true });
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 100);
     } catch (error: any) {
       toast({ title: "خطا", description: "مشکلی پیش آمد", variant: "destructive" });
     } finally {
