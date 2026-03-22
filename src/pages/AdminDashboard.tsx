@@ -9,6 +9,7 @@ import { formatSolarShort } from "@/lib/solarHijri";
 import { ReviewModal } from "@/components/admin/ReviewModal";
 import { cn } from "@/lib/utils";
 import AdminAnalyticsDashboard from "@/components/admin/AdminAnalyticsDashboard";
+import ReportManagement from "@/components/admin/ReportManagement";
 
 interface AdminArticle {
   id: string;
@@ -201,7 +202,7 @@ const AdminDashboard = () => {
 
       <main className="max-w-screen-md mx-auto p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-6 mb-4 h-auto bg-muted/30 rounded-xl p-1">
+          <TabsList className="w-full grid grid-cols-7 mb-4 h-auto bg-muted/30 rounded-xl p-1">
             {[
               { value: "stats", icon: TrendingUp, label: "آمار" },
               { value: "analytics", icon: BarChart3, label: "تحلیل‌ها" },
@@ -209,6 +210,7 @@ const AdminDashboard = () => {
               { value: "published", icon: CheckCircle, label: "منتشر" },
               { value: "rejected", icon: XCircle, label: "رد" },
               { value: "reports", icon: Flag, label: "گزارش", badge: stats?.reportedComments, badgeVariant: "destructive" as const },
+              { value: "content-reports", icon: Flag, label: "گزارش محتوا" },
             ].map(({ value, icon: Icon, label, badge, badgeVariant }) => (
               <TabsTrigger key={value} value={value} className="text-[10px] sm:text-xs py-2 px-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm relative">
                 <Icon size={12} className="ml-1 hidden sm:inline" />
@@ -240,6 +242,10 @@ const AdminDashboard = () => {
                 <StatCard icon={Flag} label="گزارش‌ها" value={stats.reportedComments} variant={stats.reportedComments > 0 ? "danger" : "default"} />
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="content-reports">
+            <ReportManagement />
           </TabsContent>
 
           <TabsContent value="reports">

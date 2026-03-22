@@ -1,11 +1,11 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ArticleFeed } from "@/components/articles/ArticleFeed";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { usePublishedArticles } from "@/hooks/useArticles";
+import { useSmartFeed } from "@/hooks/useSmartFeed";
 import { SEOHead } from "@/components/SEOHead";
 
 const Index = () => {
-  const { articles, loading, loadingMore, hasMore, refetch, loadMore } = usePublishedArticles();
+  const { articles, loading, loadingMore, hasMore, refetch, loadMore } = useSmartFeed();
 
   return (
     <AppLayout>

@@ -1,22 +1,25 @@
-import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { usePWAStatus } from "@/hooks/usePWAStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Smartphone, CheckCircle2, Share, Plus, MoreVertical, ArrowRight, Wifi, Zap, Bell } from "lucide-react";
+import { Download, Smartphone, CheckCircle2, Share, Plus, MoreVertical, ArrowRight, Wifi, Zap, Bell, RefreshCw, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { InstallUpdateButton } from "@/components/InstallUpdateButton";
 
 export default function Install() {
-  const { isInstallable, isInstalled, promptInstall, getInstallInstructions } = usePWAInstall();
+  const { isPWA, installState, updateState, checkForUpdates } = usePWAStatus();
   const navigate = useNavigate();
-  const instructions = getInstallInstructions();
 
-  const handleInstall = async () => {
-    const success = await promptInstall();
-    if (success) {
-      navigate('/');
-    }
+  // Detect platform for manual instructions
+  const getPlatform = () => {
+    const ua = navigator.userAgent;
+    if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+    if (/Android/.test(ua)) return 'android';
+    return 'desktop';
   };
 
-  if (isInstalled) {
+  const platform = getPlatform();
+
+  if (isPWA) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md text-center animate-scale-in">
@@ -29,7 +32,39 @@ export default function Install() {
               می‌توانید از آیکون روی صفحه اصلی دستگاهتان به اپلیکیشن دسترسی داشته باشید
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Update Status */}
+            <div className="bg-muted rounded-xl p-4">
+              {updateState === 'up-to-date' && (
+                <div className="flex items-center justify-center gap-2 text-green-600">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span className="font-medium">برنامه بروز است</span>
+                </div>
+              )}
+              {updateState === 'update-available' && (
+                <div className="space-y-2">
+                  <p className="text-amber-600 font-medium">نسخه جدید موجود است</p>
+                  <InstallUpdateButton className="w-full" />
+                </div>
+              )}
+              {updateState === 'checking' && (
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>در حال بررسی...</span>
+                </div>
+              )}
+              {(updateState === 'up-to-date' || updateState === 'error') && (
+                <Button 
+                  variant="outline" 
+                  onClick={checkForUpdates}
+                  className="w-full mt-2"
+                >
+                  <RefreshCw className="h-4 w-4 ml-2" />
+                  بررسی بروزرسانی
+                </Button>
+              )}
+            </div>
+
             <Button onClick={() => navigate('/')} className="w-full btn-press" size="lg">
               برو به صفحه اصلی
             </Button>
@@ -97,17 +132,19 @@ export default function Install() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Install Button */}
-            {isInstallable ? (
-              <Button onClick={handleInstall} className="w-full btn-press" size="lg">
-                <Download className="h-5 w-5 ml-2" />
-                نصب اپلیکیشن
+            {installState === 'not-installed' ? (
+              <InstallUpdateButton className="w-full" size="lg" />
+            ) : installState === 'installing' ? (
+              <Button disabled className="w-full" size="lg">
+                <Loader2 className="h-5 w-5 ml-2 animate-spin" />
+                در حال نصب...
               </Button>
             ) : (
               <div className="space-y-4">
                 <div className="bg-muted rounded-xl p-4">
                   <p className="text-sm font-medium mb-4 text-center">راهنمای نصب دستی</p>
                   
-                  {instructions.platform === 'ios' && (
+                  {platform === 'ios' && (
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3 bg-card rounded-lg p-3">
                         <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۱</span>
@@ -131,7 +168,7 @@ export default function Install() {
                     </div>
                   )}
 
-                  {instructions.platform === 'android' && (
+                  {platform === 'android' && (
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3 bg-card rounded-lg p-3">
                         <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۱</span>
@@ -152,7 +189,7 @@ export default function Install() {
                     </div>
                   )}
 
-                  {instructions.platform === 'desktop' && (
+                  {platform === 'desktop' && (
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3 bg-card rounded-lg p-3">
                         <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">۱</span>
