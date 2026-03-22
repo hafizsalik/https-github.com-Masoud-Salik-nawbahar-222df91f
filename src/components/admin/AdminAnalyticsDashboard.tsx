@@ -33,11 +33,12 @@ interface ActivityLog {
   id: string;
   user_id: string | null;
   activity_type: string;
-  activity_category: string;
   created_at: string;
   metadata: any;
   entity_id: string | null;
   entity_type: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
 }
 
 interface Stats {
@@ -211,13 +212,15 @@ export default function AdminAnalyticsDashboard() {
     }
   };
 
-  const getActivityIcon = (category: string) => {
-    switch (category) {
-      case 'auth': return <UserCheck className="w-4 h-4" />;
-      case 'content': return <MousePointer className="w-4 h-4" />;
-      case 'interaction': return <Activity className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+  const getActivityIcon = (activityType: string) => {
+    if (activityType.includes('login') || activityType.includes('register') || activityType.includes('logout')) {
+      return <UserCheck className="w-4 h-4" />;
+    } else if (activityType.includes('article') || activityType.includes('comment') || activityType.includes('write')) {
+      return <MousePointer className="w-4 h-4" />;
+    } else if (activityType.includes('follow') || activityType.includes('reaction') || activityType.includes('like')) {
+      return <Activity className="w-4 h-4" />;
     }
+    return <Clock className="w-4 h-4" />;
   };
 
   const formatTime = (date: string) => {
@@ -441,7 +444,7 @@ export default function AdminAnalyticsDashboard() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="text-muted-foreground">
-                          {getActivityIcon(activity.activity_category)}
+                          {getActivityIcon(activity.activity_type)}
                         </div>
                         <div>
                           <p className="font-medium">

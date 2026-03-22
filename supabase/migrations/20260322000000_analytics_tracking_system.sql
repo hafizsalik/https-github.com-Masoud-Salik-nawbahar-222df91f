@@ -369,15 +369,14 @@ CREATE TRIGGER calculate_session_duration_trigger
   FOR EACH ROW EXECUTE FUNCTION public.calculate_session_duration();
 
 -- ============================================
--- 7. ANALYTICS VIEWS
+-- 7. VIEWS FOR ANALYTICS DASHBOARD
 -- ============================================
 
--- View: Currently Online Users
+-- View for online users with profile information
 CREATE OR REPLACE VIEW public.online_users AS
 SELECT 
   up.user_id,
   up.device_id,
-  up.session_id,
   up.status,
   up.last_seen_at,
   up.current_activity,
@@ -386,10 +385,37 @@ SELECT
   ud.user_type,
   ud.is_pwa_installed
 FROM public.user_presence up
-LEFT JOIN public.profiles p ON up.user_id = p.id
+LEFT JOIN public.public_profiles p ON up.user_id = p.id
 LEFT JOIN public.user_devices ud ON up.device_id = ud.device_id
-WHERE up.status IN ('online', 'away')
-  AND up.last_seen_at > (now() - interval '5 minutes');
+WHERE up.status IN ('online', 'away', 'busy')
+  AND up.last_seen_at > now() - interval '5 minutes';
+
+-- Grant access to online users view
+GRANT SELECT ON public.online_users TO authenticated;
+GRANT SELECT ON public.online_users TO anon;
+
+-- View for activity logs with user information
+CREATE OR REPLACE VIEW public.activity_logs_with_users AS
+SELECT 
+  al.id,
+  al.user_id,
+  al.activity_type,
+  al.created_at,
+  al.metadata,
+  al.entity_id,
+  al.entity_type,
+  p.display_name,
+  p.avatar_url
+FROM public.activity_logs al
+LEFT JOIN public.public_profiles p ON al.user_id = p.id
+ORDER BY al.created_at DESC;
+
+-- Grant access to activity logs view
+GRANT SELECT ON public.activity_logs_with_users TO authenticated;
+
+-- ============================================
+-- 8. ANALYTICS SUMMARY VIEWS
+-- ============================================
 
 -- View: Daily Active Users (DAU)
 CREATE OR REPLACE VIEW public.daily_active_users AS
