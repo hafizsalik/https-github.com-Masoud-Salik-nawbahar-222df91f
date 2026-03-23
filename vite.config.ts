@@ -13,7 +13,7 @@ export default defineConfig(async ({ mode }) => ({
     react(),
     mode === "development" && (await import("lovable-tagger")).componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: [
         "favicon.ico",
         "robots.txt",
