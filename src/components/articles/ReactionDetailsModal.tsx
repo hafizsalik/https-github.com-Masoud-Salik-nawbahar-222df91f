@@ -5,7 +5,6 @@ import { REACTION_SVG_ICONS } from "./ReactionIcons";
 import { getRelativeTime } from "@/lib/relativeTime";
 import { toPersianNumber } from "@/lib/utils";
 import { X } from "lucide-react";
-import "@/styles/reactions.css";
 import { cn } from "@/lib/utils";
 
 interface ReactionDetail {

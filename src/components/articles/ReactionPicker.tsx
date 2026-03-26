@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { REACTION_KEYS, REACTION_LABELS, REACTION_COLORS, type ReactionKey } from "@/hooks/useCardReactions";
 import { REACTION_SVG_ICONS } from "./ReactionIcons";
 import { cn } from "@/lib/utils";
-import "@/styles/reactions.css";
 
 interface ReactionPickerProps {
   userReaction: ReactionKey | null;
