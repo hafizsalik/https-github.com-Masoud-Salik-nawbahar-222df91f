@@ -82,7 +82,7 @@ export function ArticleCardMetrics({
               onClick={onCommentClick}
               className={cn(
                 "flex items-center gap-1 text-[12px] transition-colors",
-                commentsOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                commentsOpen ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
               )}
             >
               <MessageCircle size={14} strokeWidth={1.5} aria-hidden="true" />

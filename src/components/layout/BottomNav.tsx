@@ -1,4 +1,4 @@
-import { Home, Search, BookOpen, Plus } from "lucide-react";
+import { Home, Search, Bookmark, Plus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
@@ -45,8 +45,8 @@ export function BottomNav() {
             />
           </NavItem>
 
-          {/* Search */}
-          <NavItem to="/explore" active={isActive("/explore")} label="جستجو">
+          {/* Explore */}
+          <NavItem to="/explore" active={isActive("/explore")} label="کاوش">
             <Search
               size={21}
               strokeWidth={isActive("/explore") ? 1.8 : 1.4}
@@ -69,11 +69,11 @@ export function BottomNav() {
             </div>
           </Link>
 
-          {/* VIP */}
-          <NavItem to="/vip" active={isActive("/vip")} label="ویژه">
-            <BookOpen
+          {/* Saved */}
+          <NavItem to="/bookmarks" active={isActive("/bookmarks")} label="ذخیره‌ها">
+            <Bookmark
               size={21}
-              strokeWidth={isActive("/vip") ? 1.8 : 1.4}
+              strokeWidth={isActive("/bookmarks") ? 1.8 : 1.4}
             />
           </NavItem>
 
@@ -111,7 +111,6 @@ export function BottomNav() {
   );
 }
 
-/** Reusable nav item with tactile press feedback */
 function NavItem({ to, active, children, label }: { to: string; active: boolean; children: React.ReactNode; label?: string }) {
   return (
     <Link

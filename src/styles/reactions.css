@@ -182,6 +182,19 @@
   perspective: 1000px;
 }
 
+/* Masked SVG icons for consistent theming */
+.reaction-mask {
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
+}
+
 /* Dark mode optimizations */
 @media (prefers-color-scheme: dark) {
   .animate-glow {

@@ -164,7 +164,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
       {/* Summary text */}
       <button
         onClick={handleSummaryClick}
-        className="text-[10.5px] sm:text-[11px] truncate max-w-[120px] sm:max-w-[150px] text-muted-foreground hover:text-foreground reaction-instant hover:scale-105 active:scale-95"
+        className="text-[10.5px] sm:text-[11px] truncate max-w-[120px] sm:max-w-[150px] text-muted-foreground/60 hover:text-foreground reaction-instant hover:scale-105 active:scale-95"
       >
         {summaryText || "واکنش"}
       </button>

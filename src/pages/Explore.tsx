@@ -1,13 +1,10 @@
-import { useState, useMemo, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Search, Hash, X, User, TrendingUp, Flame } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Hash, Flame } from "lucide-react";
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { usePublishedArticles } from "@/hooks/useArticles";
 import { cn, toPersianNumber } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/SEOHead";
 import { SuggestedWriters } from "@/components/profile/SuggestedWriters";
 
@@ -24,22 +21,11 @@ const trendingHashtags = [
   "افغانستان", "ادبیات", "تاریخ", "هنر", "فناوری", "آموزش",
 ];
 
-interface UserProfile {
-  id: string;
-  display_name: string;
-  avatar_url: string | null;
-  specialty: string | null;
-}
-
 const Explore = () => {
   const { articles, refetch } = usePublishedArticles();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [suggestedUsers, setSuggestedUsers] = useState<UserProfile[]>([]);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
     const category = searchParams.get("category");
@@ -48,40 +34,22 @@ const Explore = () => {
     if (tag) setActiveTag(tag);
   }, [searchParams]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    if (debouncedQuery.trim().length >= 2) searchUsers(debouncedQuery);
-    else setSuggestedUsers([]);
-  }, [debouncedQuery]);
-
-  const searchUsers = async (query: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, display_name, avatar_url, specialty")
-      .ilike("display_name", `%${query}%`)
-      .limit(5);
-    setSuggestedUsers(data || []);
-  };
+  const query = (searchParams.get("q") || "").trim();
 
   const filteredArticles = useMemo(() => {
     let result = articles;
     if (activeTopic) result = result.filter(a => a.tags?.some(t => t.toLowerCase() === activeTopic.toLowerCase()));
     if (activeTag) result = result.filter(a => a.tags?.some(t => t.toLowerCase() === activeTag.toLowerCase()));
-    if (debouncedQuery.trim()) {
-      const q = debouncedQuery.toLowerCase();
+    if (query) {
+      const q = query.toLowerCase();
       result = result.filter(a =>
         a.title.toLowerCase().includes(q) || a.content.toLowerCase().includes(q) ||
         a.author?.display_name?.toLowerCase().includes(q) || a.tags?.some(t => t.toLowerCase().includes(q))
       );
     }
     return result;
-  }, [articles, activeTopic, activeTag, debouncedQuery]);
+  }, [articles, activeTopic, activeTag, query]);
 
-  // Trending articles: sorted by engagement (reactions + comments + views)
   const trendingArticles = useMemo(() => {
     return [...articles]
       .sort((a, b) => ((b.reaction_count || 0) + (b.comment_count || 0) + (b.view_count || 0)) - ((a.reaction_count || 0) + (a.comment_count || 0) + (a.view_count || 0)))
@@ -92,19 +60,17 @@ const Explore = () => {
     const newTopic = activeTopic === topicId ? null : topicId;
     setActiveTopic(newTopic);
     setActiveTag(null);
-    setSearchQuery("");
     setSearchParams(newTopic ? { category: newTopic } : {});
   };
 
   const handleHashtagClick = (hashtag: string) => {
     setActiveTag(activeTag === hashtag ? null : hashtag);
     setActiveTopic(null);
-    setSearchQuery("");
     setSearchParams(activeTag !== hashtag ? { tag: hashtag } : {});
   };
 
-  const clearFilters = () => { setSearchQuery(""); setActiveTopic(null); setActiveTag(null); setSearchParams({}); };
-  const hasActiveFilters = debouncedQuery || activeTopic || activeTag;
+  const clearFilters = () => { setActiveTopic(null); setActiveTag(null); setSearchParams({}); };
+  const hasActiveFilters = Boolean(query || activeTopic || activeTag);
 
   return (
     <AppLayout>
@@ -114,52 +80,8 @@ const Explore = () => {
         ogUrl="/explore"
       />
       <div className="animate-fade-in">
-        {/* Search */}
-        <div className="px-5 pt-4 pb-3">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/30" size={16} />
-            <Input
-              placeholder="جستجوی مقالات، نویسندگان..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className="pr-9 bg-muted/30 border-0 rounded-xl h-10 text-[13px] focus:ring-1 focus:ring-primary/20 placeholder:text-muted-foreground/30"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-foreground"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          {suggestedUsers.length > 0 && isSearchFocused && (
-            <div className="mt-2 bg-card border border-border/50 rounded-xl overflow-hidden shadow-sm animate-slide-down">
-              <p className="text-[10px] text-muted-foreground/50 px-3 py-1.5 font-medium border-b border-border/30">نویسندگان</p>
-              {suggestedUsers.map((user) => (
-                <Link key={user.id} to={`/profile/${user.id}`} className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-muted/30 transition-colors">
-                  {user.avatar_url ? (
-                    <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-primary/8 flex items-center justify-center">
-                      <User size={12} className="text-primary" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-[13px] font-medium text-foreground">{user.display_name}</p>
-                    {user.specialty && <p className="text-[10px] text-muted-foreground/50 line-clamp-1">{user.specialty}</p>}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Topics */}
-        <div className="px-5 pb-2">
+        <div className="px-5 pt-4 pb-2">
           <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
             {topics.map((topic) => (
               <button
@@ -207,13 +129,16 @@ const Explore = () => {
               {activeTopic && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
                   {topics.find(t => t.id === activeTopic)?.emoji} {topics.find(t => t.id === activeTopic)?.label}
-                  <button onClick={() => handleTopicClick(activeTopic)} className="mr-0.5"><X size={9} /></button>
                 </span>
               )}
               {activeTag && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
                   #{activeTag}
-                  <button onClick={() => handleHashtagClick(activeTag)} className="mr-0.5"><X size={9} /></button>
+                </span>
+              )}
+              {query && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
+                  {query}
                 </span>
               )}
               <button onClick={clearFilters} className="text-[10px] text-muted-foreground/40 hover:text-foreground transition-colors">پاک کردن</button>
@@ -238,7 +163,6 @@ const Explore = () => {
         ) : (
           <>
             <div className="border-t border-border/30">
-              {/* Trending section heading */}
               <div className="flex items-center gap-1.5 px-5 pt-4 pb-2">
                 <Flame size={14} strokeWidth={1.5} className="text-muted-foreground/40" />
                 <span className="text-[12px] font-semibold text-muted-foreground/50">پرطرفدارترین‌ها</span>

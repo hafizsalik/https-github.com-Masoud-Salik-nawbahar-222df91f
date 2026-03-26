@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -142,12 +142,31 @@ function batchSimilarNotifications(notifications: Notification[], settings: Noti
   return result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
+function dedupeByContext(notifications: Notification[]): Notification[] {
+  const map = new Map<string, Notification>();
+  notifications.forEach((notif) => {
+    const key = notif.context_id || generateContextId(notif);
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, notif);
+      return;
+    }
+    if (new Date(notif.created_at).getTime() > new Date(existing.created_at).getTime()) {
+      map.set(key, notif);
+    }
+  });
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+}
+
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
+  const lastAlertRef = useRef<{ contextId: string; at: number } | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
@@ -249,8 +268,11 @@ export function useNotifications() {
       });
     }
     
+    // Context-aware dedupe to prevent duplicate alerts
+    const deduped = settings.contextAware ? dedupeByContext(filtered) : filtered;
+
     // Apply batching for similar notifications
-    const smartNotifications = batchSimilarNotifications(filtered, settings);
+    const smartNotifications = batchSimilarNotifications(deduped, settings);
     setNotifications(smartNotifications);
     setUnreadCount(smartNotifications.filter(n => !n.is_read).length);
     setLoading(false);
@@ -270,8 +292,15 @@ export function useNotifications() {
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${user.id}`,
-      }, () => { 
-        import("@/lib/sounds").then(m => m.playNotificationSound());
+      }, (payload) => { 
+        const contextId = generateContextId(payload.new as Partial<Notification>);
+        const now = Date.now();
+        const last = lastAlertRef.current;
+        const isDuplicate = last && last.contextId === contextId && (now - last.at) < 10000;
+        if (!isDuplicate) {
+          lastAlertRef.current = { contextId, at: now };
+          import("@/lib/sounds").then(m => m.playNotificationSound());
+        }
         fetchNotifications(); 
       })
       .subscribe();
