@@ -1,4 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+Type
+External commit
+Created
+Mar 23, 9:30 PMimport { useState, useRef, useEffect, useCallback } from "react";
 import { REACTION_KEYS, REACTION_LABELS, REACTION_COLORS, type ReactionKey } from "@/hooks/useCardReactions";
 import { REACTION_SVG_ICONS } from "./ReactionIcons";
 import { cn } from "@/lib/utils";
@@ -152,10 +155,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
         onClick={handleClick}
-        className={cn(
-          "flex items-center touch-none select-none reaction-instant hover:scale-105 active:scale-95",
-          justReacted && "animate-reaction-pop-enhanced"
-        )}
+        className="flex items-center touch-none select-none reaction-instant hover:scale-105 active:scale-95"
         style={activeColor ? { color: activeColor } : {}}
       >
         {renderInlineIcon()}

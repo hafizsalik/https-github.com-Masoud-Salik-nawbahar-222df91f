@@ -241,7 +241,7 @@ const Notifications = () => {
           <p className="text-muted-foreground text-[12px] mb-5 max-w-[220px] leading-relaxed">
             برای دریافت اعلان وارد شوید
           </p>
-          <Button onClick={() => navigate("/auth?view=login")} variant="outline" className="rounded-full px-5 h-8 text-[12px]">
+          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-full px-5 h-8 text-[12px]">
             ورود / ثبت نام
           </Button>
         </div>
@@ -277,19 +277,6 @@ const Notifications = () => {
               </button>
             </div>
           </div>
-
-          {/* Push permission prompt */}
-          {isSupported && permission === 'default' && (
-            <div className="mx-5 mt-3 rounded-xl border border-border/40 bg-muted/20 p-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[12px] font-semibold text-foreground">اعلان‌های سریع</p>
-                <p className="text-[11px] text-muted-foreground/60">برای دریافت اعلان‌ها اجازه دهید</p>
-              </div>
-              <Button size="sm" className="h-8 px-3" onClick={() => subscribe()}>
-                فعال‌سازی
-              </Button>
-            </div>
-          )}
 
           {/* Settings Panel */}
           {showSettings && (

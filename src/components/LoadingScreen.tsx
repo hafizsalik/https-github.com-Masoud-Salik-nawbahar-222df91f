@@ -26,7 +26,7 @@ export function LoadingScreen() {
       style={{ opacity: show ? 1 : 0 }}
     >
       {/* Logo mark */}
-      <div className="relative w-14 h-14">
+      <div className="relative w-20 h-20">
         {/* Orbiting dots */}
         <div className="absolute inset-0" style={{ animation: "nb-orbit 3s linear infinite" }}>
           <div
@@ -59,7 +59,7 @@ export function LoadingScreen() {
           style={{ animation: "nb-letter-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both" }}
         >
           <span
-          className="text-[22px] font-black text-foreground select-none"
+            className="text-[28px] font-black text-foreground select-none"
             style={{ animation: "nb-breathe 3.5s ease-in-out 0.8s infinite" }}
           >
             ن
@@ -69,11 +69,11 @@ export function LoadingScreen() {
 
       {/* Brand */}
       <div style={{ animation: "nb-fade-up 0.5s ease-out 0.3s both" }}>
-        <span className="text-[13px] font-bold text-foreground/80 tracking-wider">نوبهار</span>
+        <span className="text-[15px] font-bold text-foreground/80 tracking-wider">نوبهار</span>
       </div>
 
       {/* Progress bar */}
-      <div className="w-16 h-[2px] bg-border/40 rounded-full overflow-hidden">
+      <div className="w-20 h-[2px] bg-border/40 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-300 ease-out"
           style={{

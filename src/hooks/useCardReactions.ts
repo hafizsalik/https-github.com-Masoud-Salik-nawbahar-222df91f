@@ -1,7 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 
 /** Reaction keys — rendered as Lucide outline icons */
 export const REACTION_KEYS = ["like", "love", "insightful", "laugh", "sad"] as const;
@@ -58,8 +56,6 @@ export function useCardReactions(articleId: string, autoFetch = true) {
   const [fetched, setFetched] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
-  const { toast } = useToast();
 
   const fetchReactions = useCallback(async () => {
     setLoading(true);
@@ -134,14 +130,6 @@ export function useCardReactions(articleId: string, autoFetch = true) {
   }, [fetched, fetchReactions]);
 
   const toggleReaction = async (type: ReactionKey) => {
-    if (!user) {
-      toast({
-        title: "نیاز به ورود",
-        description: "برای واکنش نشان دادن وارد شوید",
-        variant: "destructive",
-      });
-      return false;
-    }
     // Instant response - no waiting for fetch
     const optimisticUpdate = () => {
       if (summary.userReaction === type) {
@@ -171,7 +159,13 @@ export function useCardReactions(articleId: string, autoFetch = true) {
     optimisticUpdate();
 
     // Get session and perform database operation
-    const uid = user.id;
+    const { data: { session } } = await supabase.auth.getSession();
+    const uid = session?.user?.id;
+    if (!uid) {
+      // Revert optimistic update if not authenticated
+      await fetchReactions();
+      return false;
+    }
 
     try {
       if (summary.userReaction === type) {
