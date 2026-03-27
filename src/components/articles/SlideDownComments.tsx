@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ChevronUp, Send, ThumbsUp, CornerDownRight, Trash2, Flag, MoreVertical, Globe, ImagePlus, X, Loader2 } from "lucide-react";
@@ -35,11 +35,14 @@ interface SlideDownCommentsProps {
   comments: Comment[];
   loading: boolean;
   submitting: boolean;
+  loadingMore?: boolean;
+  hasMore?: boolean;
   userId: string | null;
   onAddComment: (content: string, parentId?: string, imageUrl?: string) => Promise<boolean>;
   onDeleteComment: (commentId: string) => Promise<void>;
   onClose: () => void;
   refetch: () => void;
+  onLoadMore?: () => void;
 }
 
 export function SlideDownComments({
@@ -48,11 +51,14 @@ export function SlideDownComments({
   comments,
   loading,
   submitting,
+  loadingMore,
+  hasMore,
   userId,
   onAddComment,
   onDeleteComment,
   onClose,
   refetch,
+  onLoadMore,
 }: SlideDownCommentsProps) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -308,6 +314,18 @@ export function SlideDownComments({
           </div>
         ) : (
           <div className="divide-y divide-border/30">
+            {hasMore && (
+              <div className="px-4 py-2">
+                <Button
+                  onClick={onLoadMore}
+                  disabled={loadingMore}
+                  variant="outline"
+                  className="rounded-full px-4 h-8 text-[11px]"
+                >
+                  {loadingMore ? "در حال بارگذاری..." : "نمایش نظرات بیشتر"}
+                </Button>
+              </div>
+            )}
             {topLevelComments.map((comment, i) => {
               const replies = getReplies(comment.id);
               const isExpanded = expandedReplies[comment.id];

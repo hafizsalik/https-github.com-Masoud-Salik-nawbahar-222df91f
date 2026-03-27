@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,11 @@ import { useAuth } from "@/hooks/useAuth";
 import InteractiveOnboardingModal from "@/components/InteractiveOnboardingModal";
 import nawbaharLogo from "@/assets/nawbahar-logo.png";
 
-type AuthView = "welcome" | "login" | "register" | "forgot";
+type AuthView = "login" | "register" | "forgot";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const initialView = (searchParams.get("view") as AuthView) || "welcome";
+  const initialView = (searchParams.get("view") as AuthView) || "login";
   const [view, setView] = useState<AuthView>(initialView);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,10 +48,10 @@ const Auth = () => {
     if (/[^a-zA-Z0-9]/.test(password)) score++;
     if (password.length >= 12) score++;
 
-    if (score <= 1) return { score: 1, label: "ضعیف", color: "bg-destructive" };
-    if (score <= 2) return { score: 2, label: "متوسط", color: "bg-warning" };
-    if (score <= 3) return { score: 3, label: "خوب", color: "bg-primary" };
-    return { score: 4, label: "قوی", color: "bg-success" };
+    if (score <= 1) return { score: 1, label: "Ø¶Ø¹ÛŒÙ", color: "bg-destructive" };
+    if (score <= 2) return { score: 2, label: "Ù…ØªÙˆØ³Ø·", color: "bg-warning" };
+    if (score <= 3) return { score: 3, label: "Ø®ÙˆØ¨", color: "bg-primary" };
+    return { score: 4, label: "Ù‚ÙˆÛŒ", color: "bg-success" };
   }, [password]);
 
   const passwordChecks = useMemo(() => ({
@@ -72,10 +72,10 @@ const Auth = () => {
         await analyticsService.trackLogin(data.user.id);
       }
       
-      toast({ title: "خوش آمدید! 👋" });
+      toast({ title: "Ø®ÙˆØ´ Ø¢Ù…Ø¯ÛŒØ¯! ðŸ‘‹" });
       navigate("/");
     } catch (error: any) {
-      toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
+      toast({ title: "Ø®Ø·Ø§", description: sanitizeError(error), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -86,22 +86,22 @@ const Auth = () => {
     
     const nameError = validation.displayName.validate(displayName);
     if (nameError) {
-      toast({ title: "خطا", description: nameError, variant: "destructive" });
+      toast({ title: "Ø®Ø·Ø§", description: nameError, variant: "destructive" });
       return;
     }
 
     if (!passwordChecks.minLength || !passwordChecks.hasLetter || !passwordChecks.hasNumber) {
-      toast({ title: "خطا", description: "رمز عبور باید حداقل ۸ کاراکتر و شامل حرف و عدد باشد", variant: "destructive" });
+      toast({ title: "Ø®Ø·Ø§", description: "Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø¨Ø§ÛŒØ¯ Ø­Ø¯Ø§Ù‚Ù„ Û¸ Ú©Ø§Ø±Ø§Ú©ØªØ± Ùˆ Ø´Ø§Ù…Ù„ Ø­Ø±Ù Ùˆ Ø¹Ø¯Ø¯ Ø¨Ø§Ø´Ø¯", variant: "destructive" });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast({ title: "خطا", description: "رمز عبور و تکرار آن مطابقت ندارند", variant: "destructive" });
+      toast({ title: "Ø®Ø·Ø§", description: "Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ùˆ ØªÚ©Ø±Ø§Ø± Ø¢Ù† Ù…Ø·Ø§Ø¨Ù‚Øª Ù†Ø¯Ø§Ø±Ù†Ø¯", variant: "destructive" });
       return;
     }
 
     if (!agreedToTerms) {
-      toast({ title: "خطا", description: "لطفاً قوانین و مقررات را بپذیرید", variant: "destructive" });
+      toast({ title: "Ø®Ø·Ø§", description: "Ù„Ø·ÙØ§Ù‹ Ù‚ÙˆØ§Ù†ÛŒÙ† Ùˆ Ù…Ù‚Ø±Ø±Ø§Øª Ø±Ø§ Ø¨Ù¾Ø°ÛŒØ±ÛŒØ¯", variant: "destructive" });
       return;
     }
 
@@ -119,11 +119,11 @@ const Auth = () => {
         // Track registration
         await analyticsService.trackRegistration(data.user.id);
         
-        toast({ title: "خوش آمدید به نوبهار! 🌱" });
+        toast({ title: "Ø®ÙˆØ´ Ø¢Ù…Ø¯ÛŒØ¯ Ø¨Ù‡ Ù†ÙˆØ¨Ù‡Ø§Ø±! ðŸŒ±" });
         setShowOnboardingModal(true);
       }
     } catch (error: any) {
-      toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
+      toast({ title: "Ø®Ø·Ø§", description: sanitizeError(error), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -132,7 +132,7 @@ const Auth = () => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast({ title: "ایمیل نامعتبر", description: "لطفاً یک ایمیل معتبر وارد کنید", variant: "destructive" });
+      toast({ title: "Ø§ÛŒÙ…ÛŒÙ„ Ù†Ø§Ù…Ø¹ØªØ¨Ø±", description: "Ù„Ø·ÙØ§Ù‹ ÛŒÚ© Ø§ÛŒÙ…ÛŒÙ„ Ù…Ø¹ØªØ¨Ø± ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯", variant: "destructive" });
       return;
     }
 
@@ -142,102 +142,43 @@ const Auth = () => {
         redirectTo: `${window.location.origin}/auth?view=login`,
       });
       if (error) throw error;
-      toast({ title: "ایمیل ارسال شد", description: "لینک بازیابی رمز عبور را به ایمیلتان فرستادیم." });
+      toast({ title: "Ø§ÛŒÙ…ÛŒÙ„ Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯", description: "Ù„ÛŒÙ†Ú© Ø¨Ø§Ø²ÛŒØ§Ø¨ÛŒ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø±Ø§ Ø¨Ù‡ Ø§ÛŒÙ…ÛŒÙ„ØªØ§Ù† ÙØ±Ø³ØªØ§Ø¯ÛŒÙ…." });
       setView("login");
     } catch (error: any) {
-      toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
+      toast({ title: "Ø®Ø·Ø§", description: sanitizeError(error), variant: "destructive" });
     } finally {
       setForgotLoading(false);
     }
   };
 
-  const handleGuestBrowse = () => {
-    navigate("/");
-  };
 
-  // ─── WELCOME VIEW ───
-  if (view === "welcome") {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <SEOHead title="خوش آمدید به نوبهار" description="نوبهار فضایی برای نوشتن، اندیشیدن و گفت‌وگو" ogUrl="/auth" noIndex />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-sm animate-fade-in text-center">
-            {/* Logo */}
-            <div className="flex justify-center mb-6">
-              <img src={nawbaharLogo} alt="نوبهار" className="w-20 h-20" />
-            </div>
-
-            <h1 className="text-[28px] font-extrabold text-foreground leading-tight mb-2">
-              نوبهار
-            </h1>
-            <p className="text-[14px] text-primary font-medium mb-4 leading-relaxed" style={{ fontStyle: "italic" }}>
-              نوبهار است در آن کوش که خوشدل باشی
-            </p>
-            <p className="text-[13px] text-muted-foreground/70 leading-[2] mb-10 max-w-[280px] mx-auto">
-              نوبهار فضایی برای نوشتن، اندیشیدن و گفت‌وگو است؛
-              جایی برای آنان که می‌خواهند بنویسند، بخوانند و در فضای فکری سالم مشارکت کنند.
-            </p>
-
-            <div className="space-y-3 mb-6">
-              <Button
-                onClick={() => setView("login")}
-                className="w-full h-12 text-[14px] font-semibold rounded-xl"
-              >
-                ورود به حساب
-              </Button>
-              <Button
-                onClick={() => setView("register")}
-                variant="outline"
-                className="w-full h-12 text-[14px] font-semibold rounded-xl"
-              >
-                ایجاد حساب کاربری
-              </Button>
-            </div>
-
-            {/* Guest */}
-            <button
-              onClick={handleGuestBrowse}
-              className="text-[12px] text-muted-foreground/50 hover:text-foreground transition-colors"
-            >
-              استفاده بدون ثبت نام →
-            </button>
-
-            <p className="mt-8 text-[10px] text-muted-foreground/30 leading-relaxed">
-              با ورود یا ایجاد حساب، شما با قوانین و مقررات نوبهار موافقت می‌کنید.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ─── LOGIN VIEW ───
+  // â”€â”€â”€ LOGIN VIEW â”€â”€â”€
   if (view === "login") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <SEOHead title="ورود" description="ورود به حساب نوبهار" ogUrl="/auth" noIndex />
+        <SEOHead title="ÙˆØ±ÙˆØ¯" description="ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø­Ø³Ø§Ø¨ Ù†ÙˆØ¨Ù‡Ø§Ø±" ogUrl="/auth" noIndex />
         <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
         <div className="flex-1 flex items-center justify-center p-5">
           <div className="w-full max-w-sm animate-fade-in">
             <button
-              onClick={() => setView("welcome")}
+              onClick={() => setView("login")}
               className="flex items-center gap-1.5 text-muted-foreground/45 hover:text-foreground mb-10 transition-colors"
             >
               <ArrowRight size={18} strokeWidth={1.5} />
-              <span className="text-[13px]">بازگشت</span>
+              <span className="text-[13px]">Ø¨Ø§Ø²Ú¯Ø´Øª</span>
             </button>
 
             <div className="flex items-center gap-3 mb-8">
               <img src={nawbaharLogo} alt="" className="w-10 h-10" />
               <div>
-                <h1 className="text-[22px] font-extrabold text-foreground">ورود به نوبهار</h1>
-                <p className="text-[12px] text-muted-foreground/50 mt-0.5">به جامعه نوبهار خوش آمدید</p>
+                <h1 className="text-[22px] font-extrabold text-foreground">ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ù†ÙˆØ¨Ù‡Ø§Ø±</h1>
+                <p className="text-[12px] text-muted-foreground/50 mt-0.5">Ø¨Ù‡ Ø¬Ø§Ù…Ø¹Ù‡ Ù†ÙˆØ¨Ù‡Ø§Ø± Ø®ÙˆØ´ Ø¢Ù…Ø¯ÛŒØ¯</p>
               </div>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4" noValidate>
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[12px] text-muted-foreground">ایمیل</Label>
+                <Label htmlFor="email" className="text-[12px] text-muted-foreground">Ø§ÛŒÙ…ÛŒÙ„</Label>
                 <div className="relative">
                   <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                   <Input
@@ -255,13 +196,13 @@ const Auth = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-[12px] text-muted-foreground">رمز عبور</Label>
+                <Label htmlFor="password" className="text-[12px] text-muted-foreground">Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±</Label>
                 <div className="relative">
                   <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pr-9 pl-9 h-11 bg-muted/30 border-0 rounded-lg text-[13px] focus:ring-2 focus:ring-primary/30"
@@ -283,9 +224,9 @@ const Auth = () => {
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    صبر کنید...
+                    ØµØ¨Ø± Ú©Ù†ÛŒØ¯...
                   </span>
-                ) : "ورود"}
+                ) : "ÙˆØ±ÙˆØ¯"}
               </Button>
             </form>
 
@@ -294,23 +235,23 @@ const Auth = () => {
                 onClick={() => setView("register")}
                 className="text-[13px] text-muted-foreground hover:text-primary transition-colors"
               >
-                حساب ندارید؟ <span className="text-primary font-medium">ثبت‌نام کنید</span>
+                Ø­Ø³Ø§Ø¨ Ù†Ø¯Ø§Ø±ÛŒØ¯ØŸ <span className="text-primary font-medium">Ø«Ø¨Øªâ€ŒÙ†Ø§Ù… Ú©Ù†ÛŒØ¯</span>
               </button>
               <button
                 onClick={() => setView("forgot")}
                 className="text-[13px] text-primary hover:underline transition-colors"
               >
-                رمز عبور را فراموش کرده‌اید؟
+                Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø±Ø§ ÙØ±Ø§Ù…ÙˆØ´ Ú©Ø±Ø¯Ù‡â€ŒØ§ÛŒØ¯ØŸ
               </button>
             </div>
 
             <div className="mt-8 flex items-center justify-center gap-4 text-[10px] text-muted-foreground/30">
               <span className="flex items-center gap-1">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                رمزگذاری شده
+                Ø±Ù…Ø²Ú¯Ø°Ø§Ø±ÛŒ Ø´Ø¯Ù‡
               </span>
-              <span>·</span>
-              <span>حریم خصوصی محفوظ</span>
+              <span>Â·</span>
+              <span>Ø­Ø±ÛŒÙ… Ø®ØµÙˆØµÛŒ Ù…Ø­ÙÙˆØ¸</span>
             </div>
           </div>
         </div>
@@ -318,11 +259,11 @@ const Auth = () => {
     );
   }
 
-  // ─── FORGOT VIEW ───
+  // â”€â”€â”€ FORGOT VIEW â”€â”€â”€
   if (view === "forgot") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <SEOHead title="بازیابی رمز عبور" description="بازیابی رمز عبور حساب نوبهار" ogUrl="/auth" noIndex />
+        <SEOHead title="Ø¨Ø§Ø²ÛŒØ§Ø¨ÛŒ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±" description="Ø¨Ø§Ø²ÛŒØ§Ø¨ÛŒ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø­Ø³Ø§Ø¨ Ù†ÙˆØ¨Ù‡Ø§Ø±" ogUrl="/auth" noIndex />
         <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
         <div className="flex-1 flex items-center justify-center p-5">
           <div className="w-full max-w-sm animate-fade-in">
@@ -331,20 +272,20 @@ const Auth = () => {
               className="flex items-center gap-1.5 text-muted-foreground/45 hover:text-foreground mb-8 transition-colors"
             >
               <ArrowRight size={18} strokeWidth={1.5} />
-              <span className="text-[13px]">بازگشت</span>
+              <span className="text-[13px]">Ø¨Ø§Ø²Ú¯Ø´Øª</span>
             </button>
 
             <div className="flex items-center gap-3 mb-8">
               <img src={nawbaharLogo} alt="" className="w-10 h-10" />
               <div>
-                <h1 className="text-[22px] font-extrabold text-foreground">بازیابی رمز عبور</h1>
-                <p className="text-[12px] text-muted-foreground/50 mt-0.5">لینک بازنشانی به ایمیل شما ارسال می‌شود</p>
+                <h1 className="text-[22px] font-extrabold text-foreground">Ø¨Ø§Ø²ÛŒØ§Ø¨ÛŒ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±</h1>
+                <p className="text-[12px] text-muted-foreground/50 mt-0.5">Ù„ÛŒÙ†Ú© Ø¨Ø§Ø²Ù†Ø´Ø§Ù†ÛŒ Ø¨Ù‡ Ø§ÛŒÙ…ÛŒÙ„ Ø´Ù…Ø§ Ø§Ø±Ø³Ø§Ù„ Ù…ÛŒâ€ŒØ´ÙˆØ¯</p>
               </div>
             </div>
 
             <form onSubmit={handleForgotPassword} className="space-y-4" noValidate>
               <div className="space-y-1.5">
-                <Label htmlFor="forgotEmail" className="text-[12px] text-muted-foreground">ایمیل ثبت شده</Label>
+                <Label htmlFor="forgotEmail" className="text-[12px] text-muted-foreground">Ø§ÛŒÙ…ÛŒÙ„ Ø«Ø¨Øª Ø´Ø¯Ù‡</Label>
                 <div className="relative">
                   <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                   <Input
@@ -362,7 +303,7 @@ const Auth = () => {
               </div>
 
               <Button type="submit" className="w-full h-11 text-[14px] font-semibold rounded-lg" disabled={forgotLoading}>
-                {forgotLoading ? "در حال ارسال..." : "ارسال لینک بازیابی"}
+                {forgotLoading ? "Ø¯Ø± Ø­Ø§Ù„ Ø§Ø±Ø³Ø§Ù„..." : "Ø§Ø±Ø³Ø§Ù„ Ù„ÛŒÙ†Ú© Ø¨Ø§Ø²ÛŒØ§Ø¨ÛŒ"}
               </Button>
             </form>
 
@@ -371,7 +312,7 @@ const Auth = () => {
                 onClick={() => setView("login")}
                 className="text-[13px] text-muted-foreground hover:text-primary transition-colors"
               >
-                برگشت به ورود
+                Ø¨Ø±Ú¯Ø´Øª Ø¨Ù‡ ÙˆØ±ÙˆØ¯
               </button>
             </div>
           </div>
@@ -380,40 +321,40 @@ const Auth = () => {
     );
   }
 
-  // ─── REGISTER VIEW ───
+  // â”€â”€â”€ REGISTER VIEW â”€â”€â”€
   return (
     <>
       <div className="min-h-screen bg-background flex flex-col">
-      <SEOHead title="ثبت‌نام" description="ایجاد حساب کاربری در نوبهار" ogUrl="/auth" noIndex />
+      <SEOHead title="Ø«Ø¨Øªâ€ŒÙ†Ø§Ù…" description="Ø§ÛŒØ¬Ø§Ø¯ Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø¯Ø± Ù†ÙˆØ¨Ù‡Ø§Ø±" ogUrl="/auth" noIndex />
       <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
       <div className="flex-1 flex items-center justify-center p-5">
         <div className="w-full max-w-sm animate-fade-in">
           <button
-            onClick={() => setView("welcome")}
+            onClick={() => setView("login")}
             className="flex items-center gap-1.5 text-muted-foreground/45 hover:text-foreground mb-8 transition-colors"
           >
             <ArrowRight size={18} strokeWidth={1.5} />
-            <span className="text-[13px]">بازگشت</span>
+            <span className="text-[13px]">Ø¨Ø§Ø²Ú¯Ø´Øª</span>
           </button>
 
           <div className="flex items-center gap-3 mb-8">
             <img src={nawbaharLogo} alt="" className="w-10 h-10" />
             <div>
-              <h1 className="text-[22px] font-extrabold text-foreground">عضویت در نوبهار</h1>
-              <p className="text-[12px] text-muted-foreground/50 mt-0.5">حساب جدید بسازید و بپیوندید</p>
+              <h1 className="text-[22px] font-extrabold text-foreground">Ø¹Ø¶ÙˆÛŒØª Ø¯Ø± Ù†ÙˆØ¨Ù‡Ø§Ø±</h1>
+              <p className="text-[12px] text-muted-foreground/50 mt-0.5">Ø­Ø³Ø§Ø¨ Ø¬Ø¯ÛŒØ¯ Ø¨Ø³Ø§Ø²ÛŒØ¯ Ùˆ Ø¨Ù¾ÛŒÙˆÙ†Ø¯ÛŒØ¯</p>
             </div>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4" noValidate>
             {/* Display Name */}
             <div className="space-y-1.5">
-              <Label htmlFor="displayName" className="text-[12px] text-muted-foreground">نام نمایشی</Label>
+              <Label htmlFor="displayName" className="text-[12px] text-muted-foreground">Ù†Ø§Ù… Ù†Ù…Ø§ÛŒØ´ÛŒ</Label>
               <div className="relative">
                 <User className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                 <Input
                   id="displayName"
                   type="text"
-                  placeholder="نام شما"
+                  placeholder="Ù†Ø§Ù… Ø´Ù…Ø§"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="pr-9 h-11 bg-muted/30 border-0 rounded-lg text-[13px] focus:ring-2 focus:ring-primary/30"
@@ -425,7 +366,7 @@ const Auth = () => {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <Label htmlFor="regEmail" className="text-[12px] text-muted-foreground">ایمیل</Label>
+              <Label htmlFor="regEmail" className="text-[12px] text-muted-foreground">Ø§ÛŒÙ…ÛŒÙ„</Label>
               <div className="relative">
                 <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                 <Input
@@ -444,13 +385,13 @@ const Auth = () => {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label htmlFor="regPassword" className="text-[12px] text-muted-foreground">رمز عبور</Label>
+              <Label htmlFor="regPassword" className="text-[12px] text-muted-foreground">Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±</Label>
               <div className="relative">
                 <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                 <Input
                   id="regPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="حداقل ۸ کاراکتر"
+                  placeholder="Ø­Ø¯Ø§Ù‚Ù„ Û¸ Ú©Ø§Ø±Ø§Ú©ØªØ±"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pr-9 pl-9 h-11 bg-muted/30 border-0 rounded-lg text-[13px] focus:ring-2 focus:ring-primary/30"
@@ -485,9 +426,9 @@ const Auth = () => {
                   </div>
                   <div className="space-y-1">
                     {[
-                      { check: passwordChecks.minLength, label: "حداقل ۸ کاراکتر" },
-                      { check: passwordChecks.hasLetter, label: "شامل حرف" },
-                      { check: passwordChecks.hasNumber, label: "شامل عدد" },
+                      { check: passwordChecks.minLength, label: "Ø­Ø¯Ø§Ù‚Ù„ Û¸ Ú©Ø§Ø±Ø§Ú©ØªØ±" },
+                      { check: passwordChecks.hasLetter, label: "Ø´Ø§Ù…Ù„ Ø­Ø±Ù" },
+                      { check: passwordChecks.hasNumber, label: "Ø´Ø§Ù…Ù„ Ø¹Ø¯Ø¯" },
                     ].map(({ check, label }) => (
                       <div key={label} className="flex items-center gap-1.5 text-[10px]">
                         {check ? (
@@ -505,13 +446,13 @@ const Auth = () => {
 
             {/* Confirm Password */}
             <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword" className="text-[12px] text-muted-foreground">تکرار رمز عبور</Label>
+              <Label htmlFor="confirmPassword" className="text-[12px] text-muted-foreground">ØªÚ©Ø±Ø§Ø± Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±</Label>
               <div className="relative">
                 <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                 <Input
                   id="confirmPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="رمز عبور را دوباره وارد کنید"
+                  placeholder="Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø±Ø§ Ø¯ÙˆØ¨Ø§Ø±Ù‡ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pr-9 h-11 bg-muted/30 border-0 rounded-lg text-[13px] focus:ring-2 focus:ring-primary/30"
@@ -540,11 +481,11 @@ const Auth = () => {
                 className="mt-0.5"
               />
               <Label htmlFor="terms" className="text-[11.5px] text-muted-foreground/70 leading-relaxed cursor-pointer">
-                با{" "}
+                Ø¨Ø§{" "}
                 <button type="button" onClick={() => navigate("/about")} className="text-primary hover:underline">
-                  قوانین و مقررات نوبهار
+                  Ù‚ÙˆØ§Ù†ÛŒÙ† Ùˆ Ù…Ù‚Ø±Ø±Ø§Øª Ù†ÙˆØ¨Ù‡Ø§Ø±
                 </button>
-                {" "}موافقم
+                {" "}Ù…ÙˆØ§ÙÙ‚Ù…
               </Label>
             </div>
 
@@ -552,9 +493,9 @@ const Auth = () => {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  صبر کنید...
+                  ØµØ¨Ø± Ú©Ù†ÛŒØ¯...
                 </span>
-              ) : "ایجاد حساب کاربری"}
+              ) : "Ø§ÛŒØ¬Ø§Ø¯ Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ"}
             </Button>
           </form>
 
@@ -563,17 +504,17 @@ const Auth = () => {
               onClick={() => setView("login")}
               className="text-[13px] text-muted-foreground hover:text-primary transition-colors"
             >
-              حساب دارید؟ <span className="text-primary font-medium">وارد شوید</span>
+              Ø­Ø³Ø§Ø¨ Ø¯Ø§Ø±ÛŒØ¯ØŸ <span className="text-primary font-medium">ÙˆØ§Ø±Ø¯ Ø´ÙˆÛŒØ¯</span>
             </button>
           </div>
 
           <div className="mt-6 flex items-center justify-center gap-4 text-[10px] text-muted-foreground/30">
             <span className="flex items-center gap-1">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              رمزگذاری شده
+              Ø±Ù…Ø²Ú¯Ø°Ø§Ø±ÛŒ Ø´Ø¯Ù‡
             </span>
-            <span>·</span>
-            <span>حریم خصوصی محفوظ</span>
+            <span>Â·</span>
+            <span>Ø­Ø±ÛŒÙ… Ø®ØµÙˆØµÛŒ Ù…Ø­ÙÙˆØ¸</span>
           </div>
         </div>
       </div>

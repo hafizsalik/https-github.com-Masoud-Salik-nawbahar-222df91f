@@ -1,9 +1,9 @@
-import { Home, Search, Bookmark, Plus } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+﻿import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { NawbaharIcon } from "@/components/ui/NawbaharIcon";
 
 export function BottomNav() {
   const location = useLocation();
@@ -39,18 +39,12 @@ export function BottomNav() {
         <div className="flex items-center justify-around max-w-lg mx-auto h-12">
           {/* Home */}
           <NavItem to="/" active={isActive("/")} label="خانه">
-            <Home
-              size={21}
-              strokeWidth={isActive("/") ? 1.8 : 1.4}
-            />
+            <NawbaharIcon name="home" size={20} />
           </NavItem>
 
           {/* Explore */}
           <NavItem to="/explore" active={isActive("/explore")} label="کاوش">
-            <Search
-              size={21}
-              strokeWidth={isActive("/explore") ? 1.8 : 1.4}
-            />
+            <NawbaharIcon name="search" size={20} />
           </NavItem>
 
           {/* Write - Center prominent */}
@@ -65,16 +59,13 @@ export function BottomNav() {
                 ? "bg-foreground text-background scale-105"
                 : "bg-muted text-muted-foreground group-active:scale-90 group-active:bg-foreground/15"
             )}>
-              <Plus size={20} strokeWidth={2} />
+              <NawbaharIcon name="add" size={20} />
             </div>
           </Link>
 
           {/* Saved */}
           <NavItem to="/bookmarks" active={isActive("/bookmarks")} label="ذخیره‌ها">
-            <Bookmark
-              size={21}
-              strokeWidth={isActive("/bookmarks") ? 1.8 : 1.4}
-            />
+            <NawbaharIcon name="bookmark" size={20} />
           </NavItem>
 
           {/* Profile */}
@@ -101,7 +92,7 @@ export function BottomNav() {
                   ? "ring-[1.5px] ring-foreground scale-110"
                   : "group-active:scale-90 group-active:bg-muted-foreground/30"
               )}>
-                <span className="text-[9px] text-muted-foreground font-bold">؟</span>
+                <NawbaharIcon name="user" size={16} className="text-muted-foreground" />
               </div>
             )}
           </Link>

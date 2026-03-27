@@ -1,4 +1,4 @@
-﻿import { Menu, Info, LogOut, Shield, MessageSquare, Share2, Search } from "lucide-react";
+﻿import { Info, LogOut, Shield, MessageSquare, Share2, LogIn, UserPlus } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,8 @@ import { useState, useEffect, useRef } from "react";
 import nawbaharLogo from "@/assets/nawbahar-logo.png";
 import { NotificationBell, ThemeToggle, LogoutConfirmDialog } from "@/components/EnhancedButtons";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { NawbaharIcon } from "@/components/ui/NawbaharIcon";
 
 export function Header() {
   const { unreadCount } = useNotifications();
@@ -112,7 +114,7 @@ export function Header() {
           </div>
 
           <form onSubmit={handleSearchSubmit} className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={14} />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40"><NawbaharIcon name="search" size={14} /></span>
             <Input
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
@@ -123,6 +125,22 @@ export function Header() {
           </form>
 
           <div className="flex items-center gap-1.5 justify-end">
+            {!user && (
+              <div className="flex items-center gap-1">
+                <Link to="/auth?view=login">
+                  <Button variant="ghost" size="sm" className="h-8 px-2 text-[11.5px] text-muted-foreground hover:text-foreground">
+                    <LogIn size={14} className="ml-1 sm:hidden" />
+                    <span className="hidden sm:inline">ورود</span>
+                  </Button>
+                </Link>
+                <Link to="/auth?view=register">
+                  <Button size="sm" className="h-8 px-2 text-[11.5px]">
+                    <UserPlus size={14} className="ml-1 sm:hidden" />
+                    <span className="hidden sm:inline">ثبت‌نام</span>
+                  </Button>
+                </Link>
+              </div>
+            )}
             <Link to="/" className="flex items-center gap-1.5 group interactive">
               <img src={nawbaharLogo} alt="Ù†ÙˆØ¨Ù‡Ø§Ø±" className="w-6 h-6" />
               <span className="text-[15px] font-extrabold tracking-tight text-foreground leading-none">
@@ -135,7 +153,7 @@ export function Header() {
                 className="flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Ù…Ù†Ùˆ"
               >
-                <Menu size={19} strokeWidth={1.75} />
+                <NawbaharIcon name="menu" size={19} />
               </button>
 
               {menuOpen && (
@@ -218,3 +236,4 @@ export function Header() {
     </>
   );
 }
+
