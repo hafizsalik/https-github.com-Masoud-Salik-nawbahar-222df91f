@@ -1,8 +1,8 @@
-// Custom service worker additions for push notifications and background sync.
-// This file is imported by vite-plugin-pwa's generated service worker.
+// Custom service worker for push notifications and background sync
+// Compatible with vite-plugin-pwa
 
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
+  if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
@@ -10,34 +10,28 @@ self.addEventListener("message", (event) => {
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
+  let data = {};
   try {
-    const data = event.data.json();
-    const title = data.title || "نوبهار";
-    const notificationId = data.id || data.tag || `nawbahar-notification-${Date.now()}`;
-    const options = {
-      body: data.body || "",
-      icon: data.icon || "/pwa-192x192.png",
-      badge: data.badge || "/pwa-96x96.png",
-      dir: "rtl",
-      lang: "fa",
-      data: data.data || { url: "/" },
-      vibrate: [100, 50, 100],
-      tag: notificationId,
-      renotify: false,
-    };
-
-    event.waitUntil(self.registration.showNotification(title, options));
-  } catch (error) {
-    const text = event.data.text();
-    event.waitUntil(
-      self.registration.showNotification("نوبهار", {
-        body: text,
-        icon: "/pwa-192x192.png",
-        dir: "rtl",
-        lang: "fa",
-      })
-    );
+    data = event.data.json();
+  } catch {
+    data = { body: event.data.text() };
   }
+
+  const title = data.title || "نوبهار";
+  const notificationId = data.id || data.tag || `nawbahar-notification-${Date.now()}`;
+  const options = {
+    body: data.body || "",
+    icon: data.icon || "/pwa-192x192.png",
+    badge: data.badge || "/pwa-96x96.png",
+    dir: "rtl",
+    lang: "fa",
+    data: data.data || { url: "/" },
+    vibrate: [100, 50, 100],
+    tag: notificationId,
+    renotify: false,
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {
@@ -45,16 +39,18 @@ self.addEventListener("notificationclick", (event) => {
   const url = event.notification.data?.url || "/";
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+    (async () => {
+      const clientList = await clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && "focus" in client) {
           client.navigate(url);
           return client.focus();
         }
       }
-
-      return clients.openWindow(url);
-    })
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })()
   );
 });
 
@@ -88,12 +84,12 @@ async function replayOfflineActions() {
           body: body || undefined,
         });
         await cache.delete(request);
-      } catch (error) {
-        console.warn("[SW] Background sync retry failed for:", request.url);
+      } catch (err) {
+        console.warn("[SW] Background sync retry failed:", request.url, err);
       }
     }
-  } catch (error) {
-    console.error("[SW] Background sync error:", error);
+  } catch (err) {
+    console.error("[SW] Background sync error:", err);
   }
 }
 
@@ -110,17 +106,16 @@ async function refreshArticlesCache() {
 
     const response = await fetch(apiUrl, {
       headers: {
-        apikey:
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1YnNwYml0ZnlwcWFldXhodmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5ODc5MjAsImV4cCI6MjA4MjU2MzkyMH0.lngmDeQqDHFROJ8_9Yre6yjw1axMzE5EonlGIcT3-fc",
+        apikey: self.SUPABASE_API_KEY || "", // replace with environment variable in vite-plugin-pwa config
         Accept: "application/json",
       },
     });
 
     if (response.ok) {
-      const articlesCache = await caches.open("articles-cache");
-      await articlesCache.put(new Request(apiUrl), response.clone());
+      const cache = await caches.open("articles-cache");
+      await cache.put(new Request(apiUrl), response.clone());
     }
-  } catch (error) {
-    console.warn("[SW] Periodic sync failed:", error);
+  } catch (err) {
+    console.warn("[SW] Periodic sync failed:", err);
   }
 }
