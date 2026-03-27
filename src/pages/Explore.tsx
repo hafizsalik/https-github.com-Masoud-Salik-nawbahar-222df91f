@@ -1,186 +1,168 @@
 import { useMemo, useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Hash, Flame } from "lucide-react";
+import { Search, Flame } from "lucide-react";
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { usePublishedArticles } from "@/hooks/useArticles";
 import { cn, toPersianNumber } from "@/lib/utils";
-import { useSearchParams } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { SuggestedWriters } from "@/components/profile/SuggestedWriters";
 
-const topics = [
-  { id: "politics", label: "سیاست", emoji: "🏛️" },
-  { id: "culture", label: "فرهنگ", emoji: "🎭" },
-  { id: "science", label: "علم", emoji: "🔬" },
-  { id: "society", label: "جامعه", emoji: "👥" },
-  { id: "economy", label: "اقتصاد", emoji: "💰" },
-  { id: "health", label: "سلامت", emoji: "🏥" },
-];
+export default function Explore() {
+  const { articles } = usePublishedArticles();
 
-const trendingHashtags = [
-  "افغانستان", "ادبیات", "تاریخ", "هنر", "فناوری", "آموزش",
-];
+  const [query, setQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [sort, setSort] = useState<"smart" | "popular" | "newest" | "week">("smart");
 
-const Explore = () => {
-  const { articles, refetch } = usePublishedArticles();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTopic, setActiveTopic] = useState<string | null>(null);
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-
+  // ⚡ debounce (smooth typing)
   useEffect(() => {
-    const category = searchParams.get("category");
-    const tag = searchParams.get("tag");
-    if (category) setActiveTopic(category);
-    if (tag) setActiveTag(tag);
-  }, [searchParams]);
+    const t = setTimeout(() => setDebounced(query.trim()), 250);
+    return () => clearTimeout(t);
+  }, [query]);
 
-  const query = (searchParams.get("q") || "").trim();
+  // 🔥 smart ranking
+  const ranked = useMemo(() => {
+    let list = [...articles];
 
-  const filteredArticles = useMemo(() => {
-    let result = articles;
-    if (activeTopic) result = result.filter(a => a.tags?.some(t => t.toLowerCase() === activeTopic.toLowerCase()));
-    if (activeTag) result = result.filter(a => a.tags?.some(t => t.toLowerCase() === activeTag.toLowerCase()));
-    if (query) {
-      const q = query.toLowerCase();
-      result = result.filter(a =>
-        a.title.toLowerCase().includes(q) || a.content.toLowerCase().includes(q) ||
-        a.author?.display_name?.toLowerCase().includes(q) || a.tags?.some(t => t.toLowerCase().includes(q))
+    const score = (a: any) => {
+      let s = 0;
+      const q = debounced.toLowerCase();
+
+      if (!q) return 0;
+
+      if (a.title?.toLowerCase().includes(q)) s += 5;
+      if (a.content?.toLowerCase().includes(q)) s += 2;
+      if (a.tags?.some((t: string) => t.toLowerCase().includes(q))) s += 3;
+      if (a.author?.display_name?.toLowerCase().includes(q)) s += 2;
+
+      // engagement boost
+      s += ((a.reaction_count || 0) + (a.comment_count || 0)) * 0.01;
+
+      return s;
+    };
+
+    if (debounced) {
+      list = list
+        .map(a => ({ ...a, _score: score(a) }))
+        .filter(a => a._score > 0)
+        .sort((a, b) => b._score - a._score);
+    }
+
+    // 📊 sorting layer (LinkedIn style)
+    if (sort === "popular") {
+      list.sort((a, b) =>
+        ((b.reaction_count || 0) + (b.comment_count || 0)) -
+        ((a.reaction_count || 0) + (a.comment_count || 0))
       );
     }
-    return result;
-  }, [articles, activeTopic, activeTag, query]);
 
-  const trendingArticles = useMemo(() => {
+    if (sort === "newest") {
+      list.sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+
+    if (sort === "week") {
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      list = list
+        .filter(a => new Date(a.created_at).getTime() > weekAgo)
+        .sort((a, b) =>
+          ((b.reaction_count || 0) + (b.comment_count || 0)) -
+          ((a.reaction_count || 0) + (a.comment_count || 0))
+        );
+    }
+
+    return list.slice(0, 50);
+  }, [articles, debounced, sort]);
+
+  const trending = useMemo(() => {
     return [...articles]
-      .sort((a, b) => ((b.reaction_count || 0) + (b.comment_count || 0) + (b.view_count || 0)) - ((a.reaction_count || 0) + (a.comment_count || 0) + (a.view_count || 0)))
+      .sort((a, b) =>
+        ((b.reaction_count || 0) + (b.comment_count || 0) + (b.view_count || 0)) -
+        ((a.reaction_count || 0) + (a.comment_count || 0) + (a.view_count || 0))
+      )
       .slice(0, 8);
   }, [articles]);
 
-  const handleTopicClick = (topicId: string) => {
-    const newTopic = activeTopic === topicId ? null : topicId;
-    setActiveTopic(newTopic);
-    setActiveTag(null);
-    setSearchParams(newTopic ? { category: newTopic } : {});
-  };
-
-  const handleHashtagClick = (hashtag: string) => {
-    setActiveTag(activeTag === hashtag ? null : hashtag);
-    setActiveTopic(null);
-    setSearchParams(activeTag !== hashtag ? { tag: hashtag } : {});
-  };
-
-  const clearFilters = () => { setActiveTopic(null); setActiveTag(null); setSearchParams({}); };
-  const hasActiveFilters = Boolean(query || activeTopic || activeTag);
+  const hasSearch = Boolean(debounced);
 
   return (
     <AppLayout>
-      <SEOHead
-        title="کاوش"
-        description="جستجو و کاوش مقالات تخصصی نوبهار. موضوعات سیاست، فرهنگ، علم، جامعه، اقتصاد و سلامت."
-        ogUrl="/explore"
-      />
-      <div className="animate-fade-in">
-        {/* Topics */}
-        <div className="px-5 pt-4 pb-2">
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-            {topics.map((topic) => (
-              <button
-                key={topic.id}
-                onClick={() => handleTopicClick(topic.id)}
-                className={cn(
-                  "px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-1.5 flex-shrink-0",
-                  activeTopic === topic.id
-                    ? "bg-foreground text-background"
-                    : "bg-muted/40 text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <span className="text-[12px]">{topic.emoji}</span>
-                {topic.label}
-              </button>
-            ))}
-          </div>
+      <SEOHead title="کاوش" description="جستجوی حرفه‌ای مقالات نوبهار" />
+
+      <div className="px-5 pt-4 space-y-4">
+
+        {/* 🔍 Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="جستجو..."
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/40 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          />
         </div>
 
-        {/* Hashtags */}
-        <div className="px-5 pb-3">
-          <div className="flex flex-wrap gap-1">
-            {trendingHashtags.map((hashtag) => (
-              <button
-                key={hashtag}
-                onClick={() => handleHashtagClick(hashtag)}
-                className={cn(
-                  "inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] transition-all duration-200",
-                  activeTag === hashtag
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground/45 hover:text-foreground hover:bg-muted/30"
-                )}
-              >
-                <Hash size={8} strokeWidth={2} />
-                {hashtag}
-              </button>
-            ))}
-          </div>
+        {/* ⚙️ Filters (LinkedIn style) */}
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+          {[
+            { id: "smart", label: "هوشمند" },
+            { id: "popular", label: "محبوب‌ترین" },
+            { id: "newest", label: "جدیدترین" },
+            { id: "week", label: "این هفته" },
+          ].map(f => (
+            <button
+              key={f.id}
+              onClick={() => setSort(f.id as any)}
+              className={cn(
+                "px-3 py-1.5 rounded-xl text-xs whitespace-nowrap",
+                sort === f.id
+                  ? "bg-foreground text-background"
+                  : "bg-muted/40 text-muted-foreground"
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
-        {/* Active filters bar */}
-        {hasActiveFilters && (
-          <div className="px-5 pb-2 animate-slide-down">
-            <div className="flex items-center gap-2 flex-wrap">
-              {activeTopic && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
-                  {topics.find(t => t.id === activeTopic)?.emoji} {topics.find(t => t.id === activeTopic)?.label}
-                </span>
-              )}
-              {activeTag && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
-                  #{activeTag}
-                </span>
-              )}
-              {query && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
-                  {query}
-                </span>
-              )}
-              <button onClick={clearFilters} className="text-[10px] text-muted-foreground/40 hover:text-foreground transition-colors">پاک کردن</button>
-            </div>
-          </div>
-        )}
+        {/* 📊 Results */}
+        {hasSearch ? (
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">
+              {ranked.length > 0
+                ? `${toPersianNumber(ranked.length)} نتیجه`
+                : "نتیجه‌ای یافت نشد"}
+            </p>
 
-        {/* Results or Trending */}
-        {hasActiveFilters ? (
-          <div className="border-t border-border/30">
-            <div className="px-5 py-2">
-              <p className="text-[11px] text-muted-foreground/40">
-                {filteredArticles.length > 0 ? `${toPersianNumber(filteredArticles.length)} نتیجه` : "نتیجه‌ای یافت نشد"}
-              </p>
-            </div>
-            <div className="divide-y divide-border/30">
-              {filteredArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} onDelete={refetch} />
+            <div className="divide-y">
+              {ranked.map((a) => (
+                <ArticleCard key={a.id} article={a} />
               ))}
             </div>
           </div>
         ) : (
           <>
-            <div className="border-t border-border/30">
-              <div className="flex items-center gap-1.5 px-5 pt-4 pb-2">
-                <Flame size={14} strokeWidth={1.5} className="text-muted-foreground/40" />
-                <span className="text-[12px] font-semibold text-muted-foreground/50">پرطرفدارترین‌ها</span>
+            {/* 🔥 Trending */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Flame size={14} />
+                <span className="text-xs font-semibold text-muted-foreground">
+                  پرطرفدارترین‌ها
+                </span>
               </div>
-              <div className="divide-y divide-border/30">
-                {trendingArticles.map((article) => (
-                  <ArticleCard key={article.id} article={article} onDelete={refetch} />
+
+              <div className="divide-y">
+                {trending.map((a) => (
+                  <ArticleCard key={a.id} article={a} />
                 ))}
               </div>
             </div>
-            <div className="mt-6 px-5">
-              <SuggestedWriters />
-            </div>
+
+            <SuggestedWriters />
           </>
         )}
       </div>
     </AppLayout>
   );
-};
-
-export default Explore;
+}
