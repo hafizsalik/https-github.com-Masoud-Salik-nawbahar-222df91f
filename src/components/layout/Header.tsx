@@ -1,4 +1,4 @@
-import { Menu, Info, LogOut, Shield, MessageSquare, Share2, Search } from "lucide-react";
+﻿import { Menu, Info, LogOut, Shield, MessageSquare, Share2, Search } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,14 +58,14 @@ export function Header() {
   const handleShareApp = async () => {
     setMenuOpen(false);
     const shareUrl = `${window.location.origin}`;
-    const title = "نوبهار - جامعه نخبگان";
-    const text = "نوبهار اپلیکیشن انتشار مقالات علمی و تحلیلی است. همین حالا نصب کنید!";
+    const title = "Ù†ÙˆØ¨Ù‡Ø§Ø± - Ø¬Ø§Ù…Ø¹Ù‡ Ù†Ø®Ø¨Ú¯Ø§Ù†";
+    const text = "Ù†ÙˆØ¨Ù‡Ø§Ø± Ø§Ù¾Ù„ÛŒÚ©ÛŒØ´Ù† Ø§Ù†ØªØ´Ø§Ø± Ù…Ù‚Ø§Ù„Ø§Øª Ø¹Ù„Ù…ÛŒ Ùˆ ØªØ­Ù„ÛŒÙ„ÛŒ Ø§Ø³Øª. Ù‡Ù…ÛŒÙ† Ø­Ø§Ù„Ø§ Ù†ØµØ¨ Ú©Ù†ÛŒØ¯!";
     try {
       if (navigator.share) {
         await navigator.share({ title, text, url: shareUrl });
       } else {
         await navigator.clipboard.writeText(`${title} - ${shareUrl}`);
-        alert("لینک اپلیکیشن کپی شد. آن را با دوستانتان به اشتراک بگذارید.");
+        alert("Ù„ÛŒÙ†Ú© Ø§Ù¾Ù„ÛŒÚ©ÛŒØ´Ù† Ú©Ù¾ÛŒ Ø´Ø¯. Ø¢Ù† Ø±Ø§ Ø¨Ø§ Ø¯ÙˆØ³ØªØ§Ù†ØªØ§Ù† Ø¨Ù‡ Ø§Ø´ØªØ±Ø§Ú© Ø¨Ú¯Ø°Ø§Ø±ÛŒØ¯.");
       }
     } catch {
       // User cancelled or not supported.
@@ -116,18 +116,24 @@ export function Header() {
             <Input
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="جستجوی مقالات..."
+              placeholder="Ø¬Ø³ØªØ¬ÙˆÛŒ Ù…Ù‚Ø§Ù„Ø§Øª..."
               className="pr-8 pl-3 bg-muted/40 border-0 rounded-full h-9 text-[12px] focus:ring-1 focus:ring-primary/25 placeholder:text-muted-foreground/40"
-              aria-label="جستجو"
+              aria-label="Ø¬Ø³ØªØ¬Ùˆ"
             />
           </form>
 
           <div className="flex items-center gap-1.5 justify-end">
+            <Link to="/" className="flex items-center gap-1.5 group interactive">
+              <img src={nawbaharLogo} alt="Ù†ÙˆØ¨Ù‡Ø§Ø±" className="w-6 h-6" />
+              <span className="text-[15px] font-extrabold tracking-tight text-foreground leading-none">
+                Ù†ÙˆØ¨Ù‡Ø§Ø±
+              </span>
+            </Link>
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="منو"
+                aria-label="Ù…Ù†Ùˆ"
               >
                 <Menu size={19} strokeWidth={1.75} />
               </button>
@@ -147,7 +153,7 @@ export function Header() {
                       className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/30"
                     >
                       <Shield size={14} strokeWidth={1.5} className="text-muted-foreground" />
-                      پنل مدیریت
+                      Ù¾Ù†Ù„ Ù…Ø¯ÛŒØ±ÛŒØª
                     </button>
                   )}
 
@@ -156,7 +162,7 @@ export function Header() {
                     className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/30"
                   >
                     <Info size={14} strokeWidth={1.5} className="text-muted-foreground" />
-                    درباره نوبهار
+                    Ø¯Ø±Ø¨Ø§Ø±Ù‡ Ù†ÙˆØ¨Ù‡Ø§Ø±
                   </button>
 
                   <button
@@ -168,7 +174,7 @@ export function Header() {
                       <polyline points="7 10 12 15 17 10" />
                       <line x1="12" y1="15" x2="12" y2="3" />
                     </svg>
-                    نصب اپلیکیشن
+                    Ù†ØµØ¨ Ø§Ù¾Ù„ÛŒÚ©ÛŒØ´Ù†
                   </button>
 
                   <button
@@ -176,7 +182,7 @@ export function Header() {
                     className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/30"
                   >
                     <Share2 size={14} strokeWidth={1.5} className="text-muted-foreground" />
-                    اشتراک‌گذاری اپ
+                    Ø§Ø´ØªØ±Ø§Ú©â€ŒÚ¯Ø°Ø§Ø±ÛŒ Ø§Ù¾
                   </button>
 
                   <button
@@ -184,7 +190,7 @@ export function Header() {
                     className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/30"
                   >
                     <MessageSquare size={14} strokeWidth={1.5} className="text-muted-foreground" />
-                    ارتباط با ما
+                    Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ù…Ø§
                   </button>
 
                   {user && (
@@ -193,19 +199,13 @@ export function Header() {
                       className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-destructive hover:bg-destructive/5 transition-colors"
                     >
                       <LogOut size={14} strokeWidth={1.5} />
-                      خروج
+                      Ø®Ø±ÙˆØ¬
                     </button>
                   )}
                 </div>
               )}
             </div>
 
-            <Link to="/" className="flex items-center gap-1.5 group interactive">
-              <img src={nawbaharLogo} alt="نوبهار" className="w-6 h-6" />
-              <span className="text-[15px] font-extrabold tracking-tight text-foreground leading-none">
-                نوبهار
-              </span>
-            </Link>
           </div>
         </div>
       </header>
