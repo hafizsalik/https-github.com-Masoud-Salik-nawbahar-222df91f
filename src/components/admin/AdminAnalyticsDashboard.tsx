@@ -145,12 +145,12 @@ export default function AdminAnalyticsDashboard() {
 
     // Today's active users (unique)
     const { data: todayActive } = await supabase
-      .from('activity_logs')
+      .from('activity_logs' as any)
       .select('user_id')
       .gte('created_at', `${today}T00:00:00`)
       .not('user_id', 'is', null);
     
-    const todayActiveUsers = new Set(todayActive?.map(a => a.user_id)).size;
+    const todayActiveUsers = new Set(todayActive?.map((a: any) => a.user_id)).size;
 
     // New registrations today
     const { count: newRegistrations } = await supabase
