@@ -12,6 +12,7 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import Index from "./pages/Index";
+import "@/styles/reactions.css";
 
 // Lazy load non-critical pages
 const Explore = lazy(() => import("./pages/Explore"));

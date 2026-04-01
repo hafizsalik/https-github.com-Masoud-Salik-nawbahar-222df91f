@@ -44,7 +44,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   } = useComments(article.id, { lazy: !showComments });
 
   // Lazy reactions — no fetch on mount, uses article.reaction_count for display
-  const { summary: reactionSummary, toggleReaction, ensureFetched } = useCardReactions(article.id, false);
+  const { summary: reactionSummary, toggleReaction, ensureFetched } = useCardReactions(article.id, true);
 
   const viewCount = article.view_count || 0;
   const coverImage = article.cover_image_url || defaultCover;
@@ -69,7 +69,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   };
 
   return (
-    <article className="group" aria-label={article.title}>
+    <article className="group rounded-2xl transition-colors hover:bg-muted/20" aria-label={article.title}>
       {article.parent_title && article.parent_article_id && (
         <Link
           to={`/article/${article.parent_article_id}`}
@@ -83,7 +83,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         </Link>
       )}
 
-      <Link to={`/article/${article.id}`} className="block px-5 pt-5 pb-1">
+      <Link to={`/article/${article.id}`} className="block px-5 pt-6 pb-2">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-1.5 group/author min-w-0">
             <button onClick={handleAuthorClick} className="flex items-center gap-1.5 min-w-0" aria-label={`View ${article.author?.display_name}'s profile`}>
@@ -99,12 +99,12 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
                   <span className="text-primary text-[8px] font-bold">{article.author?.display_name?.charAt(0)}</span>
                 </div>
               )}
-              <span className="text-[11.5px] text-foreground/60 group-hover/author:text-primary transition-colors font-medium truncate max-w-[80px]">
+              <span className="text-[11.5px] text-foreground/70 group-hover/author:text-primary transition-colors font-medium truncate max-w-[80px]">
                 {article.author?.display_name}
               </span>
             </button>
             <span className="text-muted-foreground/20 text-[10px]">·</span>
-            <span className="text-[10.5px] text-muted-foreground/50 font-normal">{formatSolarShort(article.created_at)}</span>
+            <span className="text-[10.5px] text-muted-foreground/55 font-normal">{formatSolarShort(article.created_at)}</span>
           </div>
 
           <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="flex-shrink-0">
@@ -116,19 +116,19 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
           <div className="flex-1 min-w-0">
             <h3
               className={cn(
-                "text-[16px] font-extrabold text-foreground leading-[1.75] line-clamp-3 transition-colors",
+                "text-[17px] font-extrabold text-foreground leading-[1.85] line-clamp-3 transition-colors",
                 hasBeenRead && "text-muted-foreground/65"
               )}
             >
               {article.title}
             </h3>
-            <p className="text-[13px] text-muted-foreground/55 leading-[1.8] line-clamp-3 mt-1.5">
+            <p className="text-[13.5px] text-muted-foreground/60 leading-[1.9] line-clamp-3 mt-1.5">
               {getExcerpt(article.content, 150)}
             </p>
           </div>
           <div
             className={cn(
-              "w-[112px] h-[75px] flex-shrink-0 rounded overflow-hidden relative bg-muted/15 self-start mt-1 transition-all duration-300",
+              "w-[116px] h-[78px] flex-shrink-0 rounded-xl overflow-hidden relative bg-muted/25 self-start mt-1 transition-all duration-300",
               hasBeenRead && "opacity-50 saturate-[0.3] blur-[0.5px]"
             )}
           >
