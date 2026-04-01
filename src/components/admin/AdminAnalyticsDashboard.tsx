@@ -154,7 +154,7 @@ export default function AdminAnalyticsDashboard() {
 
     // New registrations today
     const { count: newRegistrations } = await supabase
-      .from('activity_logs')
+      .from('activity_logs' as any)
       .select('*', { count: 'exact', head: true })
       .eq('activity_type', 'register')
       .gte('created_at', `${today}T00:00:00`);
