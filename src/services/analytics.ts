@@ -201,7 +201,7 @@ export const analyticsService = {
     };
     
     // Fire and forget - don't wait for response to avoid blocking UI
-    supabase.from('activity_logs').insert(activityData).then(({ error }) => {
+    supabase.from('activity_logs' as any).insert(activityData).then(({ error }: any) => {
       if (error) {
         console.error('Error logging activity:', error);
       }
