@@ -1,9 +1,23 @@
-import { Home, Search, Bookmark, Plus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { NawbaharIcon } from "@/components/NawbaharIcon";
+
+import houseIcon from "@/assets/icons/house-chimney.svg";
+import categoryIcon from "@/assets/icons/category.svg";
+import addIcon from "@/assets/icons/add.svg";
+import bookmarkIcon from "@/assets/icons/bookmark.svg";
+import bellIcon from "@/assets/icons/bell.svg";
+
+const tabs = [
+  { to: "/", icon: houseIcon, label: "خانه", size: 21 },
+  { to: "/explore", icon: categoryIcon, label: "کشف", size: 21 },
+  { to: "/write", icon: addIcon, label: "پست جدید", size: 28, center: true },
+  { to: "/bookmarks", icon: bookmarkIcon, label: "کتابخانه", size: 21 },
+  { to: "/notifications", icon: bellIcon, label: "اعلان", size: 21 },
+];
 
 export function BottomNav() {
   const location = useLocation();
@@ -25,7 +39,6 @@ export function BottomNav() {
     loadAvatar();
   }, []);
 
-  const isProfileActive = location.pathname === "/profile" || location.pathname.startsWith("/profile");
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -35,96 +48,60 @@ export function BottomNav() {
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="bg-background/95 backdrop-blur-md border-t border-border/40 safe-bottom" style={{ boxShadow: '0 -1px 8px -2px rgba(0,0,0,0.06)' }}>
-        <div className="flex items-center justify-around max-w-lg mx-auto h-12">
-          {/* Home */}
-          <NavItem to="/" active={isActive("/")} label="خانه">
-            <Home
-              size={21}
-              strokeWidth={isActive("/") ? 1.8 : 1.4}
-            />
-          </NavItem>
+      <div className="bg-background/95 backdrop-blur-md border-t border-border/30 safe-bottom">
+        <div className="flex items-center justify-around max-w-lg mx-auto h-14">
+          {tabs.map((tab) => {
+            const active = isActive(tab.to);
 
-          {/* Explore */}
-          <NavItem to="/explore" active={isActive("/explore")} label="کاوش">
-            <Search
-              size={21}
-              strokeWidth={isActive("/explore") ? 1.8 : 1.4}
-            />
-          </NavItem>
+            if (tab.center) {
+              return (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  className="flex flex-col items-center justify-center flex-1 h-full group"
+                  aria-label={tab.label}
+                >
+                  <NawbaharIcon
+                    src={tab.icon}
+                    size={tab.size}
+                    className={cn(
+                      "transition-all duration-200 dark:invert",
+                      active ? "opacity-90 scale-105" : "opacity-40 group-active:scale-90"
+                    )}
+                  />
+                  <span className={cn(
+                    "text-[10px] mt-0.5 transition-colors",
+                    active ? "text-foreground font-medium" : "text-foreground/40"
+                  )}>{tab.label}</span>
+                </Link>
+              );
+            }
 
-          {/* Write - Center prominent */}
-          <Link
-            to="/write"
-            className="flex items-center justify-center flex-1 h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md group"
-            aria-label="نوشتن مقاله"
-          >
-            <div className={cn(
-              "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200",
-              isActive("/write")
-                ? "bg-foreground text-background scale-105"
-                : "bg-muted text-muted-foreground group-active:scale-90 group-active:bg-foreground/15"
-            )}>
-              <Plus size={20} strokeWidth={2} />
-            </div>
-          </Link>
-
-          {/* Saved */}
-          <NavItem to="/bookmarks" active={isActive("/bookmarks")} label="ذخیره‌ها">
-            <Bookmark
-              size={21}
-              strokeWidth={isActive("/bookmarks") ? 1.8 : 1.4}
-            />
-          </NavItem>
-
-          {/* Profile */}
-          <Link
-            to="/profile"
-            className="flex items-center justify-center flex-1 h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md group"
-            aria-label="پروفایل"
-          >
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt=""
-                className={cn(
-                  "w-[22px] h-[22px] rounded-full object-cover transition-all duration-200",
-                  isProfileActive
-                    ? "ring-[1.5px] ring-foreground scale-110"
-                    : "opacity-45 group-active:opacity-70 group-active:scale-90"
-                )}
-              />
-            ) : (
-              <div className={cn(
-                "w-[22px] h-[22px] rounded-full bg-muted-foreground/20 flex items-center justify-center transition-all duration-200",
-                isProfileActive
-                  ? "ring-[1.5px] ring-foreground scale-110"
-                  : "group-active:scale-90 group-active:bg-muted-foreground/30"
-              )}>
-                <span className="text-[9px] text-muted-foreground font-bold">؟</span>
-              </div>
-            )}
-          </Link>
+            return (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                className="flex flex-col items-center justify-center flex-1 h-full group"
+                aria-label={tab.label}
+                aria-current={active ? "page" : undefined}
+              >
+                <NawbaharIcon
+                  src={tab.icon}
+                  size={tab.size}
+                  className={cn(
+                    "transition-all duration-200 dark:invert",
+                    active ? "opacity-90" : "opacity-40 group-active:scale-90"
+                  )}
+                />
+                <span className={cn(
+                  "text-[10px] mt-0.5 transition-colors",
+                  active ? "text-foreground font-medium" : "text-foreground/40"
+                )}>{tab.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>
-  );
-}
-
-function NavItem({ to, active, children, label }: { to: string; active: boolean; children: React.ReactNode; label?: string }) {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        "flex items-center justify-center flex-1 h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md group transition-colors duration-200",
-        active ? "text-foreground" : "text-muted-foreground/40"
-      )}
-      aria-label={label}
-      aria-current={active ? "page" : undefined}
-    >
-      <div className="relative flex items-center justify-center w-10 h-10 rounded-xl transition-colors duration-300 group-active:scale-90">
-        {children}
-      </div>
-    </Link>
   );
 }
