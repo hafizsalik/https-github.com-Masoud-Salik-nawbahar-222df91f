@@ -182,12 +182,12 @@ export default function AdminAnalyticsDashboard() {
 
   const fetchOnlineUsers = async () => {
     const { data, error } = await supabase
-      .from('online_users')
+      .from('online_users' as any)
       .select('*')
       .order('last_seen_at', { ascending: false });
 
     if (!error && data) {
-      setOnlineUsers(data as OnlineUser[]);
+      setOnlineUsers(data as unknown as OnlineUser[]);
     }
   };
 
