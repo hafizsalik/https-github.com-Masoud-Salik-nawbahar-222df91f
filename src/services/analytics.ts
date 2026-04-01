@@ -230,7 +230,7 @@ export const analyticsService = {
       return null;
     }
     
-    return data.id;
+    return (data as any)?.id;
   },
   
   // End session

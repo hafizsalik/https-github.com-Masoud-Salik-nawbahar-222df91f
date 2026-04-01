@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { lazy, Suspense, forwardRef, useEffect } from "react";
+// @ts-ignore
 import { registerSW } from "virtual:pwa-register";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
