@@ -238,11 +238,11 @@ export const analyticsService = {
     if (!sessionId) return;
     
     const { error } = await supabase
-      .from('user_sessions')
+      .from('user_sessions' as any)
       .update({
         is_active: false,
         ended_at: new Date().toISOString(),
-      })
+      } as any)
       .eq('id', sessionId);
     
     if (error) {
