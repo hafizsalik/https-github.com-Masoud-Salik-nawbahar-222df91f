@@ -79,13 +79,13 @@ export function ReportManagement() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('content_reports_with_details')
+        .from('content_reports_with_details' as any)
         .select('*')
         .eq('status', activeTab)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setReports(data || []);
+      setReports((data || []) as any);
     } catch (error) {
       toast({
         title: 'خطا در بارگذاری گزارش‌ها',
