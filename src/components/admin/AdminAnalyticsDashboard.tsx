@@ -139,7 +139,7 @@ export default function AdminAnalyticsDashboard() {
 
     // Online users
     const { count: onlineUsers } = await supabase
-      .from('user_presence')
+      .from('user_presence' as any)
       .select('*', { count: 'exact', head: true })
       .eq('status', 'online');
 
