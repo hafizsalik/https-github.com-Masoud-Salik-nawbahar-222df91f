@@ -175,7 +175,7 @@ export const analyticsService = {
     };
     
     const { error } = await supabase
-      .from('user_devices')
+      .from('user_devices' as any)
       .upsert(deviceData, { onConflict: 'device_id' });
     
     if (error) {
@@ -201,7 +201,7 @@ export const analyticsService = {
     };
     
     // Fire and forget - don't wait for response to avoid blocking UI
-    supabase.from('activity_logs').insert(activityData).then(({ error }) => {
+    supabase.from('activity_logs' as any).insert(activityData).then(({ error }: any) => {
       if (error) {
         console.error('Error logging activity:', error);
       }
@@ -213,7 +213,7 @@ export const analyticsService = {
     const sessionToken = `${this.deviceId}-${Date.now()}`;
     
     const { data, error } = await supabase
-      .from('user_sessions')
+      .from('user_sessions' as any)
       .insert({
         user_id: userId || null,
         device_id: this.deviceId,
@@ -221,7 +221,7 @@ export const analyticsService = {
         is_active: true,
         entry_url: window.location.href,
         user_agent: navigator.userAgent,
-      })
+      } as any)
       .select('id')
       .single();
     
@@ -230,7 +230,7 @@ export const analyticsService = {
       return null;
     }
     
-    return data.id;
+    return (data as any)?.id;
   },
   
   // End session
@@ -238,11 +238,11 @@ export const analyticsService = {
     if (!sessionId) return;
     
     const { error } = await supabase
-      .from('user_sessions')
+      .from('user_sessions' as any)
       .update({
         is_active: false,
         ended_at: new Date().toISOString(),
-      })
+      } as any)
       .eq('id', sessionId);
     
     if (error) {
@@ -253,7 +253,7 @@ export const analyticsService = {
   // Update presence (heartbeat)
   async updatePresence(userId: string, sessionId: string, status: 'online' | 'away' | 'busy' = 'online', currentActivity?: string) {
     const { error } = await supabase
-      .from('user_presence')
+      .from('user_presence' as any)
       .upsert({
         user_id: userId,
         device_id: this.deviceId,

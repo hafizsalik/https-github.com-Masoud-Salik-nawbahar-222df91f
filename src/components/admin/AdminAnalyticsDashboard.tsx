@@ -139,35 +139,35 @@ export default function AdminAnalyticsDashboard() {
 
     // Online users
     const { count: onlineUsers } = await supabase
-      .from('user_presence')
+      .from('user_presence' as any)
       .select('*', { count: 'exact', head: true })
       .eq('status', 'online');
 
     // Today's active users (unique)
     const { data: todayActive } = await supabase
-      .from('activity_logs')
+      .from('activity_logs' as any)
       .select('user_id')
       .gte('created_at', `${today}T00:00:00`)
       .not('user_id', 'is', null);
     
-    const todayActiveUsers = new Set(todayActive?.map(a => a.user_id)).size;
+    const todayActiveUsers = new Set(todayActive?.map((a: any) => a.user_id)).size;
 
     // New registrations today
     const { count: newRegistrations } = await supabase
-      .from('activity_logs')
+      .from('activity_logs' as any)
       .select('*', { count: 'exact', head: true })
       .eq('activity_type', 'register')
       .gte('created_at', `${today}T00:00:00`);
 
     // PWA installs
     const { count: pwaInstalls } = await supabase
-      .from('user_devices')
+      .from('user_devices' as any)
       .select('*', { count: 'exact', head: true })
       .eq('is_pwa_installed', true);
 
     // Total activities
     const { count: totalActivities } = await supabase
-      .from('activity_logs')
+      .from('activity_logs' as any)
       .select('*', { count: 'exact', head: true });
 
     setStats({
@@ -182,24 +182,24 @@ export default function AdminAnalyticsDashboard() {
 
   const fetchOnlineUsers = async () => {
     const { data, error } = await supabase
-      .from('online_users')
+      .from('online_users' as any)
       .select('*')
       .order('last_seen_at', { ascending: false });
 
     if (!error && data) {
-      setOnlineUsers(data as OnlineUser[]);
+      setOnlineUsers(data as unknown as OnlineUser[]);
     }
   };
 
   const fetchRecentActivities = async () => {
     const { data, error } = await supabase
-      .from('activity_logs')
+      .from('activity_logs' as any)
       .select('*')
       .order('created_at', { ascending: false })
       .limit(50);
 
     if (!error && data) {
-      setRecentActivities(data as ActivityLog[]);
+      setRecentActivities(data as unknown as ActivityLog[]);
     }
   };
 

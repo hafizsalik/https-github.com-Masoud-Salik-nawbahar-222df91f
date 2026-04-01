@@ -209,12 +209,8 @@ const AdminDashboard = () => {
               { value: "pending", icon: Clock, label: "در انتظار انتشار", badge: stats?.pendingArticles },
               { value: "published", icon: CheckCircle, label: "منتشر شده" },
               { value: "rejected", icon: XCircle, label: "رد" },
-<<<<<<< HEAD
               { value: "reports", icon: Flag, label: "گزارش", badge: stats?.reportedComments, badgeVariant: "destructive" as const },
               { value: "content-reports", icon: Flag, label: "گزارش محتوا" },
-=======
-              { value: "reports", icon: Flag, label: "گزارش  شده", badge: stats?.reportedComments, badgeVariant: "destructive" as const },
->>>>>>> 0f73622ee35fa8f4f6427daedf64243b50f34c13
             ].map(({ value, icon: Icon, label, badge, badgeVariant }) => (
               <TabsTrigger key={value} value={value} className="text-[10px] sm:text-xs py-2 px-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm relative">
                 <Icon size={12} className="ml-1 hidden sm:inline" />

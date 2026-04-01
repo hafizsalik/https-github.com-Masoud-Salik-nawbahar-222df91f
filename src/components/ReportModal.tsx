@@ -67,7 +67,7 @@ export function ReportModal({
 
     try {
       const { error } = await supabase
-        .from('content_reports')
+        .from('content_reports' as any)
         .insert({
           reporter_id: user.id,
           content_id: contentId,

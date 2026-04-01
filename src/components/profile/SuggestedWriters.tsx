@@ -49,15 +49,15 @@ export function SuggestedWriters() {
       }
 
       const { data: profiles } = await supabase
-        .from("public_profiles")
+        .from("public_profiles" as any)
         .select("id, display_name, avatar_url, specialty")
         .in("id", topAuthorIds);
 
       if (profiles) {
-        const writerList = profiles.map(p => ({
+        const writerList = (profiles as any[]).map((p: any) => ({
           ...p,
           article_count: counts[p.id] || 0,
-        })).sort((a, b) => b.article_count - a.article_count);
+        })).sort((a: any, b: any) => b.article_count - a.article_count);
         setWriters(writerList);
       }
       setLoading(false);

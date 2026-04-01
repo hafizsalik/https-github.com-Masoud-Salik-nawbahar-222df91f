@@ -187,12 +187,7 @@ const ArticleEditor = () => {
       let coverImageUrl = coverPreview;
       if (coverImage) {
         // Compress image before upload
-        const compressedImage = await compressArticleImage(coverImage, {
-          maxSizeKB: 800,
-          maxWidth: 1920,
-          maxHeight: 1080,
-          quality: 0.82,
-        });
+        const compressedImage = await compressArticleImage(coverImage);
         
         const fileExt = compressedImage.name.split('.').pop() || 'webp';
         const fileName = `${user.id}/${Date.now()}.${fileExt}`;

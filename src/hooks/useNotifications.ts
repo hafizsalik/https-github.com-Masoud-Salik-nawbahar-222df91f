@@ -242,8 +242,8 @@ export function useNotifications() {
       type: n.type as "like" | "comment" | "follow",
       actor: actorsMap.get(n.actor_id),
       article: n.article_id ? articlesMap.get(n.article_id) : undefined,
-      context_id: generateContextId(n),
-      priority: calculatePriority(n),
+      context_id: generateContextId(n as any),
+      priority: calculatePriority(n as any),
     }));
 
     // Apply smart filters
