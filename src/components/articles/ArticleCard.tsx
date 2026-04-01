@@ -12,6 +12,7 @@ import { formatSolarShort } from "@/lib/solarHijri";
 import { ArticleCardMetrics } from "./ArticleCardMetrics";
 import defaultCover from "@/assets/default-cover.jpg";
 import { storage } from "@/lib/storage";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ArticleCardProps {
   article: FeedArticle;
@@ -23,12 +24,17 @@ function getExcerpt(content: string, maxChars: number = 110): string {
   return content.slice(0, maxChars).trim() + "…";
 }
 
-function isArticleRead(articleId: string): boolean {
-  return storage.get(`article_viewed_${articleId}`, null) !== null;
+function getReadKey(articleId: string, userId?: string | null): string {
+  return `article_viewed_${userId || "guest"}_${articleId}`;
+}
+
+function isArticleRead(articleId: string, userId?: string | null): boolean {
+  return storage.get(getReadKey(articleId, userId), null) !== null;
 }
 
 export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showComments, setShowComments] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -41,6 +47,9 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
     deleteComment,
     refetch: refetchComments,
     submitting,
+    loadMore,
+    hasMore,
+    loadingMore,
   } = useComments(article.id, { lazy: !showComments });
 
   // Lazy reactions — no fetch on mount, uses article.reaction_count for display
@@ -48,7 +57,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
 
   const viewCount = article.view_count || 0;
   const coverImage = article.cover_image_url || defaultCover;
-  const hasBeenRead = useMemo(() => isArticleRead(article.id), [article.id]);
+  const hasBeenRead = useMemo(() => isArticleRead(article.id, user?.id), [article.id, user?.id]);
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -69,7 +78,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   };
 
   return (
-    <article className="group rounded-2xl transition-colors hover:bg-muted/20" aria-label={article.title}>
+    <article className="group rounded-2xl border border-border/20 bg-card/40 transition-all hover:bg-card/60 hover:border-border/40 hover:shadow-sm" aria-label={article.title}>
       {article.parent_title && article.parent_article_id && (
         <Link
           to={`/article/${article.parent_article_id}`}
@@ -116,13 +125,13 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
           <div className="flex-1 min-w-0">
             <h3
               className={cn(
-                "text-[17px] font-extrabold text-foreground leading-[1.85] line-clamp-3 transition-colors",
+                "text-[17.5px] font-extrabold text-foreground leading-[1.75] tracking-tight line-clamp-3 transition-colors",
                 hasBeenRead && "text-muted-foreground/65"
               )}
             >
               {article.title}
             </h3>
-            <p className="text-[13.5px] text-muted-foreground/60 leading-[1.9] line-clamp-3 mt-1.5">
+            <p className="text-[13.5px] text-muted-foreground/65 leading-[1.85] line-clamp-3 mt-1.5">
               {getExcerpt(article.content, 150)}
             </p>
           </div>
@@ -168,11 +177,14 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
             comments={comments}
             loading={commentsLoading}
             submitting={submitting}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
             userId={userId}
             onAddComment={addComment}
             onDeleteComment={deleteComment}
             onClose={() => setShowComments(false)}
             refetch={refetchComments}
+            onLoadMore={loadMore}
           />
         </div>
       )}

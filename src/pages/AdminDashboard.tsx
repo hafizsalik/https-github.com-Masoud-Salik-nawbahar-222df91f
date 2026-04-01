@@ -192,9 +192,9 @@ const AdminDashboard = () => {
           <button onClick={() => navigate(-1)} className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowRight size={20} strokeWidth={1.5} />
           </button>
-          <h1 className="text-sm font-bold flex items-center gap-2">
+          <h1 className="text-sm font-bold flex items-center gap-2" aria-label="داشبورد مدیریت">
             <Shield size={14} className="text-primary" />
-            داشبورد مدیریت
+            <span className="hidden sm:inline">داشبورد مدیریت</span>
           </h1>
           <div className="w-10" />
         </div>
@@ -209,16 +209,17 @@ const AdminDashboard = () => {
               { value: "pending", icon: Clock, label: "در انتظار انتشار", badge: stats?.pendingArticles },
               { value: "published", icon: CheckCircle, label: "منتشر شده" },
               { value: "rejected", icon: XCircle, label: "رد" },
-<<<<<<< HEAD
               { value: "reports", icon: Flag, label: "گزارش", badge: stats?.reportedComments, badgeVariant: "destructive" as const },
               { value: "content-reports", icon: Flag, label: "گزارش محتوا" },
-=======
-              { value: "reports", icon: Flag, label: "گزارش  شده", badge: stats?.reportedComments, badgeVariant: "destructive" as const },
->>>>>>> 0f73622ee35fa8f4f6427daedf64243b50f34c13
             ].map(({ value, icon: Icon, label, badge, badgeVariant }) => (
-              <TabsTrigger key={value} value={value} className="text-[10px] sm:text-xs py-2 px-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm relative">
-                <Icon size={12} className="ml-1 hidden sm:inline" />
-                {label}
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="text-[10px] sm:text-xs py-2 px-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm relative"
+                aria-label={label}
+              >
+                <Icon size={13} className="ml-1" />
+                <span className="hidden sm:inline">{label}</span>
                 {badge != null && badge > 0 && (
                   <span className={cn(
                     "absolute -top-1 -left-1 min-w-[14px] h-[14px] flex items-center justify-center text-[8px] font-bold rounded-full px-0.5",
@@ -229,11 +230,11 @@ const AdminDashboard = () => {
             ))}
           </TabsList>
 
-          <TabsContent value="analytics">
+          <TabsContent value="analytics" className="animate-fade-in">
             <AdminAnalyticsDashboard />
           </TabsContent>
 
-          <TabsContent value="stats">
+          <TabsContent value="stats" className="animate-fade-in">
             {loading ? <LoadingSpinner /> : stats && (
               <div className="grid grid-cols-2 gap-2.5">
                 <StatCard icon={FileText} label="مقالات" value={stats.totalArticles} />
@@ -248,11 +249,11 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="content-reports">
+          <TabsContent value="content-reports" className="animate-fade-in">
             <ReportManagement />
           </TabsContent>
 
-          <TabsContent value="reports">
+          <TabsContent value="reports" className="animate-fade-in">
             {loading ? <LoadingSpinner /> : reportedComments.length === 0 ? (
               <EmptyState icon={Flag} text="گزارشی موجود نیست" />
             ) : (
@@ -277,7 +278,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           {["pending", "published", "rejected"].map((tab) => (
-            <TabsContent key={tab} value={tab}>
+            <TabsContent key={tab} value={tab} className="animate-fade-in">
               {loading ? <LoadingSpinner /> : articles.length === 0 ? (
                 <EmptyState icon={FileText} text={tab === "pending" ? "مقاله‌ای در انتظار نیست 🎉" : "مقاله‌ای موجود نیست"} />
               ) : (

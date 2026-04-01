@@ -181,14 +181,30 @@ export default function AdminAnalyticsDashboard() {
   };
 
   const fetchOnlineUsers = async () => {
-    const { data, error } = await supabase
-      .from('online_users')
-      .select('*')
+    const { data: presenceData, error } = await supabase
+      .from('user_presence')
+      .select('user_id, device_id, status, last_seen_at, current_activity, user_type, is_pwa_installed')
       .order('last_seen_at', { ascending: false });
 
-    if (!error && data) {
-      setOnlineUsers(data as OnlineUser[]);
-    }
+    if (error || !presenceData) return;
+
+    const userIds = [...new Set(presenceData.map(p => p.user_id).filter(Boolean))] as string[];
+    const { data: profilesData } = userIds.length > 0
+      ? await supabase.from('profiles').select('id, display_name, avatar_url').in('id', userIds)
+      : { data: [] as any[] };
+
+    const profileMap = new Map((profilesData || []).map(p => [p.id, p]));
+
+    const enriched = presenceData.map((p) => {
+      const profile = p.user_id ? profileMap.get(p.user_id) : null;
+      return {
+        ...p,
+        display_name: profile?.display_name || null,
+        avatar_url: profile?.avatar_url || null,
+      } as OnlineUser;
+    });
+
+    setOnlineUsers(enriched);
   };
 
   const fetchRecentActivities = async () => {

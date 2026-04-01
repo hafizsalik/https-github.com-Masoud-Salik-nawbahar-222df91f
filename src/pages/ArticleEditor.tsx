@@ -586,8 +586,9 @@ const ArticleEditor = () => {
           placeholder="عنوان مقاله..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="text-lg font-bold border-0 border-b border-border/30 rounded-none px-0 focus-visible:ring-0 bg-transparent h-auto py-3 placeholder:text-muted-foreground/30"
+          className="text-lg font-bold border-0 border-b border-border/30 rounded-none px-0 focus-visible:ring-0 bg-transparent h-auto py-3 placeholder:text-muted-foreground/30 text-right"
           maxLength={300}
+          dir="rtl"
         />
 
         {/* Inline Toolbar */}
@@ -636,8 +637,9 @@ const ArticleEditor = () => {
             placeholder="متن مقاله خود را بنویسید..."
             value={content}
             onChange={(e) => { setContent(e.target.value); if (proofActive) { setProofActive(false); setProofIssues([]); } }}
-            className={`min-h-[45vh] border-0 resize-none px-0 focus-visible:ring-0 bg-transparent text-[15px] placeholder:text-muted-foreground/25 ${proofActive && proofIssues.length > 0 ? "opacity-0 absolute inset-0" : ""}`}
+            className={`min-h-[45vh] border-0 resize-none px-0 focus-visible:ring-0 bg-transparent text-[15px] placeholder:text-muted-foreground/25 text-right ${proofActive && proofIssues.length > 0 ? "opacity-0 absolute inset-0" : ""}`}
             style={{ lineHeight: '2.2' }}
+            dir="rtl"
           />
 
           {/* Proofreading overlay */}
@@ -646,9 +648,10 @@ const ArticleEditor = () => {
             if (!parts) return null;
             return (
               <div
-                className="min-h-[45vh] text-[15px] text-foreground whitespace-pre-wrap cursor-text"
+                className="min-h-[45vh] text-[15px] text-foreground whitespace-pre-wrap cursor-text text-right"
                 style={{ lineHeight: '2.2' }}
                 onClick={() => textareaRef.current?.focus()}
+                dir="rtl"
               >
                 {parts.map((part, i) => 
                   part.issue ? (

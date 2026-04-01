@@ -25,8 +25,12 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { toast } = useToast();
   const lazy = options?.lazy ?? false;
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     checkAuth();
@@ -42,14 +46,17 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
     setUserId(session?.user?.id || null);
   };
 
-  const fetchComments = async () => {
-    setLoading(true);
+  const fetchComments = async (pageParam: number = 0, append: boolean = false) => {
+    if (!append) {
+      setLoading(true);
+    }
     
     const { data: commentsData, error } = await supabase
       .from("comments")
       .select("id, content, created_at, user_id, parent_id, image_url")
       .eq("article_id", articleId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .range(pageParam * PAGE_SIZE, pageParam * PAGE_SIZE + PAGE_SIZE - 1);
 
     if (error || !commentsData) {
       setLoading(false);
@@ -83,8 +90,17 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
       };
     });
     
-    setComments(transformed);
+    setHasMore(commentsData.length === PAGE_SIZE);
+    setPage(pageParam);
+    setComments((prev) => (append ? [...prev, ...transformed] : transformed));
     setLoading(false);
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    await fetchComments(page + 1, true);
+    setLoadingMore(false);
   };
 
   const addComment = async (content: string, parentId?: string, imageUrl?: string) => {
@@ -131,7 +147,7 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
 
     toast({ title: parentId ? "پاسخ ثبت شد" : "نظر شما ثبت شد" });
     import("@/lib/sounds").then(m => m.playSubmitSound());
-    await fetchComments();
+    await fetchComments(0, false);
     setSubmitting(false);
     return true;
   };
@@ -156,6 +172,9 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
     userId,
     addComment,
     deleteComment,
-    refetch: fetchComments,
+    refetch: () => fetchComments(0, false),
+    loadMore,
+    hasMore,
+    loadingMore,
   };
 }
