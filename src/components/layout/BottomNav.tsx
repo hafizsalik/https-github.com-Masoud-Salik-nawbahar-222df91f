@@ -1,9 +1,9 @@
-﻿import { Link, useLocation } from "react-router-dom";
+import { Home, Search, BookOpen, Plus } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { NawbaharIcon } from "@/components/ui/NawbaharIcon";
 
 export function BottomNav() {
   const location = useLocation();
@@ -39,12 +39,18 @@ export function BottomNav() {
         <div className="flex items-center justify-around max-w-lg mx-auto h-12">
           {/* Home */}
           <NavItem to="/" active={isActive("/")} label="خانه">
-            <NawbaharIcon name="home" size={20} />
+            <Home
+              size={21}
+              strokeWidth={isActive("/") ? 1.8 : 1.4}
+            />
           </NavItem>
 
-          {/* Explore */}
-          <NavItem to="/explore" active={isActive("/explore")} label="کاوش">
-            <NawbaharIcon name="search" size={20} />
+          {/* Search */}
+          <NavItem to="/explore" active={isActive("/explore")} label="جستجو">
+            <Search
+              size={21}
+              strokeWidth={isActive("/explore") ? 1.8 : 1.4}
+            />
           </NavItem>
 
           {/* Write - Center prominent */}
@@ -59,13 +65,16 @@ export function BottomNav() {
                 ? "bg-foreground text-background scale-105"
                 : "bg-muted text-muted-foreground group-active:scale-90 group-active:bg-foreground/15"
             )}>
-              <NawbaharIcon name="add" size={20} />
+              <Plus size={20} strokeWidth={2} />
             </div>
           </Link>
 
-          {/* Saved */}
-          <NavItem to="/bookmarks" active={isActive("/bookmarks")} label="ذخیره‌ها">
-            <NawbaharIcon name="bookmark" size={20} />
+          {/* VIP */}
+          <NavItem to="/vip" active={isActive("/vip")} label="ویژه">
+            <BookOpen
+              size={21}
+              strokeWidth={isActive("/vip") ? 1.8 : 1.4}
+            />
           </NavItem>
 
           {/* Profile */}
@@ -92,7 +101,7 @@ export function BottomNav() {
                   ? "ring-[1.5px] ring-foreground scale-110"
                   : "group-active:scale-90 group-active:bg-muted-foreground/30"
               )}>
-                <NawbaharIcon name="user" size={16} className="text-muted-foreground" />
+                <span className="text-[9px] text-muted-foreground font-bold">؟</span>
               </div>
             )}
           </Link>
@@ -102,6 +111,7 @@ export function BottomNav() {
   );
 }
 
+/** Reusable nav item with tactile press feedback */
 function NavItem({ to, active, children, label }: { to: string; active: boolean; children: React.ReactNode; label?: string }) {
   return (
     <Link

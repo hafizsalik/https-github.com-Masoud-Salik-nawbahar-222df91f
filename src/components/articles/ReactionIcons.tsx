@@ -31,7 +31,7 @@ function IconMask({ size = 24, className, animated, icon }: IconProps & { icon: 
   );
 }
 
-/** Modern reaction icons using uploaded pack â€” lively, professional, with subtle animations */
+/** Modern reaction icons using uploaded pack - lively, professional, with subtle animations */
 export function ThumbsUpIcon({ size = 24, className, animated = false }: IconProps) {
   return (
     <IconMask
