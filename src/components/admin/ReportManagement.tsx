@@ -103,12 +103,12 @@ export function ReportManagement() {
     setIsProcessing(true);
     try {
       const { error } = await supabase
-        .from('content_reports')
+        .from('content_reports' as any)
         .update({
           status: newStatus,
           admin_notes: adminNotes || null,
           resolved_at: newStatus !== 'reviewing' ? new Date().toISOString() : null,
-        })
+        } as any)
         .eq('id', reportId);
 
       if (error) throw error;

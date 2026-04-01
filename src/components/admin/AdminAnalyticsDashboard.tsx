@@ -193,13 +193,13 @@ export default function AdminAnalyticsDashboard() {
 
   const fetchRecentActivities = async () => {
     const { data, error } = await supabase
-      .from('activity_logs')
+      .from('activity_logs' as any)
       .select('*')
       .order('created_at', { ascending: false })
       .limit(50);
 
     if (!error && data) {
-      setRecentActivities(data as ActivityLog[]);
+      setRecentActivities(data as unknown as ActivityLog[]);
     }
   };
 
