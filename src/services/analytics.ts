@@ -253,7 +253,7 @@ export const analyticsService = {
   // Update presence (heartbeat)
   async updatePresence(userId: string, sessionId: string, status: 'online' | 'away' | 'busy' = 'online', currentActivity?: string) {
     const { error } = await supabase
-      .from('user_presence')
+      .from('user_presence' as any)
       .upsert({
         user_id: userId,
         device_id: this.deviceId,

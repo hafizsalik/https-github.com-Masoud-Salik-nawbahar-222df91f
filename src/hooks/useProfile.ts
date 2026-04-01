@@ -80,7 +80,7 @@ export function useProfile(userId: string | undefined) {
       const profileData = isOwnProfile 
         ? profileResult.data as Profile
         : {
-            ...profileResult.data,
+            ...(profileResult.data as any),
             trust_score: null,
             whatsapp_number: null,
             facebook_url: null,
