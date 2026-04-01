@@ -22,12 +22,13 @@ export const REACTION_EMOJIS: Record<string, string> = {
 };
 
 /** Vivid colors — lively and engaging with clear differentiation */
+/** Soft, muted reaction colors — professional and non-jarring */
 export const REACTION_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
-  like:       { bg: "hsl(217 85% 56% / 0.12)", text: "hsl(217 85% 50%)", ring: "hsl(217 85% 56% / 0.25)" },
-  love:       { bg: "hsl(348 80% 55% / 0.12)", text: "hsl(348 80% 50%)", ring: "hsl(348 80% 55% / 0.25)" },
-  insightful: { bg: "hsl(45 90% 48% / 0.14)",  text: "hsl(40 85% 42%)",  ring: "hsl(45 90% 48% / 0.25)" },
-  laugh:      { bg: "hsl(28 85% 52% / 0.12)",  text: "hsl(28 85% 46%)",  ring: "hsl(28 85% 52% / 0.25)" },
-  sad:        { bg: "hsl(200 55% 48% / 0.12)",  text: "hsl(200 55% 42%)", ring: "hsl(200 55% 48% / 0.25)" },
+  like:       { bg: "hsl(217 55% 58% / 0.10)", text: "hsl(217 50% 55%)", ring: "hsl(217 55% 58% / 0.20)" },
+  love:       { bg: "hsl(348 55% 58% / 0.10)", text: "hsl(348 50% 55%)", ring: "hsl(348 55% 58% / 0.20)" },
+  insightful: { bg: "hsl(42 60% 50% / 0.10)",  text: "hsl(40 55% 48%)",  ring: "hsl(42 60% 50% / 0.20)" },
+  laugh:      { bg: "hsl(28 55% 55% / 0.10)",  text: "hsl(28 50% 50%)",  ring: "hsl(28 55% 55% / 0.20)" },
+  sad:        { bg: "hsl(200 40% 52% / 0.10)",  text: "hsl(200 38% 48%)", ring: "hsl(200 40% 52% / 0.20)" },
 };
 
 export type ReactionKey = keyof typeof REACTION_EMOJIS;
