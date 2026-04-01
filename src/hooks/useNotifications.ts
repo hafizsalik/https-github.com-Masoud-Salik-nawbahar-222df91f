@@ -171,7 +171,10 @@ export function useNotifications() {
   useEffect(() => {
     const saved = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
     if (saved) {
-      try { setSettings(JSON.parse(saved)); } catch { /* defaults */ }
+      try {
+        const parsed = JSON.parse(saved);
+        setSettings({ ...defaultSettings, ...parsed, priorityFilter: { ...defaultSettings.priorityFilter, ...parsed.priorityFilter }, quietHours: { ...defaultSettings.quietHours, ...parsed.quietHours } });
+      } catch { /* defaults */ }
     }
   }, []);
 

@@ -19,7 +19,7 @@ interface ArticleCardProps {
   onDelete?: () => void;
 }
 
-function getExcerpt(content: string, maxChars: number = 110): string {
+function getExcerpt(content: string, maxChars: number = 130): string {
   if (content.length <= maxChars) return content;
   return content.slice(0, maxChars).trim() + "…";
 }
@@ -72,7 +72,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
       {article.parent_title && article.parent_article_id && (
         <Link
           to={`/article/${article.parent_article_id}`}
-          className="flex items-center gap-1.5 px-5 pt-3 text-[11px] text-muted-foreground/50 hover:text-primary transition-colors"
+          className="flex items-center gap-1.5 px-4 pt-2.5 text-[11px] text-muted-foreground/50 hover:text-primary transition-colors"
         >
           <CornerUpRight size={10} strokeWidth={1.5} className="text-primary/40" />
           <span>
@@ -82,29 +82,29 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         </Link>
       )}
 
-      <Link to={`/article/${article.id}`} className="block px-5 pt-5 pb-1">
+      <Link to={`/article/${article.id}`} className="block px-4 pt-4 pb-0.5">
         {/* Author row */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2 min-w-0" style={{ direction: "rtl" }}>
-            <button onClick={handleAuthorClick} className="flex items-center gap-2 min-w-0" aria-label={`View ${article.author?.display_name}'s profile`}>
+            <button onClick={handleAuthorClick} className="flex items-center gap-1.5 min-w-0" aria-label={`View ${article.author?.display_name}'s profile`}>
               {article.author?.avatar_url ? (
                 <img
                   src={article.author.avatar_url}
                   alt={article.author?.display_name}
-                  className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                  className="w-[22px] h-[22px] rounded-full object-cover flex-shrink-0"
                   loading="lazy"
                 />
               ) : (
-                <NawbaharIcon src={userIcon} size={18} className="opacity-40 flex-shrink-0 dark:invert" />
+                <NawbaharIcon src={userIcon} size={16} className="opacity-35 flex-shrink-0 dark:invert" />
               )}
-              <span className="text-[14px] font-medium truncate max-w-[120px]" style={{ color: "#888888" }}>
+              <span className="text-[13px] font-medium truncate max-w-[110px]" style={{ color: "#888888" }}>
                 {article.author?.display_name}
               </span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-normal" style={{ color: "#888888" }}>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[12px]" style={{ color: "#aaaaaa" }}>
               {formatSolarShort(article.created_at)}
             </span>
             <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="flex-shrink-0">
@@ -114,23 +114,23 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         </div>
 
         {/* Content row: text + image */}
-        <div className="flex gap-4">
+        <div className="flex gap-3" style={{ direction: "rtl" }}>
           <div className="flex-1 min-w-0">
             <h3
               className={cn(
-                "text-[18px] font-extrabold leading-[2] line-clamp-2 transition-colors",
-                hasBeenRead ? "text-muted-foreground/65" : "text-foreground"
+                "text-[16px] font-bold leading-[1.8] line-clamp-2 transition-colors",
+                hasBeenRead ? "text-muted-foreground/60" : "text-foreground"
               )}
             >
               {article.title}
             </h3>
-            <p className="text-[14px] leading-[2] line-clamp-2 mt-1" style={{ color: "#444444" }}>
-              {getExcerpt(article.content, 150)}
+            <p className="text-[13px] leading-[1.9] line-clamp-3 mt-0.5" style={{ color: "#555555" }}>
+              {getExcerpt(article.content, 160)}
             </p>
           </div>
           <div
             className={cn(
-              "w-[110px] h-[80px] flex-shrink-0 rounded-xl overflow-hidden relative bg-muted/20 self-start mt-1 transition-all duration-300",
+              "w-[100px] h-[100px] flex-shrink-0 rounded-lg overflow-hidden relative bg-muted/20 self-start transition-all duration-300",
               hasBeenRead && "opacity-50 saturate-[0.3]"
             )}
           >
@@ -163,7 +163,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
       </Link>
 
       {showComments && (
-        <div className="border-t border-border/20 mx-5">
+        <div className="border-t border-border/20 mx-4">
           <SlideDownComments
             isOpen={showComments}
             articleId={article.id}
@@ -180,7 +180,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
       )}
 
       {/* Divider */}
-      <div className="mx-5 border-b border-border/20" />
+      <div className="mx-4 border-b border-border/15" />
     </article>
   );
 }

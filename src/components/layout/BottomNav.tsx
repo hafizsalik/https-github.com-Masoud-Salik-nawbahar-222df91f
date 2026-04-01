@@ -12,11 +12,11 @@ import bookmarkIcon from "@/assets/icons/bookmark.svg";
 import bellIcon from "@/assets/icons/bell.svg";
 
 const tabs = [
-  { to: "/", icon: houseIcon, label: "خانه", size: 21 },
-  { to: "/explore", icon: categoryIcon, label: "کشف", size: 21 },
-  { to: "/write", icon: addIcon, label: "پست جدید", size: 28, center: true },
-  { to: "/bookmarks", icon: bookmarkIcon, label: "کتابخانه", size: 21 },
-  { to: "/notifications", icon: bellIcon, label: "اعلان", size: 21 },
+  { to: "/", icon: houseIcon, label: "خانه", size: 20 },
+  { to: "/explore", icon: categoryIcon, label: "کشف", size: 20 },
+  { to: "/write", icon: addIcon, label: "نوشتن", size: 26, center: true },
+  { to: "/bookmarks", icon: bookmarkIcon, label: "ذخیره", size: 20 },
+  { to: "/notifications", icon: bellIcon, label: "اعلان", size: 20 },
 ];
 
 export function BottomNav() {
@@ -48,40 +48,19 @@ export function BottomNav() {
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="bg-background/95 backdrop-blur-md border-t border-border/30 safe-bottom">
-        <div className="flex items-center justify-around max-w-lg mx-auto h-14">
+      <div className="bg-background/95 backdrop-blur-md border-t border-border/25 safe-bottom">
+        <div className="flex items-center justify-around max-w-lg mx-auto h-[52px]">
           {tabs.map((tab) => {
             const active = isActive(tab.to);
-
-            if (tab.center) {
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to}
-                  className="flex flex-col items-center justify-center flex-1 h-full group"
-                  aria-label={tab.label}
-                >
-                  <NawbaharIcon
-                    src={tab.icon}
-                    size={tab.size}
-                    className={cn(
-                      "transition-all duration-200 dark:invert",
-                      active ? "opacity-90 scale-105" : "opacity-40 group-active:scale-90"
-                    )}
-                  />
-                  <span className={cn(
-                    "text-[10px] mt-0.5 transition-colors",
-                    active ? "text-foreground font-medium" : "text-foreground/40"
-                  )}>{tab.label}</span>
-                </Link>
-              );
-            }
 
             return (
               <Link
                 key={tab.to}
                 to={tab.to}
-                className="flex flex-col items-center justify-center flex-1 h-full group"
+                className={cn(
+                  "flex items-center justify-center flex-1 h-full group",
+                  tab.center && "relative"
+                )}
                 aria-label={tab.label}
                 aria-current={active ? "page" : undefined}
               >
@@ -90,13 +69,9 @@ export function BottomNav() {
                   size={tab.size}
                   className={cn(
                     "transition-all duration-200 dark:invert",
-                    active ? "opacity-90" : "opacity-40 group-active:scale-90"
+                    active ? "opacity-85" : "opacity-35 group-active:scale-90"
                   )}
                 />
-                <span className={cn(
-                  "text-[10px] mt-0.5 transition-colors",
-                  active ? "text-foreground font-medium" : "text-foreground/40"
-                )}>{tab.label}</span>
               </Link>
             );
           })}

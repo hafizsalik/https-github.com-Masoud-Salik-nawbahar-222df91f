@@ -1,4 +1,4 @@
-import { MoreVertical, Bookmark, Share2, Flag, Pencil, Trash2, EyeOff } from "lucide-react";
+import { Bookmark, Share2, Flag, Pencil, Trash2, EyeOff } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,13 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface ArticleActionsMenuProps {
-  articleId: string;
-  authorId: string;
-  articleTitle?: string;
-  onDelete?: () => void;
-}
+import { NawbaharIcon } from "@/components/NawbaharIcon";
+import menuDotsIcon from "@/assets/icons/menu-dots-vertical.svg";
 
 const REPORT_REASONS = [
   "محتوای نادرست یا گمراه‌کننده",
@@ -36,6 +31,13 @@ const REPORT_REASONS = [
   "اسپم یا تبلیغات",
   "سایر موارد",
 ];
+
+interface ArticleActionsMenuProps {
+  articleId: string;
+  authorId: string;
+  articleTitle?: string;
+  onDelete?: () => void;
+}
 
 export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete }: ArticleActionsMenuProps) {
   const { toast } = useToast();
@@ -50,14 +52,12 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
   const [reportNote, setReportNote] = useState("");
   const [bookmarkChecked, setBookmarkChecked] = useState(false);
 
-  // Only get userId on mount — don't check bookmark yet
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserId(session?.user?.id || null);
     });
   }, []);
 
-  // Check bookmark status lazily when menu opens
   const checkBookmark = useCallback(async () => {
     if (bookmarkChecked || !userId) return;
     const { data: bookmark } = await supabase
@@ -73,7 +73,6 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
   useEffect(() => {
     if (isOpen) checkBookmark();
   }, [isOpen, checkBookmark]);
-
 
   const isOwner = userId === authorId;
 
@@ -181,12 +180,12 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <DropdownMenuTrigger asChild>
           <button
-            className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
             onPointerDown={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
           >
-            <MoreVertical size={16} strokeWidth={1.5} />
+            <NawbaharIcon src={menuDotsIcon} size={14} className="opacity-30 dark:invert" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
