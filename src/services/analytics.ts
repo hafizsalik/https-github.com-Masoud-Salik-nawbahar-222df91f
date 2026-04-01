@@ -213,7 +213,7 @@ export const analyticsService = {
     const sessionToken = `${this.deviceId}-${Date.now()}`;
     
     const { data, error } = await supabase
-      .from('user_sessions')
+      .from('user_sessions' as any)
       .insert({
         user_id: userId || null,
         device_id: this.deviceId,
@@ -221,7 +221,7 @@ export const analyticsService = {
         is_active: true,
         entry_url: window.location.href,
         user_agent: navigator.userAgent,
-      })
+      } as any)
       .select('id')
       .single();
     
