@@ -2,18 +2,18 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { queryClient } from "@/lib/queryClient";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { lazy, Suspense, forwardRef, useEffect } from "react";
 import { registerSW } from "virtual:pwa-register";
-import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import Index from "./pages/Index";
-import "@/styles/reactions.css";
 
+// Lazy load non-critical pages
 const Explore = lazy(() => import("./pages/Explore"));
 const Bookmarks = lazy(() => import("./pages/Bookmarks"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -42,17 +42,17 @@ const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const updateServiceWorker = registerSW({
-      immediate: true,
+    const updateSW = registerSW({
       onNeedRefresh() {
         toast({
           title: "نسخه جدید آماده شد",
-          description: "برای دریافت آخرین تغییرات، بروزرسانی را انجام دهید.",
+          description: "برای دریافت آخرین تغییرات صفحه را بازنشانی کنید.",
           action: (
             <button
               className="text-xs text-primary underline"
               onClick={async () => {
-                await updateServiceWorker?.(true);
+                await updateSW?.();
+                window.location.reload();
               }}
             >
               بروزرسانی
@@ -63,13 +63,13 @@ const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
       onOfflineReady() {
         toast({
           title: "حالت آفلاین فعال شد",
-          description: "نوبهار حالا حتی با اینترنت ضعیف هم بهتر کار می‌کند.",
+          description: "این برنامه اکنون بدون اینترنت همچنان کار می‌کند.",
         });
       },
     });
 
     return () => {
-      // registerSW manages its own listeners
+      // nothing to clean up in registerSW return value
     };
   }, [toast]);
 

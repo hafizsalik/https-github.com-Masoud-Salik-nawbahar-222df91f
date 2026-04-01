@@ -182,7 +182,7 @@ const Profile = () => {
               >
                 مقالات
               </TabsTrigger>
-              {false && (
+              {isOwnProfile && (
                 <TabsTrigger 
                   value="saved" 
                   className="rounded-none border-b-[1.5px] border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none py-2.5 text-[12px] font-semibold text-foreground data-[state=active]:text-foreground px-0"
@@ -220,7 +220,7 @@ const Profile = () => {
           </TabsContent>
 
           {/* Saved Tab */}
-          {false && (
+          {isOwnProfile && (
             <TabsContent value="saved" className="mt-0">
               {bookmarks.length === 0 ? (
                 <EmptyState emoji="🔖" text="هنوز مقاله‌ای ذخیره نکرده‌اید" />

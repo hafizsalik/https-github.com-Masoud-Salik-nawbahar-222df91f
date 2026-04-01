@@ -46,7 +46,7 @@ const About = () => {
             مأموریت ما
           </h2>
           <p className="text-muted-foreground leading-relaxed text-sm">
-            نوبهار فضایی برای اندیشمندان و نویسندگان فارسی‌زبان است. ما باور داریم که: هر صدایی حق شنیده شدن دارد و هر ایده‌ای می‌تواند جهان را تغییر دهد.
+            نوبهار فضایی برای اندیشمندان و نویسندگان فارسی‌زبان است. ما باور داریم که هر صدایی حق شنیده شدن دارد و هر ایده‌ای می‌تواند جهان را تغییر دهد.
           </p>
         </div>
 
@@ -98,7 +98,7 @@ const About = () => {
         {/* Footer */}
         <div className="text-center py-6 space-y-2">
           <p className="text-xs text-muted-foreground">
-            نسخه 1.5
+            نسخه 1.3 بیتا
           </p>
           <p className="text-xs text-muted-foreground">
             ساخته شده با ❤️ در افغانستان

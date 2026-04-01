@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { analyticsService } from "@/services/analytics";
+import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { analyticsService } from '@/services/analytics';
 
-type InstallState = "unknown" | "installed" | "not-installed" | "installing";
-type UpdateState = "checking" | "up-to-date" | "update-available" | "updating" | "error";
+type InstallState = 'unknown' | 'installed' | 'not-installed' | 'installing';
+type UpdateState = 'checking' | 'up-to-date' | 'update-available' | 'updating' | 'error';
 
 interface PWAStatus {
   installState: InstallState;
@@ -15,280 +15,322 @@ interface PWAStatus {
   installApp: () => Promise<void>;
 }
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-}
-
+// Detect if running as PWA
 const detectPWA = (): boolean => {
-  if (typeof window === "undefined") return false;
-
-  const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-  const isFullscreen = window.matchMedia("(display-mode: fullscreen)").matches;
-  const isIOSStandalone = (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-
+  if (typeof window === 'undefined') return false;
+  
+  // Check display mode
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  const isFullscreen = window.matchMedia('(display-mode: fullscreen)').matches;
+  const isIOSStandalone = (window.navigator as any).standalone === true;
+  
   return isStandalone || isFullscreen || isIOSStandalone;
 };
 
-let deferredPrompt: BeforeInstallPromptEvent | null = null;
+// Listen for beforeinstallprompt event
+let deferredPrompt: Event | null = null;
 
 export function usePWAStatus(): PWAStatus {
-  const [installState, setInstallState] = useState<InstallState>("unknown");
-  const [updateState, setUpdateState] = useState<UpdateState>("checking");
+  const [installState, setInstallState] = useState<InstallState>('unknown');
+  const [updateState, setUpdateState] = useState<UpdateState>('checking');
   const [isPWA, setIsPWA] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | undefined>();
   const [updateSW, setUpdateSW] = useState<((reloadPage?: boolean) => Promise<void>) | undefined>();
   const { toast } = useToast();
+  
+  const currentVersion = import.meta.env.VITE_APP_VERSION || '0.0.0';
 
-  const currentVersion = import.meta.env.VITE_APP_VERSION || "0.0.0";
-
-  const prepareUpdate = useCallback(
-    (swRegistration: ServiceWorkerRegistration, showToast: boolean) => {
-      const waitingWorker = swRegistration.waiting;
-      if (!waitingWorker) {
-        return false;
+  // Check install status on mount
+  useEffect(() => {
+    const checkInstallStatus = () => {
+      const pwa = detectPWA();
+      setIsPWA(pwa);
+      
+      if (pwa) {
+        setInstallState('installed');
+      } else {
+        // Check if beforeinstallprompt was fired (app is installable)
+        setInstallState(deferredPrompt ? 'not-installed' : 'unknown');
       }
+    };
 
-      setRegistration(swRegistration);
-      setUpdateState("update-available");
-      setUpdateSW(() => async (reloadPage: boolean = true) => {
-        setUpdateState("updating");
+    checkInstallStatus();
 
-        try {
-          waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    // Listen for install prompt availability
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      setInstallState('not-installed');
+    };
 
-          if (!reloadPage) {
-            setUpdateState("up-to-date");
-            return;
-          }
-
-          let reloaded = false;
-          const reload = () => {
-            if (reloaded) return;
-            reloaded = true;
-            window.location.reload();
-          };
-
-          navigator.serviceWorker.addEventListener("controllerchange", reload, { once: true });
-          window.setTimeout(reload, 1500);
-        } catch (error) {
-          console.error("Update failed:", error);
-          setUpdateState("error");
-          toast({
-            title: "خطا در بروزرسانی",
-            description: "لطفاً صفحه را دوباره بارگذاری کنید.",
-            variant: "destructive",
-          });
-        }
+    // Listen for app installed
+    const handleAppInstalled = () => {
+      setInstallState('installed');
+      setIsPWA(true);
+      deferredPrompt = null;
+      
+      // Track install
+      analyticsService.trackAppInstall();
+      
+      toast({
+        title: 'نصب شد! 🎉',
+        description: 'برنامه روی دستگاه شما نصب شد',
       });
+    };
 
-      if (showToast) {
-        toast({
-          title: "نسخه جدید آماده است",
-          description: "برای دریافت آخرین تغییرات، بروزرسانی را بزنید.",
-        });
-      }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
-      return true;
-    },
-    [toast]
-  );
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, [toast]);
 
-  const runUpdateCheck = useCallback(
-    async (showFeedback: boolean) => {
-      if (!("serviceWorker" in navigator)) {
-        setUpdateState("error");
-        if (showFeedback) {
-          toast({
-            title: "بروزرسانی پشتیبانی نمی‌شود",
-            description: "مرورگر شما از Service Worker پشتیبانی نمی‌کند.",
-            variant: "destructive",
-          });
-        }
-        return;
-      }
+  // Register service worker for updates
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
 
-      setUpdateState("checking");
+    let registration: ServiceWorkerRegistration | undefined;
+    let updateChecker: NodeJS.Timeout;
 
+    const registerSW = async () => {
       try {
-        const swRegistration = registration ?? (await navigator.serviceWorker.getRegistration()) ?? undefined;
-
-        if (!swRegistration) {
-          setUpdateState("up-to-date");
-          if (showFeedback) {
-            toast({
-              title: "برنامه آماده است",
-              description: "هنوز سرویس ورکر فعالی برای بروزرسانی پیدا نشد.",
+        registration = await navigator.serviceWorker.ready;
+        
+        // Store registration for update functions
+        setRegistration(registration);
+        
+        // Listen for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration?.installing;
+          
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              // Check if new worker is installed and we have a current controller (means update available)
+              // OR if new worker is installed and becomes the controller (means update was applied)
+              if (newWorker.state === 'installed') {
+                if (navigator.serviceWorker.controller) {
+                  // New version available but not yet activated
+                  setUpdateState('update-available');
+                  
+                  // Store update function
+                  setUpdateSW(() => async (reloadPage: boolean = true) => {
+                    setUpdateState('updating');
+                    
+                    try {
+                      // Get current registration
+                      const currentReg = await navigator.serviceWorker.ready;
+                      
+                      if (currentReg.waiting) {
+                        // Tell service worker to skip waiting
+                        currentReg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        
+                        // Wait for controller change
+                        const controllerChange = new Promise((resolve) => {
+                          const handleControllerChange = () => {
+                            window.removeEventListener('controllerchange', handleControllerChange);
+                            resolve(undefined);
+                          };
+                          window.addEventListener('controllerchange', handleControllerChange);
+                        });
+                        
+                        await controllerChange;
+                        
+                        if (reloadPage) {
+                          window.location.reload();
+                        }
+                      } else if (currentReg.installing) {
+                        // If worker is still installing, wait for it
+                        const installComplete = new Promise((resolve) => {
+                          const handleInstall = () => {
+                            if (currentReg.installing?.state === 'installed') {
+                              currentReg.installing.removeEventListener('statechange', handleInstall);
+                              resolve(undefined);
+                            }
+                          };
+                          
+                          if (currentReg.installing?.state === 'installed') {
+                            resolve(undefined);
+                          } else {
+                            currentReg.installing?.addEventListener('statechange', handleInstall);
+                          }
+                        });
+                        
+                        await installComplete;
+                        
+                        // Now try to activate
+                        if (currentReg.waiting) {
+                          currentReg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                          
+                          const controllerChange = new Promise((resolve) => {
+                            const handleControllerChange = () => {
+                              window.removeEventListener('controllerchange', handleControllerChange);
+                              resolve(undefined);
+                            };
+                            window.addEventListener('controllerchange', handleControllerChange);
+                          });
+                          
+                          await controllerChange;
+                          
+                          if (reloadPage) {
+                            window.location.reload();
+                          }
+                        }
+                      } else {
+                        // No worker available, force a refresh
+                        setUpdateState('up-to-date');
+                        toast({
+                          title: 'بروزرسانی انجام شد',
+                          description: 'صفحه برای اعمال تغییرات رفرش می‌شود',
+                        });
+                        
+                        if (reloadPage) {
+                          setTimeout(() => {
+                            window.location.reload();
+                          }, 1000);
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Update failed:', error);
+                      setUpdateState('error');
+                      toast({
+                        title: 'خطا در بروزرسانی',
+                        description: 'لطفاً صفحه را دستی رفرش کنید',
+                        variant: 'destructive',
+                      });
+                    }
+                  });
+                  
+                  // Show update notification
+                  toast({
+                    title: 'نسخه جدید آماده است',
+                    description: 'برای دریافت آخرین تغییرات، بروزرسانی کنید',
+                  });
+                } else {
+                  // First time installation or no controller, set as up to date
+                  setUpdateState('up-to-date');
+                }
+              }
             });
           }
-          return;
-        }
+        });
 
-        setRegistration(swRegistration);
-        await swRegistration.update();
+        // Initial check for updates
+        setTimeout(() => {
+          checkForUpdates();
+        }, 1000);
 
-        if (prepareUpdate(swRegistration, showFeedback)) {
-          return;
-        }
+        // Periodic check for updates (every 30 minutes)
+        updateChecker = setInterval(() => {
+          checkForUpdates();
+        }, 30 * 60 * 1000);
 
-        setUpdateState("up-to-date");
-        setUpdateSW(undefined);
-
-        if (showFeedback) {
-          toast({
-            title: "برنامه بروز است",
-            description: `نسخه ${currentVersion} آخرین نسخه موجود است.`,
-          });
-        }
       } catch (error) {
-        console.error("Update check failed:", error);
-        setUpdateState("error");
-
-        if (showFeedback) {
-          toast({
-            title: "خطا در بررسی بروزرسانی",
-            description: "لطفاً کمی بعد دوباره تلاش کنید.",
-            variant: "destructive",
-          });
-        }
+        console.error('SW registration failed:', error);
+        setUpdateState('error');
       }
-    },
-    [currentVersion, prepareUpdate, registration, toast]
-  );
+    };
 
-  const checkForUpdates = useCallback(async () => {
-    await runUpdateCheck(true);
-  }, [runUpdateCheck]);
+    registerSW();
 
+    return () => {
+      clearInterval(updateChecker);
+    };
+  }, [toast, checkForUpdates]);
+
+  // Install app function
   const installApp = useCallback(async () => {
     if (!deferredPrompt) {
       toast({
-        title: "نصب مستقیم در دسترس نیست",
-        description: "لطفاً از Chrome یا Edge استفاده کنید یا از منوی مرورگر نصب را انجام دهید.",
-        variant: "destructive",
+        title: 'نصب در مرورگر شما پشتیبانی نمی‌شود',
+        description: 'لطفاً از Chrome یا Edge استفاده کنید',
+        variant: 'destructive',
       });
       return;
     }
 
-    setInstallState("installing");
-
+    setInstallState('installing');
+    
     try {
-      await deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
-
-      if (result.outcome === "accepted") {
-        setInstallState("installed");
+      // Show install prompt
+      (deferredPrompt as any).prompt();
+      
+      // Wait for user choice
+      const result = await (deferredPrompt as any).userChoice;
+      
+      if (result.outcome === 'accepted') {
+        setInstallState('installed');
         setIsPWA(true);
+        
         analyticsService.trackAppInstall();
+        
         toast({
-          title: "در حال نصب",
-          description: "اپلیکیشن روی دستگاه شما اضافه شد.",
+          title: 'در حال نصب...',
+          description: 'برنامه در حال نصب روی دستگاه شماست',
         });
       } else {
-        setInstallState("not-installed");
+        setInstallState('not-installed');
       }
-
+      
       deferredPrompt = null;
     } catch (error) {
-      console.error("Install failed:", error);
-      setInstallState("not-installed");
+      setInstallState('not-installed');
       toast({
-        title: "خطا در نصب",
-        description: "لطفاً دوباره تلاش کنید.",
-        variant: "destructive",
+        title: 'خطا در نصب',
+        variant: 'destructive',
       });
     }
   }, [toast]);
 
-  useEffect(() => {
-    const syncInstallState = () => {
-      const pwa = detectPWA();
-      setIsPWA(pwa);
-      setInstallState(pwa ? "installed" : deferredPrompt ? "not-installed" : "unknown");
-    };
-
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      deferredPrompt = event as BeforeInstallPromptEvent;
-      setInstallState("not-installed");
-    };
-
-    const handleAppInstalled = () => {
-      deferredPrompt = null;
-      setInstallState("installed");
-      setIsPWA(true);
-      analyticsService.trackAppInstall();
-      toast({
-        title: "نصب انجام شد",
-        description: "اکنون می‌توانید نوبهار را مثل یک اپ اجرا کنید.",
-      });
-    };
-
-    syncInstallState();
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-    };
-  }, [toast]);
-
-  useEffect(() => {
-    if (!("serviceWorker" in navigator)) {
-      setUpdateState("error");
-      return;
-    }
-
-    let active = true;
-    let intervalId: ReturnType<typeof setInterval> | undefined;
-    let detachUpdateFound: (() => void) | undefined;
-
-    const setup = async () => {
-      try {
-        const swRegistration = await navigator.serviceWorker.ready;
-        if (!active) return;
-
-        setRegistration(swRegistration);
-
-        const handleUpdateFound = () => {
-          const installingWorker = swRegistration.installing;
-          if (!installingWorker) return;
-
-          installingWorker.addEventListener("statechange", () => {
-            if (!active) return;
-
-            if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
-              prepareUpdate(swRegistration, true);
-            }
+  // Check for updates
+  const checkForUpdates = useCallback(async () => {
+    setUpdateState('checking');
+    
+    try {
+      let reg = registration;
+      
+      if (!reg) {
+        // Try to get registration if not available
+        reg = await navigator.serviceWorker.ready;
+        setRegistration(reg);
+        
+        if (!reg) {
+          setUpdateState('error');
+          toast({
+            title: 'خطا در بررسی',
+            description: 'سرویس ورکر در دسترس نیست',
+            variant: 'destructive',
           });
-        };
-
-        swRegistration.addEventListener("updatefound", handleUpdateFound);
-        detachUpdateFound = () => swRegistration.removeEventListener("updatefound", handleUpdateFound);
-
-        await runUpdateCheck(false);
-        intervalId = window.setInterval(() => {
-          void runUpdateCheck(false);
-        }, 30 * 60 * 1000);
-      } catch (error) {
-        console.error("Service worker setup failed:", error);
-        if (active) {
-          setUpdateState("error");
+          return;
         }
       }
-    };
 
-    void setup();
+      // Manually check for updates
+      await reg.update();
+      
+      // Wait a bit to see if update is found
+      setTimeout(() => {
+        if (updateState !== 'update-available' && updateState !== 'updating') {
+          setUpdateState('up-to-date');
+          toast({
+            title: 'برنامه بروز است',
+            description: 'شما آخرین نسخه را دارید',
+          });
+        }
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Update check failed:', error);
+      setUpdateState('error');
+      toast({
+        title: 'خطا در بررسی',
+        description: 'دوباره تلاش کنید',
+        variant: 'destructive',
+      });
+    }
+  }, [registration, updateState, toast]);
 
-    return () => {
-      active = false;
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-      detachUpdateFound?.();
-    };
-  }, [prepareUpdate, runUpdateCheck]);
 
   return {
     installState,

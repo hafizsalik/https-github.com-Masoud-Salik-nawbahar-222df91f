@@ -5,7 +5,6 @@ import { REACTION_SVG_ICONS } from "./ReactionIcons";
 import { getRelativeTime } from "@/lib/relativeTime";
 import { toPersianNumber } from "@/lib/utils";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ReactionDetail {
   user_id: string;
@@ -102,11 +101,9 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
         <div className="flex items-center gap-1 px-4 py-2 border-b border-border/50 overflow-x-auto hide-scrollbar">
           <button
             onClick={() => setActiveFilter(null)}
-            className={cn(
-              "px-3 py-1 rounded-full text-xs font-medium reaction-instant flex-shrink-0",
-              "hover:scale-105 active:scale-95",
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex-shrink-0 ${
               !activeFilter ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-            )}
+            }`}
           >
             همه {toPersianNumber(reactions.length)}
           </button>
@@ -118,20 +115,11 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
                 <button
                   key={type}
                   onClick={() => setActiveFilter(activeFilter === type ? null : type)}
-                  className={cn(
-                    "px-2.5 py-1 rounded-full text-xs font-medium reaction-instant flex-shrink-0 flex items-center gap-1",
-                    "hover:scale-105 active:scale-95",
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors flex-shrink-0 flex items-center gap-1 ${
                     activeFilter === type ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-                  )}
+                  }`}
                 >
-                  {IconComponent ? (
-                    <IconComponent 
-                      size={14} 
-                      strokeWidth={1.8}
-                      animated={activeFilter === type}
-                      className="reaction-icon"
-                    />
-                  ) : <span>{type}</span>}
+                  {IconComponent ? <IconComponent size={14} strokeWidth={1.5} /> : <span>{type}</span>}
                   <span>{toPersianNumber(count)}</span>
                 </button>
               );
@@ -153,11 +141,8 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
                 return (
                   <div
                     key={`${reaction.user_id}-${reaction.reaction_type}`}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 reaction-instant reaction-icon",
-                      "hover:bg-muted/50 animate-fade-in"
-                    )}
-                    style={{ animationDelay: `${i * 25}ms` }}
+                    className="flex items-center gap-3 px-4 py-3 animate-fade-in"
+                    style={{ animationDelay: `${i * 30}ms` }}
                   >
                     {reaction.profile?.avatar_url ? (
                       <img src={reaction.profile.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
@@ -177,14 +162,7 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {IconComponent && (
-                        <IconComponent 
-                          size={18} 
-                          strokeWidth={1.8}
-                          animated={true}
-                          className="reaction-icon text-muted-foreground"
-                        />
-                      )}
+                      {IconComponent && <IconComponent size={18} strokeWidth={1.5} className="text-muted-foreground" />}
                       <span className="text-[10px] text-muted-foreground">
                         {REACTION_LABELS[reaction.reaction_type] || reaction.reaction_type}
                       </span>

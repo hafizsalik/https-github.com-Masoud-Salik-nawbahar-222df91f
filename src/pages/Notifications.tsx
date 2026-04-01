@@ -104,8 +104,7 @@ function getNotificationText(
   type: string,
   actorName: string,
   articleTitle?: string,
-  extras?: { commentPreview?: string; reactionType?: string },
-  batchCount?: number
+  extras?: { commentPreview?: string; reactionType?: string }
 ) {
   const reactionLabel = extras?.reactionType ? REACTION_LABELS[extras.reactionType] : null;
 
@@ -113,23 +112,11 @@ function getNotificationText(
     case "like":
       return (
         <>
-          {batchCount > 1 ? (
-            <>
-              <strong className="font-medium">{batchCount} نفر</strong>
-              {reactionLabel
-                ? <> واکنش <span className="text-foreground/70 font-medium">«{reactionLabel}»</span> نشان دادند</>
-                : <> واکنش نشان دادند</>
-              }
-            </>
-          ) : (
-            <>
-              <strong className="font-medium">{actorName}</strong>
-              {reactionLabel
-                ? <> واکنش <span className="text-foreground/70 font-medium">«{reactionLabel}»</span> نشان داد</>
-                : <> واکنش نشان داد</>
-              }
-            </>
-          )}
+          <strong className="font-medium">{actorName}</strong>
+          {reactionLabel
+            ? <> واکنش <span className="text-foreground/70 font-medium">«{reactionLabel}»</span> نشان داد</>
+            : <> واکنش نشان داد</>
+          }
           {articleTitle && (
             <span className="text-muted-foreground/50 block text-[11px] mt-0.5 line-clamp-1">
               {articleTitle}
@@ -140,16 +127,8 @@ function getNotificationText(
     case "comment":
       return (
         <>
-          {batchCount > 1 ? (
-            <>
-              <strong className="font-medium">{batchCount} نظر جدید</strong> دریافت کردید
-            </>
-          ) : (
-            <>
-              <strong className="font-medium">{actorName}</strong> نظر داد
-            </>
-          )}
-          {extras?.commentPreview && batchCount === 1 && (
+          <strong className="font-medium">{actorName}</strong> نظر داد
+          {extras?.commentPreview && (
             <span className="text-muted-foreground/60 block text-[11px] mt-0.5 line-clamp-2 leading-relaxed">
               «{extras.commentPreview}»
             </span>
@@ -319,60 +298,6 @@ const Notifications = () => {
                     />
                   </div>
                 ))}
-                
-                {/* Smart notification settings */}
-                <div className="border-t border-border/20 pt-2 mt-2">
-                  <div className="flex items-center justify-between py-1.5">
-                    <div className="flex items-center gap-2.5">
-                      <Bell size={13} className="text-muted-foreground/50" aria-hidden="true" />
-                      <div>
-                        <span className="text-[12px]">گروه‌بندی مشابه</span>
-                        <p className="text-[10px] text-muted-foreground/40 leading-tight">ترکیب اعلان‌های مشابه</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.batchSimilar}
-                      onCheckedChange={(checked) => updateSettings({ batchSimilar: checked })}
-                      aria-label="گروه‌بندی اعلان‌های مشابه"
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between py-1.5">
-                    <div className="flex items-center gap-2.5">
-                      <Lightbulb size={13} className="text-muted-foreground/50" aria-hidden="true" />
-                      <div>
-                        <span className="text-[12px]">هوشمند</span>
-                        <p className="text-[10px] text-muted-foreground/40 leading-tight">فیلتر بر اساس اولویت و زمان</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.contextAware}
-                      onCheckedChange={(checked) => updateSettings({ contextAware: checked })}
-                      aria-label="اعلان‌های هوشمند"
-                    />
-                  </div>
-                  
-                  {settings.contextAware && (
-                    <div className="flex items-center justify-between py-1.5">
-                      <div className="flex items-center gap-2.5">
-                        <BellOff size={13} className="text-muted-foreground/50" aria-hidden="true" />
-                        <div>
-                          <span className="text-[12px]">ساعت‌های آرامش</span>
-                          <p className="text-[10px] text-muted-foreground/40 leading-tight">
-                            {settings.quietHours.start} - {settings.quietHours.end}
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={settings.quietHours.enabled}
-                        onCheckedChange={(checked) => updateSettings({ 
-                          quietHours: { ...settings.quietHours, enabled: checked } 
-                        })}
-                        aria-label="ساعت‌های آرامش"
-                      />
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           )}
@@ -449,8 +374,7 @@ const Notifications = () => {
                                 notification.type,
                                 notification.actor?.display_name || "کاربر",
                                 notification.article?.title,
-                                extra,
-                                notification.batch_count
+                                extra
                               )}
                             </p>
                             <p className="text-[10px] text-muted-foreground/35 mt-0.5">

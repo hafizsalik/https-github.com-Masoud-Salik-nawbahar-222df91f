@@ -1,8 +1,9 @@
-import path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
+// https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => ({
   server: {
     host: "::",
@@ -12,8 +13,7 @@ export default defineConfig(async ({ mode }) => ({
     react(),
     mode === "development" && (await import("lovable-tagger")).componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: "auto",
+      registerType: "prompt",
       includeAssets: [
         "favicon.ico",
         "robots.txt",
@@ -31,19 +31,16 @@ export default defineConfig(async ({ mode }) => ({
         id: "/",
         scope: "/",
         display: "standalone",
+        display_override: ["standalone", "minimal-ui"],
         background_color: "#f9f7f4",
         theme_color: "#f9f7f4",
         orientation: "portrait-primary",
         dir: "rtl",
         lang: "fa-AF",
+        prefer_related_applications: false,
+        related_applications: [],
         categories: ["news", "social", "education", "lifestyle"],
         icons: [
-          {
-            src: "/pwa-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any",
-          },
           {
             src: "/pwa-512x512.png",
             sizes: "512x512",
@@ -51,10 +48,10 @@ export default defineConfig(async ({ mode }) => ({
             purpose: "any",
           },
           {
-            src: "/pwa-maskable-192x192.png",
+            src: "/pwa-192x192.png",
             sizes: "192x192",
             type: "image/png",
-            purpose: "maskable",
+            purpose: "any",
           },
           {
             src: "/pwa-maskable-512x512.png",
@@ -74,7 +71,7 @@ export default defineConfig(async ({ mode }) => ({
             src: "/screenshots/mobile-article.png",
             sizes: "750x1334",
             form_factor: "narrow",
-            label: "نمایش مقاله",
+            label: "مشاهده مقاله",
           },
           {
             src: "/screenshots/desktop-home.png",
@@ -92,9 +89,9 @@ export default defineConfig(async ({ mode }) => ({
             icons: [{ src: "/icons/write-96x96.png", sizes: "96x96", type: "image/png" }],
           },
           {
-            name: "ذخیره‌ها",
+            name: "ذخیره‌شده‌ها",
             short_name: "ذخیره‌ها",
-            description: "مشاهده مقالات ذخیره شده",
+            description: "مقالات ذخیره شده شما",
             url: "/bookmarks",
             icons: [{ src: "/icons/bookmark-96x96.png", sizes: "96x96", type: "image/png" }],
           },
@@ -106,6 +103,32 @@ export default defineConfig(async ({ mode }) => ({
             icons: [{ src: "/icons/notification-96x96.png", sizes: "96x96", type: "image/png" }],
           },
         ],
+        share_target: {
+          action: "/write",
+          method: "GET",
+          params: {
+            title: "title",
+            text: "text",
+            url: "url",
+          },
+        },
+        handle_links: "preferred",
+        iarc_rating_id: "3a27595a-41bf-4f80-9b5a-e0c920a3b5a3",
+        protocol_handlers: [
+          {
+            protocol: "web+nawbahar",
+            url: "/article/%s",
+          },
+        ],
+        launch_handler: {
+          client_mode: ["navigate-existing", "auto"],
+        },
+        scope_extensions: [
+          { origin: "https://nawbahar.lovable.app" },
+        ],
+        edge_side_panel: {
+          preferred_width: 400,
+        },
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,webp,jpg,jpeg}"],
@@ -114,7 +137,7 @@ export default defineConfig(async ({ mode }) => ({
         skipWaiting: true,
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api/, /^\/~oauth/],
-        importScripts: ["/sw-push.js"],
+        importScripts: ['/sw-push.js'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -123,7 +146,7 @@ export default defineConfig(async ({ mode }) => ({
               cacheName: "google-fonts-cache",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -137,7 +160,7 @@ export default defineConfig(async ({ mode }) => ({
               cacheName: "gstatic-fonts-cache",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -151,7 +174,7 @@ export default defineConfig(async ({ mode }) => ({
               cacheName: "articles-cache",
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24,
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -165,7 +188,7 @@ export default defineConfig(async ({ mode }) => ({
               cacheName: "profiles-cache",
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24,
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -179,7 +202,7 @@ export default defineConfig(async ({ mode }) => ({
               cacheName: "images-cache",
               expiration: {
                 maxEntries: 200,
-                maxAgeSeconds: 60 * 60 * 24 * 7,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -193,7 +216,7 @@ export default defineConfig(async ({ mode }) => ({
               cacheName: "external-images-cache",
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -217,7 +240,6 @@ export default defineConfig(async ({ mode }) => ({
     "import.meta.env.VITE_APP_VERSION": JSON.stringify(process.env.npm_package_version || "0.0.1"),
   },
   build: {
-    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -225,6 +247,14 @@ export default defineConfig(async ({ mode }) => ({
           supabase: ["@supabase/supabase-js"],
           query: ["@tanstack/react-query"],
         },
+      },
+    },
+    sourcemap: false,
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
       },
     },
   },

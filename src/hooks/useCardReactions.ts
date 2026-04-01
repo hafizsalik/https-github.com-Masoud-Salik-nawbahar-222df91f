@@ -47,45 +47,33 @@ const EMPTY_SUMMARY: ReactionSummary = {
 };
 
 /**
- * Instant card reactions hook — optimized for zero-delay loading
+ * Lazy card reactions hook — does NOT fetch on mount.
  * Uses article.reaction_count for display count.
- * Full reaction data is pre-fetched for instant interaction.
+ * Full reaction data is only fetched on first user interaction.
  */
 export function useCardReactions(articleId: string, autoFetch = true) {
   const [summary, setSummary] = useState<ReactionSummary>(EMPTY_SUMMARY);
   const [fetched, setFetched] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const fetchReactions = useCallback(async () => {
-    setLoading(true);
-    
-    // Optimized: Get session and reactions in parallel
-    const [{ data: { session } }, { data: reactions }] = await Promise.all([
-      supabase.auth.getSession(),
-      supabase
-        .from("reactions")
-        .select("reaction_type, user_id, created_at")
-        .eq("article_id", articleId)
-        .order("created_at", { ascending: false })
-    ]);
-    
+    const { data: { session } } = await supabase.auth.getSession();
     const currentUserId = session?.user?.id || null;
     setUserId(currentUserId);
+
+    const { data: reactions } = await supabase
+      .from("reactions")
+      .select("reaction_type, user_id, created_at")
+      .eq("article_id", articleId)
+      .order("created_at", { ascending: false });
 
     if (!reactions || reactions.length === 0) {
       setSummary(EMPTY_SUMMARY);
       setFetched(true);
-      setLoading(false);
       return;
     }
 
-    // Optimized: Process data efficiently
     const typeCounts: Record<string, number> = {};
-    const userReactionType = currentUserId 
-      ? reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined
-      : null;
-    
     reactions.forEach((r) => {
       typeCounts[r.reaction_type] = (typeCounts[r.reaction_type] || 0) + 1;
     });
@@ -95,7 +83,9 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       .map(([key]) => key as ReactionKey);
     const topTypes = sorted.slice(0, 2);
 
-    const userReaction = userReactionType || null;
+    const userReaction = currentUserId
+      ? (reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined) || null
+      : null;
 
     const uniqueOtherReactorIds = Array.from(
       new Set(reactions.filter((r) => r.user_id !== currentUserId).map((r) => r.user_id))
@@ -115,77 +105,37 @@ export function useCardReactions(articleId: string, autoFetch = true) {
 
     setSummary({ topTypes, totalCount: reactions.length, reactorNames, userReaction });
     setFetched(true);
-    setLoading(false);
   }, [articleId]);
 
-  // Instant fetch on mount for zero-delay interaction
+  // Auto-fetch on mount for persistent display
   useEffect(() => {
-    if (autoFetch && !fetched && !loading) {
+    if (autoFetch && !fetched) {
       fetchReactions();
     }
-  }, [autoFetch, fetched, loading, fetchReactions]);
+  }, [autoFetch, fetched, fetchReactions]);
 
   const ensureFetched = useCallback(async () => {
     if (!fetched) await fetchReactions();
   }, [fetched, fetchReactions]);
 
   const toggleReaction = async (type: ReactionKey) => {
-    // Instant response - no waiting for fetch
-    const optimisticUpdate = () => {
-      if (summary.userReaction === type) {
-        // Remove reaction
-        setSummary(prev => ({
-          ...prev,
-          userReaction: null,
-          totalCount: Math.max(0, prev.totalCount - 1)
-        }));
-      } else if (summary.userReaction) {
-        // Change reaction
-        setSummary(prev => ({
-          ...prev,
-          userReaction: type
-        }));
-      } else {
-        // Add reaction
-        setSummary(prev => ({
-          ...prev,
-          userReaction: type,
-          totalCount: prev.totalCount + 1
-        }));
-      }
-    };
-
-    // Apply optimistic update immediately
-    optimisticUpdate();
-
-    // Get session and perform database operation
+    if (!fetched) await fetchReactions();
+    
     const { data: { session } } = await supabase.auth.getSession();
     const uid = session?.user?.id;
-    if (!uid) {
-      // Revert optimistic update if not authenticated
-      await fetchReactions();
-      return false;
+    if (!uid) return false;
+
+    if (summary.userReaction === type) {
+      await supabase.from("reactions").delete().eq("article_id", articleId).eq("user_id", uid);
+    } else if (summary.userReaction) {
+      await supabase.from("reactions").update({ reaction_type: type }).eq("article_id", articleId).eq("user_id", uid);
+    } else {
+      await supabase.from("reactions").insert({ article_id: articleId, user_id: uid, reaction_type: type });
     }
 
-    try {
-      if (summary.userReaction === type) {
-        await supabase.from("reactions").delete().eq("article_id", articleId).eq("user_id", uid);
-      } else if (summary.userReaction) {
-        await supabase.from("reactions").update({ reaction_type: type }).eq("article_id", articleId).eq("user_id", uid);
-      } else {
-        await supabase.from("reactions").insert({ article_id: articleId, user_id: uid, reaction_type: type });
-      }
-    } catch (error) {
-      // Revert on error
-      console.error('Reaction toggle failed:', error);
-      await fetchReactions();
-      return false;
-    }
-
-    // Refresh data to ensure consistency
     await fetchReactions();
     return true;
   };
 
-  return { summary, loading, userId, toggleReaction, ensureFetched, fetched };
+  return { summary, loading: false, userId, toggleReaction, ensureFetched, fetched };
 }

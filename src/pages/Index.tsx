@@ -1,8 +1,8 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ArticleFeed } from "@/components/articles/ArticleFeed";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { SEOHead } from "@/components/SEOHead";
 import { useSmartFeed } from "@/hooks/useSmartFeed";
+import { SEOHead } from "@/components/SEOHead";
 
 const Index = () => {
   const { articles, loading, loadingMore, hasMore, refetch, loadMore } = useSmartFeed();
@@ -31,14 +31,14 @@ const Index = () => {
         <LoadingScreen />
       ) : (
         <>
-          <ArticleFeed
-            articles={articles}
+          <ArticleFeed 
+            articles={articles} 
             onRefresh={refetch}
             hasMore={hasMore}
             loadingMore={loadingMore}
             onLoadMore={loadMore}
           />
-          <div className="mt-4 text-center text-[10px] text-muted-foreground">
+          <div className="mt-4 text-[10px] text-muted-foreground text-center">
             نسخه برنامه: {import.meta.env.VITE_APP_VERSION || "unknown"}
           </div>
         </>
