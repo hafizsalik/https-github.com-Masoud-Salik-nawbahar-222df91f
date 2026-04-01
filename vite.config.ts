@@ -10,7 +10,7 @@ export default defineConfig(async ({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === "development" && (await import("lovable-tagger")).componentTagger(),
+    mode === "development" && await import("lovable-tagger").then(m => m.componentTagger()).catch(() => null),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
