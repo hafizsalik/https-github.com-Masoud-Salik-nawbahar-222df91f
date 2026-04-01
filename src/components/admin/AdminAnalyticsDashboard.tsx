@@ -167,7 +167,7 @@ export default function AdminAnalyticsDashboard() {
 
     // Total activities
     const { count: totalActivities } = await supabase
-      .from('activity_logs')
+      .from('activity_logs' as any)
       .select('*', { count: 'exact', head: true });
 
     setStats({
