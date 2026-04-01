@@ -161,7 +161,7 @@ export default function AdminAnalyticsDashboard() {
 
     // PWA installs
     const { count: pwaInstalls } = await supabase
-      .from('user_devices')
+      .from('user_devices' as any)
       .select('*', { count: 'exact', head: true })
       .eq('is_pwa_installed', true);
 
