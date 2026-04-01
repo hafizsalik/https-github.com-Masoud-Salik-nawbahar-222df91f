@@ -22,7 +22,6 @@ import { FollowButton } from "@/components/FollowButton";
 import { useToast } from "@/hooks/use-toast";
 import { toPersianNumber } from "@/lib/utils";
 import { SEOHead } from "@/components/SEOHead";
-import { storage } from "@/lib/storage";
 
 interface ArticleData {
   id: string;
@@ -62,17 +61,11 @@ const Article = () => {
   const contentLength = article?.content?.length || 0;
   useEngagementTracking(id || "", contentLength);
 
-  const { comments, loading: commentsLoading, submitting, userId, addComment, deleteComment, loadMore, hasMore, loadingMore } = useComments(id || "");
+  const { comments, loading: commentsLoading, submitting, userId, addComment, deleteComment } = useComments(id || "");
 
   useEffect(() => {
     if (id) fetchArticle(id);
   }, [id]);
-
-  useEffect(() => {
-    if (!article?.id) return;
-    const readKey = `article_viewed_${user?.id || "guest"}_${article.id}`;
-    storage.set(readKey, new Date().toISOString());
-  }, [article?.id, user?.id]);
 
   useEffect(() => {
     if (window.location.hash === "#comments" && !loading) {
@@ -278,18 +271,15 @@ const Article = () => {
 
         {/* Comments Section */}
         <div id="comments" className="pt-2">
-        <CommentSection
-          comments={comments}
-          loading={commentsLoading}
-          submitting={submitting}
-          hasMore={hasMore}
-          loadingMore={loadingMore}
-          userId={userId}
-          onAddComment={addComment}
-          onDeleteComment={deleteComment}
-          onLoadMore={loadMore}
-          responses={responses}
-        />
+          <CommentSection
+            comments={comments}
+            loading={commentsLoading}
+            submitting={submitting}
+            userId={userId}
+            onAddComment={addComment}
+            onDeleteComment={deleteComment}
+            responses={responses}
+          />
         </div>
 
         {/* Suggested Writers */}

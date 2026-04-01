@@ -37,7 +37,7 @@ const Write = () => {
           دیدگاه‌های خود را با جامعه نوبهار به اشتراک بگذارید
         </p>
         
-        <Link to="/auth?view=login">
+        <Link to="/auth">
           <Button variant="outline" className="rounded-full px-6 h-9 text-[13px]">
             ورود برای شروع نوشتن
           </Button>

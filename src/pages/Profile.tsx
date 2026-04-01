@@ -1,7 +1,7 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { CalendarDays, FileText, Award, Shield } from "lucide-react";
+import { LogIn, CalendarDays, FileText, Award, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,13 +34,31 @@ const Profile = () => {
   const [showFollowers, setShowFollowers] = useState(false);
   
 
-  useEffect(() => {
-    if (!user && isOwnProfile) {
-      navigate("/auth?view=login", { replace: true });
-    }
-  }, [user, isOwnProfile, navigate]);
+  // Not logged in
+  if (!user && isOwnProfile) {
+    return (
+      <AppLayout>
+        <div className="p-5 space-y-8 animate-fade-in">
+          <div className="flex flex-col items-center py-16 px-6">
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-6">
+              <span className="text-2xl font-black text-primary-foreground">ن</span>
+            </div>
+            <h2 className="text-xl font-bold mb-2">به نوبهار خوش آمدید</h2>
+            <p className="text-muted-foreground text-sm text-center mb-8 max-w-[260px] leading-relaxed">
+              برای ذخیره مقالات، دنبال کردن نویسندگان و نوشتن وارد شوید.
+            </p>
+            <Link to="/auth">
+              <Button className="rounded-full px-8 h-11 btn-press">
+                <LogIn size={18} className="ml-2" />
+                ورود / ثبت‌نام
+              </Button>
+            </Link>
+          </div>
 
-  if (!user && isOwnProfile) return null;
+        </div>
+      </AppLayout>
+    );
+  }
 
   if (loading) {
     return (
@@ -133,24 +151,21 @@ const Profile = () => {
                 <FollowButton userId={viewingUserId} />
               ) : null}
               {profile.whatsapp_number && (
-                <a href={`https://wa.me/${encodeURIComponent(profile.whatsapp_number)}`} target="_blank" rel="noopener noreferrer" aria-label="واتس‌اپ"
+                <a href={`https://wa.me/${encodeURIComponent(profile.whatsapp_number)}`} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all">
-                  <WhatsApp size={11} strokeWidth={1.5} />
-                  <span className="hidden sm:inline">واتس‌اپ</span>
+                  <WhatsApp size={11} strokeWidth={1.5} /><span>واتسپ</span>
                 </a>
               )}
               {profile.facebook_url && (
-                <a href={profile.facebook_url} target="_blank" rel="noopener noreferrer" aria-label="فیسبوک"
+                <a href={profile.facebook_url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all">
-                  <Facebook size={11} strokeWidth={1.5} />
-                  <span className="hidden sm:inline">فیسبوک</span>
+                  <Facebook size={11} strokeWidth={1.5} /><span>فیسبوک</span>
                 </a>
               )}
               {profile.linkedin_url && (
-                <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" aria-label="لینکدین"
+                <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-full px-2.5 py-1 transition-all">
-                  <Linkedin size={11} strokeWidth={1.5} />
-                  <span className="hidden sm:inline">لینکدین</span>
+                  <Linkedin size={11} strokeWidth={1.5} /><span>لینکدین</span>
                 </a>
               )}
             </div>

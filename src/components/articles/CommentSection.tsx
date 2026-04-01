@@ -26,12 +26,9 @@ interface CommentSectionProps {
   comments: Comment[];
   loading: boolean;
   submitting: boolean;
-  loadingMore?: boolean;
-  hasMore?: boolean;
   userId: string | null;
   onAddComment: (content: string, parentId?: string) => Promise<boolean>;
   onDeleteComment: (commentId: string) => Promise<void>;
-  onLoadMore?: () => void;
   responses?: ResponseArticle[];
 }
 
@@ -39,12 +36,9 @@ export function CommentSection({
   comments,
   loading,
   submitting,
-  loadingMore,
-  hasMore,
   userId,
   onAddComment,
   onDeleteComment,
-  onLoadMore,
   responses = [],
 }: CommentSectionProps) {
   const [newComment, setNewComment] = useState("");
@@ -156,18 +150,6 @@ export function CommentSection({
         </div>
       ) : (
         <div className="space-y-0">
-          {hasMore && (
-            <div className="pb-3">
-              <Button
-                onClick={onLoadMore}
-                disabled={loadingMore}
-                variant="outline"
-                className="rounded-full px-4 h-8 text-[11px]"
-              >
-                {loadingMore ? "در حال بارگذاری..." : "نمایش نظرات بیشتر"}
-              </Button>
-            </div>
-          )}
           {topLevelComments.map((comment, i) => {
             const replies = getReplies(comment.id);
             const isExpanded = expandedReplies[comment.id];

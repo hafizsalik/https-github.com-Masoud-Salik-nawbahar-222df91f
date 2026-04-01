@@ -1,11 +1,13 @@
-﻿import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { queryClient } from "@/lib/queryClient";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { lazy, Suspense, forwardRef } from "react";
+import { lazy, Suspense, forwardRef, useEffect } from "react";
+import { registerSW } from "virtual:pwa-register";
+import { useToast } from "@/hooks/use-toast";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
@@ -38,7 +40,39 @@ function PageFallback() {
 }
 
 const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
+  const { toast } = useToast();
 
+  useEffect(() => {
+    const updateSW = registerSW({
+      onNeedRefresh() {
+        toast({
+          title: "نسخه جدید آماده شد",
+          description: "برای دریافت آخرین تغییرات صفحه را بازنشانی کنید.",
+          action: (
+            <button
+              className="text-xs text-primary underline"
+              onClick={async () => {
+                await updateSW?.();
+                window.location.reload();
+              }}
+            >
+              بروزرسانی
+            </button>
+          ),
+        });
+      },
+      onOfflineReady() {
+        toast({
+          title: "حالت آفلاین فعال شد",
+          description: "این برنامه اکنون بدون اینترنت همچنان کار می‌کند.",
+        });
+      },
+    });
+
+    return () => {
+      // nothing to clean up in registerSW return value
+    };
+  }, [toast]);
 
   return (
     <ErrorBoundary>

@@ -26,7 +26,7 @@ const Bookmarks = () => {
           <p className="text-muted-foreground text-[13px] max-w-[240px] mb-6 leading-relaxed">
             برای ذخیره مقالات وارد شوید
           </p>
-          <Button onClick={() => navigate("/auth?view=login")} variant="outline" className="rounded-full px-6 h-9 text-[13px]">
+          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-full px-6 h-9 text-[13px]">
             ورود به حساب
           </Button>
         </div>

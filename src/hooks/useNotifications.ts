@@ -142,31 +142,6 @@ function batchSimilarNotifications(notifications: Notification[], settings: Noti
   return result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-function buildDedupeKey(notification: Partial<Notification>): string {
-  const userId = notification.user_id || "unknown-user";
-  const type = notification.type || "unknown-type";
-  const createdAt = notification.created_at ? new Date(notification.created_at).toISOString() : "unknown-time";
-  return `${userId}_${type}_${createdAt}`;
-}
-
-function dedupeByTypeTimestampUser(notifications: Notification[]): Notification[] {
-  const map = new Map<string, Notification>();
-  notifications.forEach((notif) => {
-    const key = buildDedupeKey(notif);
-    if (!map.has(key)) {
-      map.set(key, notif);
-      return;
-    }
-    const existing = map.get(key)!;
-    if (new Date(notif.created_at).getTime() > new Date(existing.created_at).getTime()) {
-      map.set(key, notif);
-    }
-  });
-  return Array.from(map.values()).sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-}
-
 function dedupeByContext(notifications: Notification[]): Notification[] {
   const map = new Map<string, Notification>();
   notifications.forEach((notif) => {
@@ -192,7 +167,6 @@ export function useNotifications() {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
   const lastAlertRef = useRef<{ contextId: string; at: number } | null>(null);
-  const lastEventRef = useRef<{ eventKey: string; at: number } | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
@@ -294,10 +268,8 @@ export function useNotifications() {
       });
     }
     
-    // Deduplicate by user + type + timestamp (primary)
-    const dedupedByEvent = dedupeByTypeTimestampUser(filtered);
-    // Context-aware dedupe to prevent duplicate alerts (secondary)
-    const deduped = settings.contextAware ? dedupeByContext(dedupedByEvent) : dedupedByEvent;
+    // Context-aware dedupe to prevent duplicate alerts
+    const deduped = settings.contextAware ? dedupeByContext(filtered) : filtered;
 
     // Apply batching for similar notifications
     const smartNotifications = batchSimilarNotifications(deduped, settings);
@@ -321,9 +293,7 @@ export function useNotifications() {
         table: 'notifications',
         filter: `user_id=eq.${user.id}`,
       }, (payload) => { 
-        const incoming = payload.new as Partial<Notification>;
-        const contextId = generateContextId(incoming);
-        const eventKey = buildDedupeKey(incoming);
+        const contextId = generateContextId(payload.new as Partial<Notification>);
         const now = Date.now();
         const last = lastAlertRef.current;
         const isDuplicate = last && last.contextId === contextId && (now - last.at) < 10000;
@@ -331,12 +301,6 @@ export function useNotifications() {
           lastAlertRef.current = { contextId, at: now };
           import("@/lib/sounds").then(m => m.playNotificationSound());
         }
-        // Skip redundant realtime events (same user+type+timestamp in a short window)
-        const lastEvent = lastEventRef.current;
-        if (lastEvent && lastEvent.eventKey === eventKey && (now - lastEvent.at) < 3000) {
-          return;
-        }
-        lastEventRef.current = { eventKey, at: now };
         fetchNotifications(); 
       })
       .subscribe();
