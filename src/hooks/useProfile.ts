@@ -55,7 +55,7 @@ export function useProfile(userId: string | undefined) {
           .eq("id", userId)
           .maybeSingle()
       : supabase
-          .from("public_profiles")
+          .from("public_profiles" as any)
           .select("id, display_name, avatar_url, specialty, bio, reputation_score, created_at")
           .eq("id", userId)
           .maybeSingle();

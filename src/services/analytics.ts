@@ -175,7 +175,7 @@ export const analyticsService = {
     };
     
     const { error } = await supabase
-      .from('user_devices')
+      .from('user_devices' as any)
       .upsert(deviceData, { onConflict: 'device_id' });
     
     if (error) {
