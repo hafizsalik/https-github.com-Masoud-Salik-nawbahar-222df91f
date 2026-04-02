@@ -74,6 +74,11 @@ const ArticleEditor = () => {
   const { loading: authLoading, isAuthenticated } = useProtectedRoute();
   const { user } = useAuth();
   
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [showExtras, setShowExtras] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textFileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -422,9 +427,6 @@ const ArticleEditor = () => {
     { key: "innovation", label: "نوآوری", max: 5 },
   ] as const;
 
-  const [showSchedule, setShowSchedule] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
 
   const handleSaveDraft = async () => {
     const titleError = validation.title.validate(title);
@@ -510,7 +512,6 @@ const ArticleEditor = () => {
     }
   };
 
-  const [showExtras, setShowExtras] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
