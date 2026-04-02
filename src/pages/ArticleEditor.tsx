@@ -512,7 +512,6 @@ const ArticleEditor = () => {
     }
   };
 
-  const [showExtras, setShowExtras] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
