@@ -427,9 +427,6 @@ const ArticleEditor = () => {
     { key: "innovation", label: "نوآوری", max: 5 },
   ] as const;
 
-  const [showSchedule, setShowSchedule] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
 
   const handleSaveDraft = async () => {
     const titleError = validation.title.validate(title);
