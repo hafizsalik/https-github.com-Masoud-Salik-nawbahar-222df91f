@@ -6,7 +6,6 @@ import { type ReactionKey, type ReactionSummary } from "@/hooks/useCardReactions
 import { useState } from "react";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 
-import likeIcon from "@/assets/icons/reaction-like.svg";
 import commentIcon from "@/assets/icons/comment.svg";
 import responseIcon from "@/assets/icons/response.svg";
 
@@ -38,7 +37,7 @@ export function ArticleCardMetrics({
   onReact,
   onReactionHover,
 }: ArticleCardMetricsProps) {
-  const { totalCount, userReaction } = reactionSummary;
+  const { totalCount, userReaction, topTypes, reactorNames } = reactionSummary;
   const [showReactionDetails, setShowReactionDetails] = useState(false);
 
   const displayReactionCount = totalCount > 0 ? totalCount : reactionCount;
@@ -53,7 +52,20 @@ export function ArticleCardMetrics({
     }
   };
 
-  // Icon style: black at 25% opacity, with dark mode invert
+  // Build reaction label
+  const buildLabel = (): string | undefined => {
+    if (displayReactionCount <= 0) return undefined;
+    const names: string[] = [];
+    if (userReaction) names.push("شما");
+    reactorNames?.forEach((n) => { if (!names.includes(n)) names.push(n); });
+    if (names.length === 0) return `${toPersianNumber(displayReactionCount)} واکنش`;
+    const shown = names.slice(0, 2);
+    const remaining = Math.max(displayReactionCount - shown.length, 0);
+    let text = shown.join("، ");
+    if (remaining > 0) text += ` و ${toPersianNumber(remaining)} نفر`;
+    return text;
+  };
+
   const iconBase = "opacity-25 dark:invert";
 
   return (
@@ -62,23 +74,17 @@ export function ArticleCardMetrics({
         <div className="flex items-center justify-between" style={{ direction: "rtl" }}>
           {/* Right side: reaction + comment + response */}
           <div className="flex items-center gap-4">
-            {/* Reactions */}
-            <button
-              onClick={handleSummaryClick}
-              onMouseEnter={onReactionHover}
-              className="flex items-center gap-1.5 transition-colors"
-            >
-              <NawbaharIcon
-                src={likeIcon}
-                size={16}
-                className={cn(iconBase, userReaction && "opacity-70")}
+            {/* Reactions — full ReactionPicker with long-press */}
+            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+              <ReactionPicker
+                userReaction={userReaction}
+                onReact={onReact}
+                onHover={onReactionHover}
+                topTypes={topTypes}
+                summaryText={buildLabel()}
+                onSummaryClick={displayReactionCount > 0 ? handleSummaryClick : undefined}
               />
-              {displayReactionCount > 0 && (
-                <span className="text-[12px]" style={{ color: "#888888" }}>
-                  {toPersianNumber(displayReactionCount)}
-                </span>
-              )}
-            </button>
+            </div>
 
             {/* Comments */}
             <button

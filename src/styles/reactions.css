@@ -195,6 +195,32 @@
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
 }
 
+/* Smooth close animations for picker & menu */
+@keyframes picker-in {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes picker-out {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+@keyframes menu-out {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.92); opacity: 0; }
+}
+
+.animate-picker-in {
+  animation: picker-in 0.22s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.animate-picker-out {
+  animation: picker-out 0.18s ease-in both;
+  pointer-events: none;
+}
+.animate-menu-out {
+  animation: menu-out 0.18s ease-in both;
+  pointer-events: none;
+}
+
 /* Dark mode optimizations */
 @media (prefers-color-scheme: dark) {
   .animate-glow {

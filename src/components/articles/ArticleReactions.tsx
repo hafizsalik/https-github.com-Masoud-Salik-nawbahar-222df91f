@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { type ReactionKey, type ReactionSummary } from "@/hooks/useCardReactions";
 import { cn, toPersianNumber } from "@/lib/utils";
-import { MessageCircle } from "lucide-react";
 import { ReactionDetailsModal } from "./ReactionDetailsModal";
 import { ReactionPicker } from "./ReactionPicker";
+import { NawbaharIcon } from "@/components/NawbaharIcon";
+import commentIcon from "@/assets/icons/comment.svg";
 
 interface ArticleReactionsProps {
   articleId: string;
@@ -46,9 +47,9 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
           {/* Comment */}
           <button
             onClick={onCommentClick}
-            className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
-            <MessageCircle size={14} strokeWidth={1.5} />
+            <NawbaharIcon src={commentIcon} size={15} className="opacity-25 dark:invert" />
             <span className="text-[11.5px]">
               {commentCount > 0 ? `${toPersianNumber(commentCount)} نظر` : "نظر"}
             </span>
