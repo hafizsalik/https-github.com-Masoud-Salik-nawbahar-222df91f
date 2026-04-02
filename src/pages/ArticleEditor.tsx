@@ -74,6 +74,11 @@ const ArticleEditor = () => {
   const { loading: authLoading, isAuthenticated } = useProtectedRoute();
   const { user } = useAuth();
   
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [showExtras, setShowExtras] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textFileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
