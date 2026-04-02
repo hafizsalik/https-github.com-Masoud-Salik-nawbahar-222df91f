@@ -1,61 +1,97 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
-  ArrowRight,
   CheckCircle2,
   Download,
   Loader2,
   RefreshCw,
 } from "lucide-react";
-const motion = { div: 'div' as any, li: 'li' as any };
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+type UpdateState = "idle" | "checking" | "up-to-date" | "update" | "error";
+
+let deferredPrompt: any = null;
 
 export default function Install() {
   const navigate = useNavigate();
 
   const [isPWA, setIsPWA] = useState(false);
   const [ready, setReady] = useState(false);
-  const [updateState, setUpdateState] = useState<
-    "idle" | "checking" | "up-to-date" | "update"
-  >("idle");
+  const [canInstall, setCanInstall] = useState(false);
+  const [updateState, setUpdateState] = useState<UpdateState>("idle");
 
-  // ⚡ Fast background detection
+  // 🔍 Detect install state
   useEffect(() => {
-    const detect = () => {
-      const installed =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as any).standalone === true;
+    const installed =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
 
-      if (installed) setIsPWA(true);
-      setReady(true);
-    };
+    setIsPWA(installed);
+    setReady(true);
 
-    detect();
+    // listen install event
+    window.addEventListener("appinstalled", () => {
+      setIsPWA(true);
+    });
+
+    // capture install prompt
+    window.addEventListener("beforeinstallprompt", (e: any) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      setCanInstall(true);
+    });
   }, []);
 
-  // ⚡ Safe update check (no infinite loading)
+  // 🔄 Check for updates (real SW)
   const checkUpdates = async () => {
     setUpdateState("checking");
 
-    const timeout = setTimeout(() => {
-      setUpdateState("up-to-date");
-    }, 3000);
-
     try {
-      // simulate service worker check
-      await new Promise((r) => setTimeout(r, 1200));
-      clearTimeout(timeout);
-      setUpdateState("up-to-date");
+      const reg = await navigator.serviceWorker.getRegistration();
+
+      if (!reg) {
+        setUpdateState("error");
+        return;
+      }
+
+      await reg.update();
+
+      if (reg.waiting) {
+        setUpdateState("update");
+      } else {
+        setUpdateState("up-to-date");
+      }
     } catch {
-      setUpdateState("up-to-date");
+      setUpdateState("error");
     }
   };
 
-  // ⚡ Install trigger
+  // 🚀 Install app
   const handleInstall = async () => {
-    // You should connect this to beforeinstallprompt
-    alert("Install prompt triggered");
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+
+    if (choice.outcome === "accepted") {
+      setIsPWA(true);
+    }
+
+    deferredPrompt = null;
+    setCanInstall(false);
+  };
+
+  // 🔄 Apply update
+  const applyUpdate = async () => {
+    const reg = await navigator.serviceWorker.getRegistration();
+
+    if (reg?.waiting) {
+      reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      window.location.reload();
+    }
   };
 
   if (!ready) {
@@ -69,7 +105,6 @@ export default function Install() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <motion.div
-        key={isPWA ? "installed" : "install"}
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md"
@@ -85,24 +120,40 @@ export default function Install() {
             </div>
 
             <CardTitle>
-              {isPWA ? "با موفقیت نصب شد ✅" : "نصب برنامه"}
+              {isPWA ? "Installed Successfully ✅" : "Install App"}
             </CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-4">
             {isPWA ? (
               <>
-                {/* Update section */}
+                {/* UPDATE BOX */}
                 <div className="rounded-xl bg-muted p-4 space-y-2">
                   {updateState === "checking" && (
                     <div className="flex justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Checking...
+                      Checking updates...
                     </div>
                   )}
 
                   {updateState === "up-to-date" && (
                     <p className="text-green-600">Up to date</p>
+                  )}
+
+                  {updateState === "update" && (
+                    <>
+                      <p className="text-yellow-600">
+                        New update available 🚀
+                      </p>
+                      <Button onClick={applyUpdate} className="w-full">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Update Now
+                      </Button>
+                    </>
+                  )}
+
+                  {updateState === "error" && (
+                    <p className="text-red-500">Update check failed</p>
                   )}
 
                   <Button
@@ -111,7 +162,7 @@ export default function Install() {
                     className="w-full"
                   >
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Check updates
+                    Check Updates
                   </Button>
                 </div>
 
@@ -121,17 +172,23 @@ export default function Install() {
               </>
             ) : (
               <>
-                <Button onClick={handleInstall} className="w-full">
-                  <Download className="mr-2 h-4 w-4" />
-                  Install Now
-                </Button>
+                {canInstall ? (
+                  <Button onClick={handleInstall} className="w-full">
+                    <Download className="mr-2 h-4 w-4" />
+                    Install Now
+                  </Button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Install not supported on this device
+                  </p>
+                )}
 
                 <Button
                   variant="ghost"
                   onClick={() => navigate("/")}
                   className="w-full"
                 >
-                  ادامه بدون نصب برنامه
+                  Continue without install
                 </Button>
               </>
             )}
