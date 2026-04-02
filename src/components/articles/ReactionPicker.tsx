@@ -14,10 +14,21 @@ interface ReactionPickerProps {
 
 export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summaryText, onSummaryClick }: ReactionPickerProps) {
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [justReacted, setJustReacted] = useState(false);
   const prevReaction = useRef(userReaction);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Smooth close helper
+  const smoothClose = useCallback(() => {
+    if (!open) return;
+    setClosing(true);
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 180);
+  }, [open]);
 
   useEffect(() => {
     if (prevReaction.current !== userReaction && prevReaction.current !== undefined) {
@@ -30,26 +41,30 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
     prevReaction.current = userReaction;
   }, [userReaction]);
 
+  // Close on scroll
   useEffect(() => {
     if (!open) return;
-    const close = (e: Event) => {
-      if (containerRef.current?.contains(e.target as Node)) return;
-      setOpen(false);
-    };
+    const close = () => smoothClose();
     window.addEventListener("scroll", close, { passive: true, capture: true });
     return () => window.removeEventListener("scroll", close, true);
-  }, [open]);
+  }, [open, smoothClose]);
 
+  // Click-outside: works for both mouse and touch
   useEffect(() => {
     if (!open) return;
-    const handler = (e: Event) => {
+    const handler = (e: PointerEvent | MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
+        smoothClose();
       }
     };
-    document.addEventListener("pointerdown", handler);
-    return () => document.removeEventListener("pointerdown", handler);
-  }, [open]);
+    // Use pointerdown for unified mouse+touch
+    document.addEventListener("pointerdown", handler, true);
+    document.addEventListener("touchstart", handler, { passive: true, capture: true });
+    return () => {
+      document.removeEventListener("pointerdown", handler, true);
+      document.removeEventListener("touchstart", handler, true as any);
+    };
+  }, [open, smoothClose]);
 
   // Tap = quick like, long press = open picker
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -59,6 +74,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
     longPressTimer.current = setTimeout(() => {
       longPressTimer.current = null;
       setOpen(true);
+      setClosing(false);
     }, 400);
   }, [onHover]);
 
@@ -68,15 +84,14 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
-      // Quick tap = toggle like
       if (userReaction === "like") {
-        onReact("like"); // removes it
+        onReact("like");
       } else if (!userReaction) {
         setJustReacted(true);
         onReact("like");
       } else {
-        // Already has a different reaction, open picker
         setOpen(true);
+        setClosing(false);
       }
     }
   }, [userReaction, onReact]);
@@ -88,14 +103,18 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
     }
   }, []);
 
-  // Desktop: click opens picker
+  // Desktop click
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Only use on non-touch devices
     if (window.matchMedia("(hover: hover)").matches) {
       onHover?.();
-      setOpen(prev => !prev);
+      if (open) {
+        smoothClose();
+      } else {
+        setOpen(true);
+        setClosing(false);
+      }
     }
   };
 
@@ -104,10 +123,9 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
     e.stopPropagation();
     setJustReacted(true);
     onReact(type);
-    setOpen(false);
+    smoothClose();
   };
 
-  const isReacted = Boolean(userReaction);
   const activeColor = userReaction ? REACTION_COLORS[userReaction]?.text : undefined;
 
   const renderInlineIcon = () => {
@@ -140,9 +158,13 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
       onSummaryClick(e);
     } else {
       onHover?.();
-      setOpen((prev) => !prev);
+      if (open) smoothClose();
+      else { setOpen(true); setClosing(false); }
     }
   };
+
+  const isVisible = open && !closing;
+  const animClass = closing ? "animate-picker-out" : "animate-picker-in";
 
   return (
     <div ref={containerRef} className="relative flex items-center gap-1 sm:gap-1.5">
@@ -167,7 +189,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
       </button>
 
       {/* Reaction picker panel */}
-      {open && (
+      {(open || closing) && (
         <div
           className={cn(
             "fixed inset-x-0 bottom-0 z-50",
@@ -175,7 +197,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
             "flex items-center justify-center",
             "sm:rounded-full rounded-t-2xl",
             "px-3 sm:px-2 py-3 sm:py-1.5",
-            "animate-scale-in"
+            animClass
           )}
           style={{
             background: "hsl(var(--card))",
@@ -198,7 +220,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
                     isActive && "scale-[1.05] shadow-md"
                   )}
                   style={{
-                    animation: `reaction-entry-enhanced 0.25s ease-out ${i * 35}ms both`,
+                    animation: closing ? 'none' : `reaction-entry-enhanced 0.25s ease-out ${i * 35}ms both`,
                     ...(isActive ? { backgroundColor: color.bg } : {}),
                   }}
                 >
@@ -227,45 +249,16 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
       )}
 
       {/* Backdrop for mobile */}
-      {open && (
+      {(open || closing) && (
         <div
-          className="fixed inset-0 z-40 bg-background/15 sm:hidden"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); }}
+          className={cn(
+            "fixed inset-0 z-40 sm:hidden",
+            closing ? "animate-fade-out" : "animate-fade-in",
+            "bg-background/15"
+          )}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); smoothClose(); }}
         />
       )}
-
-      <style>{`
-        @keyframes reaction-pop {
-          0% { transform: scale(0.4); opacity: 0; }
-          50% { transform: scale(1.3); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes reaction-entry {
-          0% { transform: scale(0) translateY(8px); opacity: 0; }
-          100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        /* Enhanced hover effects */
-        .reaction-picker-item {
-          position: relative;
-          overflow: hidden;
-        }
-        .reaction-picker-item::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 0;
-          height: 0;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.1);
-          transform: translate(-50%, -50%);
-          transition: width 0.3s, height 0.3s;
-        }
-        .reaction-picker-item:hover::before {
-          width: 100%;
-          height: 100%;
-        }
-      `}</style>
     </div>
   );
 }

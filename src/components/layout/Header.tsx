@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { LogoutConfirmDialog } from "@/components/EnhancedButtons";
 import { Input } from "@/components/ui/input";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
@@ -20,6 +20,7 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuClosing, setMenuClosing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -43,16 +44,31 @@ export function Header() {
     }
   }, [isDark]);
 
+  // Smooth close for hamburger menu
+  const smoothCloseMenu = useCallback(() => {
+    if (!menuOpen) return;
+    setMenuClosing(true);
+    setTimeout(() => {
+      setMenuOpen(false);
+      setMenuClosing(false);
+    }, 180);
+  }, [menuOpen]);
+
+  // Click-outside for hamburger menu — mouse + touch
   useEffect(() => {
     if (!menuOpen) return;
-    const handler = (e: MouseEvent) => {
+    const handler = (e: Event) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
+        smoothCloseMenu();
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [menuOpen]);
+    document.addEventListener('pointerdown', handler, true);
+    document.addEventListener('touchstart', handler, { passive: true, capture: true });
+    return () => {
+      document.removeEventListener('pointerdown', handler, true);
+      document.removeEventListener('touchstart', handler, true as any);
+    };
+  }, [menuOpen, smoothCloseMenu]);
 
   useEffect(() => {
     if (location.pathname !== "/explore") return;
@@ -72,7 +88,7 @@ export function Header() {
   }, [user]);
 
   const handleShareApp = async () => {
-    setMenuOpen(false);
+    smoothCloseMenu();
     const shareUrl = `${window.location.origin}`;
     const title = "نوبهار - جامعه نخبگان";
     const text = "نوبهار اپلیکیشن انتشار مقالات علمی و تحلیلی است. همین حالا نصب کنید!";
@@ -108,6 +124,9 @@ export function Header() {
     navigate(q ? `/explore?q=${encodeURIComponent(q)}` : "/explore");
   };
 
+  const menuVisible = menuOpen && !menuClosing;
+  const menuAnimClass = menuClosing ? "animate-menu-out" : "animate-scale-in";
+
   return (
     <>
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
@@ -115,16 +134,19 @@ export function Header() {
           {/* Left: Hamburger menu */}
           <div className="relative" ref={menuRef}>
             <button
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => {
+                if (menuOpen) smoothCloseMenu();
+                else { setMenuOpen(true); setMenuClosing(false); }
+              }}
               className="flex items-center justify-center w-9 h-9 transition-colors"
               aria-label="منو"
             >
-              <NawbaharIcon src={menuBurgerIcon} size={18} className="opacity-40 dark:invert" />
+              <NawbaharIcon src={menuBurgerIcon} size={18} className="opacity-55 dark:invert" />
             </button>
 
-            {menuOpen && (
+            {(menuOpen || menuClosing) && (
               <div
-                className="absolute left-0 top-full mt-1 w-48 bg-card/95 backdrop-blur-md border border-border/40 rounded-xl shadow-lg animate-scale-in origin-top-left z-50 overflow-hidden"
+                className={`absolute left-0 top-full mt-1 w-48 bg-card/95 backdrop-blur-md border border-border/40 rounded-xl shadow-lg ${menuAnimClass} origin-top-left z-50 overflow-hidden`}
                 style={{ opacity: 0.96 }}
               >
                 <div className="px-3 py-2.5 border-b border-border/30 flex items-center justify-between">
@@ -138,20 +160,20 @@ export function Header() {
                 </div>
 
                 {isAdmin && (
-                  <button onClick={() => { setMenuOpen(false); navigate("/admin"); }}
+                  <button onClick={() => { smoothCloseMenu(); navigate("/admin"); }}
                     className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/20">
                     <Shield size={13} strokeWidth={1.5} className="text-muted-foreground" />
                     پنل مدیریت
                   </button>
                 )}
 
-                <button onClick={() => { setMenuOpen(false); navigate("/about"); }}
+                <button onClick={() => { smoothCloseMenu(); navigate("/about"); }}
                   className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/20">
                   <Info size={13} strokeWidth={1.5} className="text-muted-foreground" />
                   درباره نوبهار
                 </button>
 
-                <button onClick={() => { setMenuOpen(false); navigate("/install"); }}
+                <button onClick={() => { smoothCloseMenu(); navigate("/install"); }}
                   className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/20">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -167,7 +189,7 @@ export function Header() {
                   اشتراک‌گذاری اپ
                 </button>
 
-                <button onClick={() => { setMenuOpen(false); navigate("/contact"); }}
+                <button onClick={() => { smoothCloseMenu(); navigate("/contact"); }}
                   className="w-full px-3 py-2 flex items-center gap-2 text-[11.5px] text-foreground hover:bg-muted/40 transition-colors border-b border-border/20">
                   <MessageSquare size={13} strokeWidth={1.5} className="text-muted-foreground" />
                   ارتباط با ما
