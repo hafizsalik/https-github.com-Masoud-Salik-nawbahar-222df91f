@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { REACTION_KEYS, REACTION_LABELS, REACTION_COLORS, type ReactionKey } from "@/hooks/useCardReactions";
 import { REACTION_SVG_ICONS } from "./ReactionIcons";
+const REACTION_EMOJIS: Record<ReactionKey, string> = {
+  like: "👍",
+  love: "❤️",
+  sad: "😢",
+  fire: "🔥",
+  star: "⭐",
+};
 import { cn } from "@/lib/utils";
 
 interface ReactionPickerProps {
@@ -125,28 +132,34 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
     onReact(type);
     smoothClose();
   };
+  const activeColor = userReaction
+    ? REACTION_COLORS[userReaction]?.text
+    : undefined;
 
-  const activeColor = userReaction ? REACTION_COLORS[userReaction]?.text : undefined;
+  const REACTION_EMOJIS: Record<ReactionKey, string> = {
+    like: "👍",
+    love: "❤️",
+    star: "⭐",
+    educative: "🎓",
+    sad: "😢",
+  };
 
   const renderInlineIcon = () => {
-    const IconComponent = (userReaction && REACTION_SVG_ICONS[userReaction]) ? REACTION_SVG_ICONS[userReaction] : REACTION_SVG_ICONS.like;
-    const style = justReacted ? { animation: "reaction-pop-enhanced 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both" } : {};
-    
-    if (!IconComponent) {
-      return <span className="w-4 h-4 text-muted-foreground/50 reaction-icon">👍</span>;
-    }
+    const emoji = userReaction ? REACTION_EMOJIS[userReaction] : "👍";
+
+    const style = justReacted
+      ? {
+        animation:
+          "reaction-pop-enhanced 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+      }
+      : {};
 
     return (
-      <span style={style} className="flex items-center reaction-icon">
-        <IconComponent 
-          size={16} 
-          strokeWidth={userReaction ? 2.2 : 1.8}
-          animated={justReacted}
-          className={cn(
-            "reaction-instant",
-            userReaction ? "" : "text-muted-foreground/50"
-          )}
-        />
+      <span
+        style={style}
+        className="flex items-center text-[16px] reaction-icon select-none"
+      >
+        {emoji}
       </span>
     );
   };
@@ -183,7 +196,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
       {/* Summary text */}
       <button
         onClick={handleSummaryClick}
-        className="text-[10.5px] sm:text-[11px] truncate max-w-[120px] sm:max-w-[150px] text-muted-foreground/60 hover:text-foreground reaction-instant hover:scale-105 active:scale-95"
+        className="text-[11px] font-medium truncate max-w-[140px] sm:max-w-[160px] text-muted-foreground hover:text-foreground transition-all active:scale-95"
       >
         {summaryText || "واکنش"}
       </button>
@@ -224,7 +237,7 @@ export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summa
                     ...(isActive ? { backgroundColor: color.bg } : {}),
                   }}
                 >
-                  <IconComponent 
+                  <IconComponent
                     size={22}
                     strokeWidth={isActive ? 2.2 : 1.8}
                     animated={isActive}
