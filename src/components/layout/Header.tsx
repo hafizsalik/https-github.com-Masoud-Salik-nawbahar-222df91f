@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { LogoutConfirmDialog } from "@/components/EnhancedButtons";
 import { Input } from "@/components/ui/input";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 import menuBurgerIcon from "@/assets/icons/menu-burger.svg";
