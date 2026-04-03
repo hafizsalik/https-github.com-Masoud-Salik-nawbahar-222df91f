@@ -19,7 +19,7 @@ interface ArticleCardProps {
   onDelete?: () => void;
 }
 
-function getExcerpt(content: string, maxChars: number = 130): string {
+function getExcerpt(content: string, maxChars: number = 140): string {
   if (content.length <= maxChars) return content;
   return content.slice(0, maxChars).trim() + "…";
 }
@@ -45,7 +45,6 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
 
   const { summary: reactionSummary, toggleReaction, ensureFetched } = useCardReactions(article.id, false);
 
-  const viewCount = article.view_count || 0;
   const coverImage = article.cover_image_url || defaultCover;
   const hasBeenRead = useMemo(() => isArticleRead(article.id), [article.id]);
 
@@ -68,11 +67,12 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
   };
 
   return (
-    <article className="group transition-colors hover:bg-muted/10" aria-label={article.title}>
+    <article className="group" aria-label={article.title}>
+      {/* Response indicator */}
       {article.parent_title && article.parent_article_id && (
         <Link
           to={`/article/${article.parent_article_id}`}
-          className="flex items-center gap-1.5 px-4 pt-2.5 text-[11px] text-muted-foreground/50 hover:text-primary transition-colors"
+          className="flex items-center gap-1.5 px-4 pt-3 text-[11px] text-muted-foreground/60 hover:text-primary transition-colors"
         >
           <CornerUpRight size={10} strokeWidth={1.5} className="text-primary/40" />
           <span>
@@ -82,29 +82,31 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         </Link>
       )}
 
-      <Link to={`/article/${article.id}`} className="block px-4 pt-4 pb-0.5">
+      <Link to={`/article/${article.id}`} className="block px-4 pt-4 pb-1">
         {/* Author row */}
-        <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0" style={{ direction: "rtl" }}>
-            <button onClick={handleAuthorClick} className="flex items-center gap-1.5 min-w-0" aria-label={`View ${article.author?.display_name}'s profile`}>
+            <button onClick={handleAuthorClick} className="flex items-center gap-2 min-w-0" aria-label={`View ${article.author?.display_name}'s profile`}>
               {article.author?.avatar_url ? (
                 <img
                   src={article.author.avatar_url}
                   alt={article.author?.display_name}
-                  className="w-[22px] h-[22px] rounded-full object-cover flex-shrink-0"
+                  className="w-6 h-6 rounded-full object-cover flex-shrink-0"
                   loading="lazy"
                 />
               ) : (
-                <NawbaharIcon src={userIcon} size={16} className="opacity-35 flex-shrink-0 dark:invert" />
+                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  <NawbaharIcon src={userIcon} size={14} className="opacity-40 dark:invert" />
+                </div>
               )}
-              <span className="text-[13px] font-medium truncate max-w-[110px]" style={{ color: "#888888" }}>
+              <span className="text-[14px] font-medium truncate max-w-[120px] text-foreground">
                 {article.author?.display_name}
               </span>
             </button>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <span className="text-[12px]" style={{ color: "#aaaaaa" }}>
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] text-muted-foreground">
               {formatSolarShort(article.created_at)}
             </span>
             <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="flex-shrink-0">
@@ -113,32 +115,34 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
           </div>
         </div>
 
-        {/* Content row: text + image */}
+        {/* Title — full width */}
+        <h3
+          className={cn(
+            "text-[17px] font-bold leading-[1.7] line-clamp-2 mb-1.5 transition-colors",
+            hasBeenRead ? "text-muted-foreground/60" : "text-foreground"
+          )}
+        >
+          {article.title}
+        </h3>
+
+        {/* Content row: excerpt + image */}
         <div className="flex gap-3" style={{ direction: "rtl" }}>
           <div className="flex-1 min-w-0">
-            <h3
-              className={cn(
-                "text-[16px] font-bold leading-[1.8] line-clamp-2 transition-colors",
-                hasBeenRead ? "text-muted-foreground/60" : "text-foreground"
-              )}
-            >
-              {article.title}
-            </h3>
-            <p className="text-[13px] leading-[1.9] line-clamp-3 mt-0.5" style={{ color: "#555555" }}>
-              {getExcerpt(article.content, 160)}
+            <p className="text-[14px] leading-[1.7] line-clamp-3 text-muted-foreground">
+              {getExcerpt(article.content, 140)}
             </p>
           </div>
           <div
             className={cn(
-              "w-[100px] h-[100px] flex-shrink-0 rounded-lg overflow-hidden relative bg-muted/20 self-start transition-all duration-300",
-              hasBeenRead && "opacity-50 saturate-[0.3]"
+              "w-[88px] h-[88px] flex-shrink-0 rounded-lg overflow-hidden relative bg-muted self-start transition-opacity",
+              hasBeenRead && "opacity-50"
             )}
           >
             {!imageLoaded && <div className="absolute inset-0 skeleton" />}
             <img
               src={coverImage}
               alt=""
-              className={cn("w-full h-full object-cover transition-opacity duration-500", imageLoaded ? "opacity-100" : "opacity-0")}
+              className={cn("w-full h-full object-cover transition-opacity duration-300", imageLoaded ? "opacity-100" : "opacity-0")}
               loading="lazy"
               decoding="async"
               onLoad={() => setImageLoaded(true)}
@@ -146,12 +150,11 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
           </div>
         </div>
 
+        {/* Metrics */}
         <ArticleCardMetrics
           articleId={article.id}
-          viewCount={viewCount}
           commentCount={article.comment_count}
           reactionCount={article.reaction_count}
-          responseCount={0}
           isRead={hasBeenRead}
           commentsOpen={showComments}
           onCommentClick={handleCommentClick}
@@ -180,7 +183,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
       )}
 
       {/* Divider */}
-      <div className="mx-4 border-b border-border/15" />
+      <div className="mx-4 border-b border-border/40" />
     </article>
   );
 }
