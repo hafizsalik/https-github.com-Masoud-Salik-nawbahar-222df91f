@@ -5,6 +5,7 @@ import { ReactionDetailsModal } from "./ReactionDetailsModal";
 import { ReactionPicker } from "./ReactionPicker";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 import commentIcon from "@/assets/icons/comment.svg";
+import bookmarkIcon from "@/assets/icons/bookmark.svg";
 
 interface ArticleReactionsProps {
   articleId: string;
@@ -42,20 +43,9 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
 
   return (
     <>
-      <div className="flex items-center justify-between py-4 my-6 border-t border-b border-border/30">
-        <div className="flex items-center gap-4">
-          {/* Comment */}
-          <button
-            onClick={onCommentClick}
-            className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <NawbaharIcon src={commentIcon} size={15} className="opacity-25 dark:invert" />
-            <span className="text-[11.5px]">
-              {commentCount > 0 ? `${toPersianNumber(commentCount)} نظر` : "نظر"}
-            </span>
-          </button>
-
-          {/* Reaction picker — same as card */}
+      <div className="flex items-center justify-between py-4 my-6 border-t border-b border-border/40">
+        <div className="flex items-center gap-5">
+          {/* Reaction picker — full interaction in article page */}
           <ReactionPicker
             userReaction={userReaction}
             onReact={onReact}
@@ -63,6 +53,17 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
             summaryText={label || undefined}
             onSummaryClick={hasReactions ? handleSummaryClick : undefined}
           />
+
+          {/* Comment */}
+          <button
+            onClick={onCommentClick}
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <NawbaharIcon src={commentIcon} size={16} className="opacity-30 dark:invert" />
+            <span className="text-[12px]">
+              {commentCount > 0 ? `${toPersianNumber(commentCount)} نظر` : "نظر"}
+            </span>
+          </button>
         </div>
       </div>
 

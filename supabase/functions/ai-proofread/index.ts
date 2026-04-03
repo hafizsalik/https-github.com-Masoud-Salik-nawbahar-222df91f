@@ -6,12 +6,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory rate limiter
+const rateMap = new Map<string, number[]>();
+
 serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { headers: corsHeaders });
 
   try {
-    // ---------- AUTH ----------
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return json({ issues: [], error: "unauthorized" }, 401);
@@ -28,15 +30,14 @@ serve(async (req) => {
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data, error } = await supabase.auth.getClaims(token);
+    const { data, error } = await supabase.auth.getUser(token);
 
-    if (error || !data?.claims) {
+    if (error || !data?.user) {
       return json({ issues: [], error: "invalid_token" }, 401);
     }
 
-    const userId = data.claims.sub;
+    const userId = data.user.id;
 
-    // ---------- INPUT ----------
     const { text } = await req.json();
 
     if (!text || text.trim().length < 10) {
@@ -45,19 +46,15 @@ serve(async (req) => {
 
     const cleanText = text.slice(0, 3000);
 
-    // ---------- RATE LIMIT (simple in-memory) ----------
+    // Rate limit
     const now = Date.now();
-    globalThis.__rate = globalThis.__rate || {};
-    const userRate = globalThis.__rate[userId] || [];
-
+    const userRate = rateMap.get(userId) || [];
     const recent = userRate.filter((t: number) => now - t < 60000);
     if (recent.length > 20) {
       return json({ issues: [], error: "rate_limited" }, 429);
     }
+    rateMap.set(userId, [...recent, now]);
 
-    globalThis.__rate[userId] = [...recent, now];
-
-    // ---------- AI ----------
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("Missing API key");
 
@@ -115,12 +112,19 @@ ${cleanText}
 
     const dataAI = await response.json();
 
-    // ---------- PARSE ----------
-    let result = { issues: [] };
+    interface ProofreadIssue {
+      word: string;
+      suggestion: string;
+      type: string;
+      reason: string;
+      index: number;
+      severity: string;
+    }
+
+    let result: { issues: ProofreadIssue[] } = { issues: [] };
 
     try {
       const content = dataAI.choices?.[0]?.message?.content;
-
       if (content) {
         result = JSON.parse(content);
       }
@@ -128,12 +132,11 @@ ${cleanText}
       console.warn("Fallback parsing failed");
     }
 
-    // ---------- VALIDATE ----------
     if (!Array.isArray(result.issues)) {
       result = { issues: [] };
     }
 
-    result.issues = result.issues.slice(0, 15).map((i: any) => ({
+    result.issues = result.issues.slice(0, 15).map((i: ProofreadIssue) => ({
       word: i.word || "",
       suggestion: i.suggestion || "",
       type: i.type || "style",
@@ -149,8 +152,7 @@ ${cleanText}
   }
 });
 
-// ---------- HELPER ----------
-function json(data: any, status = 200) {
+function json(data: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
