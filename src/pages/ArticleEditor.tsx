@@ -551,7 +551,7 @@ const ArticleEditor = () => {
       </header>
 
       {/* Editor */}
-      <main className="max-w-screen-md mx-auto px-4 pt-3 pb-28">
+      <main className="max-w-screen-md mx-auto px-5 pt-3 pb-28">
         {/* Response indicator */}
         {parentArticle && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground p-2.5 mb-3 bg-primary/5 rounded-lg border border-primary/10">

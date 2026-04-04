@@ -12,13 +12,13 @@ import { sanitizeError, validation } from "@/lib/errorHandler";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/hooks/useAuth";
 import InteractiveOnboardingModal from "@/components/InteractiveOnboardingModal";
-import nawbaharLogo from "@/assets/nawbahar-logo.png";
+import logoImg from "@/assets/logo.png";
 
-type AuthView = "welcome" | "login" | "register" | "forgot";
+type AuthView = "login" | "register" | "forgot";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const initialView = (searchParams.get("view") as AuthView) || "welcome";
+  const initialView = (searchParams.get("view") as AuthView) || "login";
   const [view, setView] = useState<AuthView>(initialView);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -155,62 +155,6 @@ const Auth = () => {
     navigate("/");
   };
 
-  // ─── WELCOME VIEW ───
-  if (view === "welcome") {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <SEOHead title="خوش آمدید به نوبهار" description="نوبهار فضایی برای نوشتن، اندیشیدن و گفت‌وگو" ogUrl="/auth" noIndex />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-sm animate-fade-in text-center">
-            {/* Logo */}
-            <div className="flex justify-center mb-6">
-              <img src={nawbaharLogo} alt="نوبهار" className="w-20 h-20" />
-            </div>
-
-            <h1 className="text-[28px] font-extrabold text-foreground leading-tight mb-2">
-              نوبهار
-            </h1>
-            <p className="text-[14px] text-primary font-medium mb-4 leading-relaxed" style={{ fontStyle: "italic" }}>
-              نوبهار است در آن کوش که خوشدل باشی
-            </p>
-            <p className="text-[13px] text-muted-foreground/70 leading-[2] mb-10 max-w-[280px] mx-auto">
-              نوبهار فضایی برای نوشتن، اندیشیدن و گفت‌وگو است؛
-              جایی برای آنان که می‌خواهند بنویسند، بخوانند و در فضای فکری سالم مشارکت کنند.
-            </p>
-
-            <div className="space-y-3 mb-6">
-              <Button
-                onClick={() => setView("login")}
-                className="w-full h-12 text-[14px] font-semibold rounded-xl"
-              >
-                ورود به حساب
-              </Button>
-              <Button
-                onClick={() => setView("register")}
-                variant="outline"
-                className="w-full h-12 text-[14px] font-semibold rounded-xl"
-              >
-                ایجاد حساب کاربری
-              </Button>
-            </div>
-
-            {/* Guest */}
-            <button
-              onClick={handleGuestBrowse}
-              className="text-[12px] text-muted-foreground/50 hover:text-foreground transition-colors"
-            >
-              استفاده بدون ثبت نام →
-            </button>
-
-            <p className="mt-8 text-[10px] text-muted-foreground/30 leading-relaxed">
-              با ورود یا ایجاد حساب، شما با قوانین و مقررات نوبهار موافقت می‌کنید.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ─── LOGIN VIEW ───
   if (view === "login") {
     return (
@@ -219,16 +163,10 @@ const Auth = () => {
         <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
         <div className="flex-1 flex items-center justify-center p-5">
           <div className="w-full max-w-sm animate-fade-in">
-            <button
-              onClick={() => setView("welcome")}
-              className="flex items-center gap-1.5 text-muted-foreground/45 hover:text-foreground mb-10 transition-colors"
-            >
-              <ArrowRight size={18} strokeWidth={1.5} />
-              <span className="text-[13px]">بازگشت</span>
-            </button>
+            {/* No back button - this is the main auth page */}
 
             <div className="flex items-center gap-3 mb-8">
-              <img src={nawbaharLogo} alt="" className="w-10 h-10" />
+              <img src={logoImg} alt="" className="w-10 h-10 rounded-xl" />
               <div>
                 <h1 className="text-[22px] font-extrabold text-foreground">ورود به نوبهار</h1>
                 <p className="text-[12px] text-muted-foreground/50 mt-0.5">به جامعه نوبهار خوش آمدید</p>
@@ -335,7 +273,7 @@ const Auth = () => {
             </button>
 
             <div className="flex items-center gap-3 mb-8">
-              <img src={nawbaharLogo} alt="" className="w-10 h-10" />
+              <img src={logoImg} alt="" className="w-10 h-10 rounded-xl" />
               <div>
                 <h1 className="text-[22px] font-extrabold text-foreground">بازیابی رمز عبور</h1>
                 <p className="text-[12px] text-muted-foreground/50 mt-0.5">لینک بازنشانی به ایمیل شما ارسال می‌شود</p>
@@ -388,16 +326,16 @@ const Auth = () => {
       <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
       <div className="flex-1 flex items-center justify-center p-5">
         <div className="w-full max-w-sm animate-fade-in">
-          <button
-            onClick={() => setView("welcome")}
-            className="flex items-center gap-1.5 text-muted-foreground/45 hover:text-foreground mb-8 transition-colors"
-          >
-            <ArrowRight size={18} strokeWidth={1.5} />
-            <span className="text-[13px]">بازگشت</span>
-          </button>
+           <button
+             onClick={() => setView("login")}
+             className="flex items-center gap-1.5 text-muted-foreground/45 hover:text-foreground mb-8 transition-colors"
+           >
+             <ArrowRight size={18} strokeWidth={1.5} />
+             <span className="text-[13px]">بازگشت</span>
+           </button>
 
           <div className="flex items-center gap-3 mb-8">
-            <img src={nawbaharLogo} alt="" className="w-10 h-10" />
+            <img src={logoImg} alt="" className="w-10 h-10 rounded-xl" />
             <div>
               <h1 className="text-[22px] font-extrabold text-foreground">عضویت در نوبهار</h1>
               <p className="text-[12px] text-muted-foreground/50 mt-0.5">حساب جدید بسازید و بپیوندید</p>

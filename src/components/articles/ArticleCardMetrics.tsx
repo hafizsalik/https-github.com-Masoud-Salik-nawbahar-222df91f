@@ -1,7 +1,6 @@
 import { CheckCheck } from "lucide-react";
 import { cn, toPersianNumber } from "@/lib/utils";
 import { ReactionPicker } from "./ReactionPicker";
-import { ReactionDetailsModal } from "./ReactionDetailsModal";
 import { type ReactionKey, type ReactionSummary } from "@/hooks/useCardReactions";
 import { useState } from "react";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
@@ -34,94 +33,66 @@ export function ArticleCardMetrics({
   onReact,
   onReactionHover,
 }: ArticleCardMetricsProps) {
-  const { totalCount, userReaction, topTypes, reactorNames } = reactionSummary;
-  const [showReactionDetails, setShowReactionDetails] = useState(false);
+  const { totalCount, userReaction, topTypes } = reactionSummary;
 
   const displayReactionCount = totalCount > 0 ? totalCount : reactionCount;
   const displayCommentCount = commentCount || 0;
 
-  const handleSummaryClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (displayReactionCount > 0) {
-      onReactionHover?.();
-      setShowReactionDetails(true);
-    }
-  };
-
-  const buildLabel = (): string | undefined => {
-    if (displayReactionCount <= 0) return undefined;
-    const names: string[] = [];
-    if (userReaction) names.push("شما");
-    reactorNames?.forEach((n) => { if (!names.includes(n)) names.push(n); });
-    if (names.length === 0) return `${toPersianNumber(displayReactionCount)}`;
-    const shown = names.slice(0, 2);
-    const remaining = Math.max(displayReactionCount - shown.length, 0);
-    let text = shown.join("، ");
-    if (remaining > 0) text += ` و ${toPersianNumber(remaining)} نفر`;
-    return text;
-  };
-
-  const iconBase = "opacity-30 dark:invert";
+  const iconBase = "opacity-25 dark:invert";
 
   return (
-    <>
-      <div className="mt-3 pb-2">
-        <div className="flex items-center justify-between" style={{ direction: "rtl" }}>
-          {/* Right side: reaction + comment + response */}
-          <div className="flex items-center gap-5">
-            {/* Reactions */}
-            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-              <ReactionPicker
-                userReaction={userReaction}
-                onReact={onReact}
-                onHover={onReactionHover}
-                topTypes={topTypes}
-                summaryText={buildLabel()}
-                onSummaryClick={displayReactionCount > 0 ? handleSummaryClick : undefined}
-              />
-            </div>
-
-            {/* Comments */}
-            <button
-              onClick={onCommentClick}
-              className="flex items-center gap-1.5 transition-colors"
-            >
-              <NawbaharIcon
-                src={commentIcon}
-                size={16}
-                className={cn(iconBase, commentsOpen && "opacity-60")}
-              />
-              {displayCommentCount > 0 && (
-                <span className="text-[12px] text-muted-foreground">
-                  {toPersianNumber(displayCommentCount)}
-                </span>
-              )}
-            </button>
-
-            {/* Response */}
-            <button
-              onClick={onResponseClick}
-              className="flex items-center gap-1.5 transition-colors"
-            >
-              <NawbaharIcon
-                src={responseIcon}
-                size={16}
-                className={iconBase}
-              />
-            </button>
+    <div className="mt-3 pb-2">
+      <div className="flex items-center justify-between" style={{ direction: "rtl" }}>
+        {/* Right side: reaction + comment + response */}
+        <div className="flex items-center gap-6">
+          {/* Reactions */}
+          <div className="flex items-center gap-1.5" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+            <ReactionPicker
+              userReaction={userReaction}
+              onReact={onReact}
+              onHover={onReactionHover}
+              topTypes={topTypes}
+            />
+            {displayReactionCount > 0 && (
+              <span className="text-[13px] text-muted-foreground">
+                {toPersianNumber(displayReactionCount)}
+              </span>
+            )}
           </div>
 
-          {/* Left side: read indicator */}
-          {isRead && <CheckCheck size={12} strokeWidth={2} className="text-primary/40" aria-label="خوانده شده" />}
-        </div>
-      </div>
+          {/* Comments */}
+          <button
+            onClick={onCommentClick}
+            className="flex items-center gap-1.5 transition-colors p-1"
+          >
+            <NawbaharIcon
+              src={commentIcon}
+              size={20}
+              className={cn(iconBase, commentsOpen && "opacity-60")}
+            />
+            {displayCommentCount > 0 && (
+              <span className="text-[13px] text-muted-foreground">
+                {toPersianNumber(displayCommentCount)}
+              </span>
+            )}
+          </button>
 
-      <ReactionDetailsModal
-        articleId={articleId}
-        isOpen={showReactionDetails}
-        onClose={() => setShowReactionDetails(false)}
-      />
-    </>
+          {/* Response */}
+          <button
+            onClick={onResponseClick}
+            className="flex items-center gap-1.5 transition-colors p-1"
+          >
+            <NawbaharIcon
+              src={responseIcon}
+              size={20}
+              className={iconBase}
+            />
+          </button>
+        </div>
+
+        {/* Left side: read indicator */}
+        {isRead && <CheckCheck size={14} strokeWidth={2} className="text-primary/40" aria-label="خوانده شده" />}
+      </div>
+    </div>
   );
 }

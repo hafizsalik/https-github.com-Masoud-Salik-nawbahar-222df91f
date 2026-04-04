@@ -1,11 +1,4 @@
-import { Bookmark, Share2, Flag, Pencil, Trash2, EyeOff } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Bookmark, Share2, Flag, Pencil, Trash2, EyeOff, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +16,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 import menuDotsIcon from "@/assets/icons/menu-dots-vertical.svg";
+import { cn } from "@/lib/utils";
 
 const REPORT_REASONS = [
   "محتوای نادرست یا گمراه‌کننده",
@@ -45,6 +39,7 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [reportStep, setReportStep] = useState<0 | 1 | 2>(0);
@@ -74,7 +69,34 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
     if (isOpen) checkBookmark();
   }, [isOpen, checkBookmark]);
 
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-bottom-sheet]')) return;
+      smoothClose();
+    };
+    document.addEventListener('pointerdown', handler, true);
+    return () => document.removeEventListener('pointerdown', handler, true);
+  }, [isOpen]);
+
   const isOwner = userId === authorId;
+
+  const smoothClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 200);
+  };
+
+  const openSheet = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(true);
+    setIsClosing(false);
+  };
 
   const handleSave = async () => {
     if (!userId) {
@@ -90,7 +112,7 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
       setIsBookmarked(true);
       toast({ title: "ذخیره شد" });
     }
-    setIsOpen(false);
+    smoothClose();
   };
 
   const handleShare = async () => {
@@ -101,11 +123,11 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
       await navigator.clipboard.writeText(url);
       toast({ title: "لینک کپی شد" });
     }
-    setIsOpen(false);
+    smoothClose();
   };
 
   const handleEdit = () => {
-    setIsOpen(false);
+    smoothClose();
     navigate(`/write?edit=${articleId}`);
   };
 
@@ -133,13 +155,13 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
       }
     } catch { /* ignore */ }
     toast({ title: "این نوع مقالات کمتر نمایش داده خواهد شد" });
-    setIsOpen(false);
+    smoothClose();
     onDelete?.();
   };
 
   const handleReportStart = () => {
-    setIsOpen(false);
-    setReportStep(1);
+    smoothClose();
+    setTimeout(() => setReportStep(1), 220);
   };
 
   const handleReportConfirm = () => {
@@ -175,59 +197,88 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
     setReportNote("");
   };
 
+  const menuItemClass = "flex items-center gap-4 w-full px-5 py-3.5 text-[14px] text-foreground active:bg-muted/60 transition-colors";
+
   return (
     <>
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
-        <DropdownMenuTrigger asChild>
-          <button
-            className="p-1 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
+      {/* Trigger button */}
+      <button
+        className="p-1 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+        onClick={openSheet}
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
+        <NawbaharIcon src={menuDotsIcon} size={14} className="opacity-30 dark:invert" />
+      </button>
+
+      {/* Bottom Sheet */}
+      {(isOpen || isClosing) && (
+        <div className="fixed inset-0 z-[100]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          {/* Backdrop */}
+          <div
+            className={cn(
+              "absolute inset-0 bg-black/30 transition-opacity duration-200",
+              isClosing ? "opacity-0" : "opacity-100"
+            )}
+            onClick={smoothClose}
+          />
+          {/* Sheet */}
+          <div
+            data-bottom-sheet
+            className={cn(
+              "absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl shadow-2xl max-w-lg mx-auto overflow-hidden",
+              isClosing ? "animate-bottom-sheet-out" : "animate-bottom-sheet-in"
+            )}
+            onClick={(e) => e.stopPropagation()}
           >
-            <NawbaharIcon src={menuDotsIcon} size={14} className="opacity-30 dark:invert" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={handleSave} className="gap-3 text-sm">
-            <Bookmark size={14} strokeWidth={1.5} />
-            <span>{isBookmarked ? "حذف از ذخیره‌ها" : "ذخیره"}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleShare} className="gap-3 text-sm">
-            <Share2 size={14} strokeWidth={1.5} />
-            <span>اشتراک‌گذاری</span>
-          </DropdownMenuItem>
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+            </div>
 
-          {isOwner && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleEdit} className="gap-3 text-sm">
-                <Pencil size={14} strokeWidth={1.5} />
-                <span>ویرایش</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { setIsOpen(false); setShowDeleteDialog(true); }} className="gap-3 text-sm text-destructive focus:text-destructive">
-                <Trash2 size={14} strokeWidth={1.5} />
-                <span>حذف</span>
-              </DropdownMenuItem>
-            </>
-          )}
+            <div className="pb-6 safe-bottom">
+              <button onClick={handleSave} className={menuItemClass}>
+                <Bookmark size={18} strokeWidth={1.5} className={isBookmarked ? "text-primary fill-primary" : "text-muted-foreground"} />
+                <span>{isBookmarked ? "حذف از ذخیره‌ها" : "ذخیره"}</span>
+              </button>
+              <button onClick={handleShare} className={menuItemClass}>
+                <Share2 size={18} strokeWidth={1.5} className="text-muted-foreground" />
+                <span>اشتراک‌گذاری</span>
+              </button>
 
-          {!isOwner && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleNotInterested} className="gap-3 text-sm">
-                <EyeOff size={14} strokeWidth={1.5} />
-                <span>علاقه‌مند نیستم</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleReportStart} className="gap-3 text-sm text-destructive focus:text-destructive">
-                <Flag size={14} strokeWidth={1.5} />
-                <span>گزارش</span>
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+              {isOwner && (
+                <>
+                  <div className="mx-5 border-b border-border/20 my-1" />
+                  <button onClick={handleEdit} className={menuItemClass}>
+                    <Pencil size={18} strokeWidth={1.5} className="text-muted-foreground" />
+                    <span>ویرایش</span>
+                  </button>
+                  <button onClick={() => { smoothClose(); setTimeout(() => setShowDeleteDialog(true), 220); }} className={cn(menuItemClass, "text-destructive")}>
+                    <Trash2 size={18} strokeWidth={1.5} />
+                    <span>حذف</span>
+                  </button>
+                </>
+              )}
 
+              {!isOwner && (
+                <>
+                  <div className="mx-5 border-b border-border/20 my-1" />
+                  <button onClick={handleNotInterested} className={menuItemClass}>
+                    <EyeOff size={18} strokeWidth={1.5} className="text-muted-foreground" />
+                    <span>علاقه‌مند نیستم</span>
+                  </button>
+                  <button onClick={handleReportStart} className={cn(menuItemClass, "text-destructive")}>
+                    <Flag size={18} strokeWidth={1.5} />
+                    <span>گزارش</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
@@ -249,6 +300,7 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Report Dialogs */}
       <AlertDialog open={reportStep === 1} onOpenChange={(open) => !open && closeReport()}>
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
@@ -259,9 +311,7 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel>انصراف</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReportConfirm}>
-              بله، ادامه
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleReportConfirm}>بله، ادامه</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

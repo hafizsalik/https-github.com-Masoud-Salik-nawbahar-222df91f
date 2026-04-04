@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import InteractiveOnboardingModal from "@/components/InteractiveOnboardingModal";
 import { SEOHead } from "@/components/SEOHead";
-import nawbaharLogo from "@/assets/nawbahar-logo.png";
+import nawbaharLogo from "@/assets/logo.png";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();

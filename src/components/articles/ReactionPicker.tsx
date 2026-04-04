@@ -21,9 +21,6 @@ export function ReactionPicker({
   userReaction,
   onReact,
   onHover,
-  topTypes,
-  summaryText,
-  onSummaryClick,
 }: ReactionPickerProps) {
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -78,40 +75,30 @@ export function ReactionPicker({
   const ActiveIcon = userReaction ? (REACTION_SVG_ICONS[userReaction] || DefaultIcon) : DefaultIcon;
 
   return (
-    <div ref={ref} className="relative flex items-center gap-1.5">
+    <div ref={ref} className="relative flex items-center">
       {/* Main reaction button */}
       <button
         onPointerDown={handlePress}
         onPointerUp={handleRelease}
-        className="reaction-instant flex items-center justify-center"
+        className="reaction-instant flex items-center justify-center p-1"
         style={activeColor ? { color: activeColor } : { color: "hsl(var(--muted-foreground))" }}
       >
         <span
           className="inline-flex"
           style={justReacted ? { animation: "reaction-pop 0.35s ease" } : undefined}
         >
-          <ActiveIcon size={18} animated={!!userReaction} />
+          <ActiveIcon size={20} animated={!!userReaction} />
         </span>
       </button>
 
-      {/* Summary text */}
-      {summaryText && (
-        <button
-          onClick={(e) => onSummaryClick ? onSummaryClick(e) : setOpen((p) => !p)}
-          className="text-[12px] truncate max-w-[120px]"
-          style={{ color: activeColor || "hsl(var(--muted-foreground))" }}
-        >
-          {summaryText}
-        </button>
-      )}
-
-      {/* Picker tray */}
+      {/* Picker tray - positioned above with enough space */}
       {(open || closing) && (
         <div
           className={cn(
-            "absolute bottom-full mb-2 left-1/2 -translate-x-1/2 flex bg-card border border-border/50 rounded-2xl px-1.5 py-1.5 shadow-lg z-50 gap-0.5",
+            "absolute bottom-full mb-3 left-0 flex bg-card border border-border/50 rounded-2xl px-2 py-2 shadow-xl z-[60] gap-1",
             closing ? "animate-menu-out" : "animate-scale-in"
           )}
+          style={{ minWidth: "260px" }}
         >
           {REACTION_KEYS.map((key) => {
             const isActive = userReaction === key;
@@ -122,13 +109,13 @@ export function ReactionPicker({
                 key={key}
                 onClick={() => select(key)}
                 className={cn(
-                  "w-10 h-10 flex flex-col items-center justify-center rounded-xl transition-all duration-150",
+                  "w-12 h-12 flex flex-col items-center justify-center rounded-xl transition-all duration-150",
                   isActive && "scale-110"
                 )}
                 style={isActive ? { background: REACTION_COLORS[key]?.bg, color: REACTION_COLORS[key]?.text } : {}}
               >
-                <Icon size={20} animated={isActive} />
-                <span className="text-[8px] mt-0.5 text-muted-foreground">{REACTION_LABELS[key]}</span>
+                <Icon size={24} animated={isActive} />
+                <span className="text-[9px] mt-0.5 text-muted-foreground leading-none">{REACTION_LABELS[key]}</span>
               </button>
             );
           })}
