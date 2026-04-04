@@ -163,13 +163,7 @@ const Auth = () => {
         <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
         <div className="flex-1 flex items-center justify-center p-5">
           <div className="w-full max-w-sm animate-fade-in">
-            <button
-              onClick={() => setView("welcome")}
-              className="flex items-center gap-1.5 text-muted-foreground/45 hover:text-foreground mb-10 transition-colors"
-            >
-              <ArrowRight size={18} strokeWidth={1.5} />
-              <span className="text-[13px]">بازگشت</span>
-            </button>
+            {/* No back button - this is the main auth page */}
 
             <div className="flex items-center gap-3 mb-8">
               <img src={nawbaharLogo} alt="" className="w-10 h-10" />
