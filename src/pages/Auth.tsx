@@ -166,7 +166,7 @@ const Auth = () => {
             {/* No back button - this is the main auth page */}
 
             <div className="flex items-center gap-3 mb-8">
-              <img src={nawbaharLogo} alt="" className="w-10 h-10" />
+              <img src={logoImg} alt="" className="w-10 h-10 rounded-xl" />
               <div>
                 <h1 className="text-[22px] font-extrabold text-foreground">ورود به نوبهار</h1>
                 <p className="text-[12px] text-muted-foreground/50 mt-0.5">به جامعه نوبهار خوش آمدید</p>
