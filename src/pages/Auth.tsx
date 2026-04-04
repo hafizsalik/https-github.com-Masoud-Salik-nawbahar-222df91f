@@ -155,62 +155,6 @@ const Auth = () => {
     navigate("/");
   };
 
-  // ─── WELCOME VIEW ───
-  if (view === "welcome") {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <SEOHead title="خوش آمدید به نوبهار" description="نوبهار فضایی برای نوشتن، اندیشیدن و گفت‌وگو" ogUrl="/auth" noIndex />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-sm animate-fade-in text-center">
-            {/* Logo */}
-            <div className="flex justify-center mb-6">
-              <img src={nawbaharLogo} alt="نوبهار" className="w-20 h-20" />
-            </div>
-
-            <h1 className="text-[28px] font-extrabold text-foreground leading-tight mb-2">
-              نوبهار
-            </h1>
-            <p className="text-[14px] text-primary font-medium mb-4 leading-relaxed" style={{ fontStyle: "italic" }}>
-              نوبهار است در آن کوش که خوشدل باشی
-            </p>
-            <p className="text-[13px] text-muted-foreground/70 leading-[2] mb-10 max-w-[280px] mx-auto">
-              نوبهار فضایی برای نوشتن، اندیشیدن و گفت‌وگو است؛
-              جایی برای آنان که می‌خواهند بنویسند، بخوانند و در فضای فکری سالم مشارکت کنند.
-            </p>
-
-            <div className="space-y-3 mb-6">
-              <Button
-                onClick={() => setView("login")}
-                className="w-full h-12 text-[14px] font-semibold rounded-xl"
-              >
-                ورود به حساب
-              </Button>
-              <Button
-                onClick={() => setView("register")}
-                variant="outline"
-                className="w-full h-12 text-[14px] font-semibold rounded-xl"
-              >
-                ایجاد حساب کاربری
-              </Button>
-            </div>
-
-            {/* Guest */}
-            <button
-              onClick={handleGuestBrowse}
-              className="text-[12px] text-muted-foreground/50 hover:text-foreground transition-colors"
-            >
-              استفاده بدون ثبت نام →
-            </button>
-
-            <p className="mt-8 text-[10px] text-muted-foreground/30 leading-relaxed">
-              با ورود یا ایجاد حساب، شما با قوانین و مقررات نوبهار موافقت می‌کنید.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ─── LOGIN VIEW ───
   if (view === "login") {
     return (
