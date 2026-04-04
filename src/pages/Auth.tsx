@@ -335,7 +335,7 @@ const Auth = () => {
            </button>
 
           <div className="flex items-center gap-3 mb-8">
-            <img src={nawbaharLogo} alt="" className="w-10 h-10" />
+            <img src={logoImg} alt="" className="w-10 h-10 rounded-xl" />
             <div>
               <h1 className="text-[22px] font-extrabold text-foreground">عضویت در نوبهار</h1>
               <p className="text-[12px] text-muted-foreground/50 mt-0.5">حساب جدید بسازید و بپیوندید</p>
