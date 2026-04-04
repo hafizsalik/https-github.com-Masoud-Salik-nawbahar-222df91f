@@ -18,7 +18,7 @@ type AuthView = "login" | "register" | "forgot";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const initialView = (searchParams.get("view") as AuthView) || "welcome";
+  const initialView = (searchParams.get("view") as AuthView) || "login";
   const [view, setView] = useState<AuthView>(initialView);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
