@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
 
 import menuBurgerIcon from "@/assets/icons/menu-burger.svg";
 import searchIcon from "@/assets/icons/search.svg";
 import userIcon from "@/assets/icons/user.svg";
+import logoImg from "@/assets/logo.png";
 
 export function Header() {
   const { unreadCount } = useNotifications();
@@ -27,6 +29,7 @@ export function Header() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -51,7 +54,7 @@ export function Header() {
     setTimeout(() => {
       setMenuOpen(false);
       setMenuClosing(false);
-    }, 180);
+    }, 200);
   }, [menuOpen]);
 
   useEffect(() => {
@@ -74,13 +77,16 @@ export function Header() {
   }, [location.pathname, location.search]);
 
   useEffect(() => {
-    if (!user) { setAvatarUrl(null); return; }
+    if (!user) { setAvatarUrl(null); setDisplayName(null); return; }
     supabase
       .from("profiles")
-      .select("avatar_url")
+      .select("avatar_url, display_name")
       .eq("id", user.id)
       .single()
-      .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
+      .then(({ data }) => {
+        setAvatarUrl(data?.avatar_url || null);
+        setDisplayName(data?.display_name || null);
+      });
   }, [user]);
 
   const handleShareApp = async () => {
@@ -120,118 +126,21 @@ export function Header() {
     navigate(q ? `/explore?q=${encodeURIComponent(q)}` : "/explore");
   };
 
-  const menuAnimClass = menuClosing ? "animate-menu-out" : "animate-scale-in";
-
   return (
     <>
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
         <div className="flex items-center justify-between px-4 h-[52px] max-w-lg mx-auto">
           {/* Left: Hamburger menu */}
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => {
-                if (menuOpen) smoothCloseMenu();
-                else { setMenuOpen(true); setMenuClosing(false); }
-              }}
-              className="flex items-center justify-center w-10 h-10 transition-colors"
-              aria-label="منو"
-            >
-              <NawbaharIcon src={menuBurgerIcon} size={20} className="opacity-50 dark:invert" />
-            </button>
-
-            {/* Full-height slide-in menu */}
-            {(menuOpen || menuClosing) && (
-              <>
-                {/* Backdrop */}
-                <div
-                  className={cn("fixed inset-0 bg-black/20 z-40", menuClosing ? "opacity-0" : "opacity-100")}
-                  style={{ transition: "opacity 0.18s ease" }}
-                  onClick={smoothCloseMenu}
-                />
-                {/* Menu panel */}
-                <div
-                  className={cn(
-                    "fixed top-0 right-0 h-full w-[280px] bg-card border-l border-border/30 shadow-2xl z-50 overflow-y-auto",
-                    menuClosing ? "animate-slide-out-right" : "animate-slide-in-right"
-                  )}
-                >
-                  {/* Menu header */}
-                  <div className="px-5 pt-6 pb-4 border-b border-border/30">
-                    <h2 className="text-[15px] font-bold text-foreground">نوبهار</h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">جامعه نخبگان</p>
-                  </div>
-
-                  <div className="py-2">
-                    {/* Dark mode toggle */}
-                    <div className="px-5 py-3 flex items-center justify-between">
-                      <span className="text-[13px] text-foreground">حالت تاریک</span>
-                      <button
-                        onClick={() => setIsDark(!isDark)}
-                        className={cn(
-                          "w-10 h-[22px] rounded-full flex items-center transition-colors relative",
-                          isDark ? "bg-primary" : "bg-muted"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-4 h-4 rounded-full bg-white shadow transition-transform absolute",
-                          isDark ? "translate-x-1" : "translate-x-5"
-                        )} />
-                      </button>
-                    </div>
-
-                    <div className="mx-5 border-b border-border/20" />
-
-                    {isAdmin && (
-                      <button onClick={() => { smoothCloseMenu(); navigate("/admin"); }}
-                        className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
-                        <Shield size={16} strokeWidth={1.5} className="text-muted-foreground" />
-                        پنل مدیریت
-                      </button>
-                    )}
-
-                    <button onClick={() => { smoothCloseMenu(); navigate("/about"); }}
-                      className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
-                      <Info size={16} strokeWidth={1.5} className="text-muted-foreground" />
-                      درباره نوبهار
-                    </button>
-
-                    <button onClick={() => { smoothCloseMenu(); navigate("/install"); }}
-                      className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                      نصب اپلیکیشن
-                    </button>
-
-                    <button onClick={handleShareApp}
-                      className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
-                      <Share2 size={16} strokeWidth={1.5} className="text-muted-foreground" />
-                      اشتراک‌گذاری اپ
-                    </button>
-
-                    <button onClick={() => { smoothCloseMenu(); navigate("/contact"); }}
-                      className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
-                      <MessageSquare size={16} strokeWidth={1.5} className="text-muted-foreground" />
-                      ارتباط با ما
-                    </button>
-
-                    {user && (
-                      <>
-                        <div className="mx-5 border-b border-border/20 my-1" />
-                        <button onClick={handleSignOut}
-                          className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-destructive hover:bg-destructive/5 transition-colors">
-                          <LogOut size={16} strokeWidth={1.5} />
-                          خروج
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+          <button
+            onClick={() => {
+              if (menuOpen) smoothCloseMenu();
+              else { setMenuOpen(true); setMenuClosing(false); }
+            }}
+            className="flex items-center justify-center w-10 h-10 transition-colors"
+            aria-label="منو"
+          >
+            <NawbaharIcon src={menuBurgerIcon} size={20} className="opacity-55 dark:invert" />
+          </button>
 
           {/* Center: Search bar */}
           <form onSubmit={handleSearchSubmit} className="flex-1 mx-3 max-w-[240px]">
@@ -249,7 +158,7 @@ export function Header() {
 
           {/* Right: User avatar or guest icon */}
           <Link
-            to={user ? "/profile" : "/auth"}
+            to={user ? "/profile" : "/auth?view=login"}
             className="flex items-center justify-center w-10 h-10"
             aria-label="پروفایل"
           >
@@ -267,6 +176,140 @@ export function Header() {
           </Link>
         </div>
       </header>
+
+      {/* Full-screen slide-in menu */}
+      {(menuOpen || menuClosing) && (
+        <div className="fixed inset-0 z-[100]" ref={menuRef}>
+          {/* Backdrop */}
+          <div
+            className={cn("absolute inset-0 bg-black/25 transition-opacity duration-200", menuClosing ? "opacity-0" : "opacity-100")}
+            onClick={smoothCloseMenu}
+          />
+          {/* Menu panel - FULL HEIGHT */}
+          <div
+            className={cn(
+              "absolute top-0 right-0 bottom-0 w-[280px] bg-card border-l border-border/30 shadow-2xl overflow-y-auto flex flex-col",
+              menuClosing ? "animate-slide-out-right" : "animate-slide-in-right"
+            )}
+          >
+            {/* Menu header with logo and user info */}
+            <div className="px-5 pt-6 pb-5 border-b border-border/20">
+              {/* Logo */}
+              <div className="flex items-center gap-3 mb-4">
+                <img src={logoImg} alt="نوبهار" className="w-10 h-10 rounded-xl" />
+                <div>
+                  <h2 className="text-[16px] font-bold text-foreground">نوبهار</h2>
+                  <p className="text-[11px] text-muted-foreground/60">جامعه نخبگان</p>
+                </div>
+              </div>
+
+              {/* User info */}
+              {user && (
+                <button
+                  onClick={() => { smoothCloseMenu(); navigate("/profile"); }}
+                  className="flex items-center gap-3 w-full mt-2 p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
+                >
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                      <NawbaharIcon src={userIcon} size={18} className="opacity-50 dark:invert" />
+                    </div>
+                  )}
+                  <div className="text-right min-w-0">
+                    <p className="text-[13px] font-semibold text-foreground truncate">{displayName || "کاربر"}</p>
+                    <p className="text-[10px] text-muted-foreground/50">مشاهده پروفایل</p>
+                  </div>
+                </button>
+              )}
+
+              {!user && (
+                <button
+                  onClick={() => { smoothCloseMenu(); navigate("/auth?view=login"); }}
+                  className="flex items-center gap-3 w-full mt-2 p-2.5 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    <NawbaharIcon src={userIcon} size={18} className="opacity-50 dark:invert" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[13px] font-semibold text-primary">ورود / ثبت‌نام</p>
+                    <p className="text-[10px] text-muted-foreground/50">به نوبهار بپیوندید</p>
+                  </div>
+                </button>
+              )}
+            </div>
+
+            {/* Menu items */}
+            <div className="flex-1 py-2">
+              {/* Dark mode toggle */}
+              <div className="px-5 py-3.5 flex items-center justify-between">
+                <span className="text-[13px] text-foreground">حالت تاریک</span>
+                <button
+                  onClick={() => setIsDark(!isDark)}
+                  className={cn(
+                    "w-10 h-[22px] rounded-full flex items-center transition-colors relative",
+                    isDark ? "bg-primary" : "bg-muted"
+                  )}
+                >
+                  <div className={cn(
+                    "w-4 h-4 rounded-full bg-white shadow transition-transform absolute",
+                    isDark ? "translate-x-1" : "translate-x-5"
+                  )} />
+                </button>
+              </div>
+
+              <div className="mx-5 border-b border-border/15" />
+
+              {isAdmin && (
+                <button onClick={() => { smoothCloseMenu(); navigate("/admin"); }}
+                  className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
+                  <Shield size={16} strokeWidth={1.5} className="text-muted-foreground" />
+                  پنل مدیریت
+                </button>
+              )}
+
+              <button onClick={() => { smoothCloseMenu(); navigate("/about"); }}
+                className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
+                <Info size={16} strokeWidth={1.5} className="text-muted-foreground" />
+                درباره نوبهار
+              </button>
+
+              <button onClick={() => { smoothCloseMenu(); navigate("/install"); }}
+                className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                نصب اپلیکیشن
+              </button>
+
+              <button onClick={handleShareApp}
+                className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
+                <Share2 size={16} strokeWidth={1.5} className="text-muted-foreground" />
+                اشتراک‌گذاری اپ
+              </button>
+
+              <button onClick={() => { smoothCloseMenu(); navigate("/contact"); }}
+                className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
+                <MessageSquare size={16} strokeWidth={1.5} className="text-muted-foreground" />
+                ارتباط با ما
+              </button>
+            </div>
+
+            {/* Logout at bottom */}
+            {user && (
+              <div className="border-t border-border/15 pb-6 safe-bottom">
+                <button onClick={handleSignOut}
+                  className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-destructive hover:bg-destructive/5 transition-colors">
+                  <LogOut size={16} strokeWidth={1.5} />
+                  خروج
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <LogoutConfirmDialog
         isOpen={showLogoutConfirm}

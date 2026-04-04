@@ -19,7 +19,7 @@ interface ArticleCardProps {
   onDelete?: () => void;
 }
 
-function getExcerpt(content: string, maxChars: number = 140): string {
+function getExcerpt(content: string, maxChars: number = 180): string {
   if (content.length <= maxChars) return content;
   return content.slice(0, maxChars).trim() + "…";
 }
@@ -91,11 +91,11 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
                 <img
                   src={article.author.avatar_url}
                   alt={article.author?.display_name}
-                  className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                  className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                   loading="lazy"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                   <NawbaharIcon src={userIcon} size={14} className="opacity-40 dark:invert" />
                 </div>
               )}
@@ -128,14 +128,14 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         {/* Content row: excerpt + image */}
         <div className="flex gap-3" style={{ direction: "rtl" }}>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] leading-[1.7] line-clamp-3 text-muted-foreground">
-              {getExcerpt(article.content, 140)}
+            <p className="text-[14px] leading-[1.7] line-clamp-4 text-muted-foreground">
+              {getExcerpt(article.content, 180)}
             </p>
           </div>
           <div
             className={cn(
               "w-[88px] h-[88px] flex-shrink-0 rounded-lg overflow-hidden relative bg-muted self-start transition-opacity",
-              hasBeenRead && "opacity-50"
+              hasBeenRead && "opacity-40"
             )}
           >
             {!imageLoaded && <div className="absolute inset-0 skeleton" />}
