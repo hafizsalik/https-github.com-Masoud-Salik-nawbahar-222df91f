@@ -12,9 +12,9 @@ import { sanitizeError, validation } from "@/lib/errorHandler";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/hooks/useAuth";
 import InteractiveOnboardingModal from "@/components/InteractiveOnboardingModal";
-import nawbaharLogo from "@/assets/nawbahar-logo.png";
+import logoImg from "@/assets/logo.png";
 
-type AuthView = "welcome" | "login" | "register" | "forgot";
+type AuthView = "login" | "register" | "forgot";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
