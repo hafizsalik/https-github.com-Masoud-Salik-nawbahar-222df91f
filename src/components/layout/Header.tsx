@@ -74,7 +74,7 @@ export function Header() {
     setSearchValue(params.get("q") || "");
   }, [location.pathname, location.search]);
 
-  const { data: profileData } = useProfile(user?.id || "");
+  const { profile: profileData } = useProfile(user?.id);
   const avatarUrl = profileData?.avatar_url || null;
   const displayName = profileData?.display_name || null;
 
