@@ -76,18 +76,9 @@ export function Header() {
     setSearchValue(params.get("q") || "");
   }, [location.pathname, location.search]);
 
-  useEffect(() => {
-    if (!user) { setAvatarUrl(null); setDisplayName(null); return; }
-    supabase
-      .from("profiles")
-      .select("avatar_url, display_name")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        setAvatarUrl(data?.avatar_url || null);
-        setDisplayName(data?.display_name || null);
-      });
-  }, [user]);
+  const { data: profileData } = useProfile(user?.id || "");
+  const avatarUrl = profileData?.avatar_url || null;
+  const displayName = profileData?.display_name || null;
 
   const handleShareApp = async () => {
     smoothCloseMenu();
