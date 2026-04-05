@@ -28,8 +28,6 @@ export function Header() {
   const [searchValue, setSearchValue] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState<string | null>(null);
 
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
