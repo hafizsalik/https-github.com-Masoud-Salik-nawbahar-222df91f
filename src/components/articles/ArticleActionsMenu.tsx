@@ -47,11 +47,11 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
   const [reportNote, setReportNote] = useState("");
   const [bookmarkChecked, setBookmarkChecked] = useState(false);
 
+  const { user } = useAuth();
+  
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id || null);
-    });
-  }, []);
+    setUserId(user?.id || null);
+  }, [user]);
 
   const checkBookmark = useCallback(async () => {
     if (bookmarkChecked || !userId) return;
@@ -174,8 +174,8 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
       ? `${selectedReason} — ${reportNote.trim()}`
       : selectedReason;
 
-    const { error } = await supabase.from("reported_comments").insert({
-      comment_id: articleId,
+    const { error } = await supabase.from("reported_articles" as any).insert({
+      article_id: articleId,
       reporter_id: userId,
       reason,
     });
