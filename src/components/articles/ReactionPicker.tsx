@@ -7,6 +7,9 @@ import {
 } from "@/hooks/useCardReactions";
 import { REACTION_SVG_ICONS } from "./ReactionIcons";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReactionPickerProps {
   userReaction: ReactionKey | null;
@@ -22,12 +25,24 @@ export function ReactionPicker({
   onReact,
   onHover,
 }: ReactionPickerProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const [justReacted, setJustReacted] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const guardAuth = useCallback(() => {
+    if (!user) {
+      toast({ title: "برای واکنش باید وارد شوید", variant: "destructive" });
+      navigate("/auth?view=login");
+      return false;
+    }
+    return true;
+  }, [user, navigate, toast]);
 
   const close = useCallback(() => {
     setClosing(true);
@@ -47,7 +62,9 @@ export function ReactionPicker({
 
   const handlePress = () => {
     onHover?.();
-    timer.current = setTimeout(() => setOpen(true), 350);
+    timer.current = setTimeout(() => {
+      if (guardAuth()) setOpen(true);
+    }, 350);
   };
 
   const handleRelease = () => {
@@ -55,6 +72,7 @@ export function ReactionPicker({
     clearTimeout(timer.current);
     timer.current = null;
     if (!open) {
+      if (!guardAuth()) return;
       if (!userReaction) {
         onReact("like");
         setJustReacted(true);

@@ -69,7 +69,7 @@ const Auth = () => {
       
       // Track login
       if (data?.user) {
-        await analyticsService.trackLogin(data.user.id);
+        await analyticsService.trackLogin();
       }
       
       toast({ title: "خوش آمدید! 👋" });
@@ -117,7 +117,7 @@ const Auth = () => {
       if (error) throw error;
       if (data?.user) {
         // Track registration
-        await analyticsService.trackRegistration(data.user.id);
+        await analyticsService.trackRegistration();
         
         toast({ title: "خوش آمدید به نوبهار! 🌱" });
         setShowOnboardingModal(true);

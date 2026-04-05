@@ -28,8 +28,6 @@ export function Header() {
   const [searchValue, setSearchValue] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState<string | null>(null);
 
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -76,18 +74,9 @@ export function Header() {
     setSearchValue(params.get("q") || "");
   }, [location.pathname, location.search]);
 
-  useEffect(() => {
-    if (!user) { setAvatarUrl(null); setDisplayName(null); return; }
-    supabase
-      .from("profiles")
-      .select("avatar_url, display_name")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        setAvatarUrl(data?.avatar_url || null);
-        setDisplayName(data?.display_name || null);
-      });
-  }, [user]);
+  const { profile: profileData } = useProfile(user?.id);
+  const avatarUrl = profileData?.avatar_url || null;
+  const displayName = profileData?.display_name || null;
 
   const handleShareApp = async () => {
     smoothCloseMenu();

@@ -510,6 +510,30 @@ export type Database = {
           },
         ]
       }
+      reported_articles: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          reporter_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reporter_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reporter_id?: string
+        }
+        Relationships: []
+      }
       reported_comments: {
         Row: {
           comment_id: string
