@@ -12,79 +12,43 @@ interface IconProps {
   animated?: boolean;
 }
 
-function IconMask({ size = 24, className, animated, icon }: IconProps & { icon: string }) {
+/** Direct <img> rendering — guarantees icons display on all platforms */
+function ReactionImg({ size = 24, className, animated, icon, alt }: IconProps & { icon: string; alt: string }) {
   return (
-    <span
+    <img
+      src={icon}
+      alt={alt}
+      width={size}
+      height={size}
+      draggable={false}
       className={cn(
-        "reaction-mask transition-all duration-200",
+        "inline-block flex-shrink-0 transition-transform duration-200",
         animated && "animate-reaction-pop-enhanced",
         className
       )}
-      style={{
-        width: size,
-        height: size,
-        WebkitMaskImage: `url(${icon})`,
-        maskImage: `url(${icon})`,
-      }}
       aria-hidden="true"
     />
   );
 }
 
-/** Modern reaction icons using uploaded pack - lively, professional, with subtle animations */
 export function ThumbsUpIcon({ size = 24, className, animated = false }: IconProps) {
-  return (
-    <IconMask
-      size={size}
-      animated={animated}
-      className={cn(animated && "animate-pulse-subtle", className)}
-      icon={likeIcon}
-    />
-  );
+  return <ReactionImg size={size} animated={animated} className={className} icon={likeIcon} alt="like" />;
 }
 
 export function HeartIcon({ size = 24, className, animated = false }: IconProps) {
-  return (
-    <IconMask
-      size={size}
-      animated={animated}
-      className={cn(animated && "animate-heartbeat", className)}
-      icon={loveIcon}
-    />
-  );
+  return <ReactionImg size={size} animated={animated} className={className} icon={loveIcon} alt="love" />;
 }
 
 export function LightbulbIcon({ size = 24, className, animated = false }: IconProps) {
-  return (
-    <IconMask
-      size={size}
-      animated={animated}
-      className={cn(animated && "animate-glow", className)}
-      icon={insightfulIcon}
-    />
-  );
+  return <ReactionImg size={size} animated={animated} className={className} icon={insightfulIcon} alt="insightful" />;
 }
 
 export function SmileIcon({ size = 24, className, animated = false }: IconProps) {
-  return (
-    <IconMask
-      size={size}
-      animated={animated}
-      className={cn(animated && "animate-bounce-gentle", className)}
-      icon={laughIcon}
-    />
-  );
+  return <ReactionImg size={size} animated={animated} className={className} icon={laughIcon} alt="laugh" />;
 }
 
 export function FrownIcon({ size = 24, className, animated = false }: IconProps) {
-  return (
-    <IconMask
-      size={size}
-      animated={animated}
-      className={cn(animated && "animate-sway", className)}
-      icon={sadIcon}
-    />
-  );
+  return <ReactionImg size={size} animated={animated} className={className} icon={sadIcon} alt="sad" />;
 }
 
 export const REACTION_SVG_ICONS: Record<string, (props: IconProps) => JSX.Element> = {

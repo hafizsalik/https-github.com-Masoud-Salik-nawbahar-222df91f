@@ -365,3 +365,30 @@ html.text-xl body { font-size: 20px; }
   .no-print { display: none !important; }
   body { background: white; color: black; }
 }
+
+/* Article prose styles for rich content */
+.article-prose {
+  @apply text-foreground text-[15px] leading-[2.2];
+}
+.article-prose h1 { @apply text-[22px] font-extrabold mt-8 mb-4; }
+.article-prose h2 { @apply text-[19px] font-bold mt-7 mb-3; }
+.article-prose h3 { @apply text-[17px] font-semibold mt-6 mb-2; }
+.article-prose p { @apply mb-4; }
+.article-prose strong, .article-prose b { @apply font-bold; }
+.article-prose em, .article-prose i { @apply italic; }
+.article-prose ul { @apply list-disc pr-6 mb-4 space-y-1; }
+.article-prose ol { @apply list-decimal pr-6 mb-4 space-y-1; }
+.article-prose blockquote {
+  @apply border-r-4 border-primary/30 pr-4 my-4 text-muted-foreground italic;
+}
+.article-prose a { @apply text-primary underline underline-offset-2; }
+.article-prose img { @apply rounded-lg my-4 max-w-full; }
+
+/* Fade out animation */
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.animate-fade-out {
+  animation: fade-out 0.2s ease-out both;
+}

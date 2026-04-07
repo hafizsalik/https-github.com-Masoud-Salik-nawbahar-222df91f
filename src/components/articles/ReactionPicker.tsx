@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { X } from "lucide-react";
 
 interface ReactionPickerProps {
   userReaction: ReactionKey | null;
@@ -49,15 +50,27 @@ export function ReactionPicker({
     setTimeout(() => {
       setOpen(false);
       setClosing(false);
-    }, 180);
+    }, 250);
   }, []);
 
+  // Close on outside click/touch
   useEffect(() => {
+    if (!open) return;
     const handler = (e: PointerEvent) => {
       if (!ref.current?.contains(e.target as Node)) close();
     };
-    if (open) document.addEventListener("pointerdown", handler, true);
+    document.addEventListener("pointerdown", handler, true);
     return () => document.removeEventListener("pointerdown", handler, true);
+  }, [open, close]);
+
+  // Close on back button / escape
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
   }, [open, close]);
 
   const handlePress = () => {
@@ -99,7 +112,6 @@ export function ReactionPicker({
         onPointerDown={handlePress}
         onPointerUp={handleRelease}
         className="reaction-instant flex items-center justify-center p-1"
-        style={activeColor ? { color: activeColor } : { color: "hsl(var(--muted-foreground))" }}
       >
         <span
           className="inline-flex"
@@ -109,34 +121,72 @@ export function ReactionPicker({
         </span>
       </button>
 
-      {/* Picker tray - positioned above with enough space */}
+      {/* Bottom sheet overlay for mobile */}
       {(open || closing) && (
         <div
-          className={cn(
-            "absolute bottom-full mb-3 left-0 flex bg-card border border-border/50 rounded-2xl px-2 py-2 shadow-xl z-[60] gap-1",
-            closing ? "animate-menu-out" : "animate-scale-in"
-          )}
-          style={{ minWidth: "260px" }}
+          className="fixed inset-0 z-[60]"
+          onClick={(e) => { e.stopPropagation(); close(); }}
         >
-          {REACTION_KEYS.map((key) => {
-            const isActive = userReaction === key;
-            const Icon = REACTION_SVG_ICONS[key] || DefaultIcon;
+          {/* Backdrop */}
+          <div className={cn(
+            "absolute inset-0 bg-background/20 backdrop-blur-[2px]",
+            closing ? "animate-fade-out" : "animate-fade-in"
+          )} />
 
-            return (
-              <button
-                key={key}
-                onClick={() => select(key)}
-                className={cn(
-                  "w-12 h-12 flex flex-col items-center justify-center rounded-xl transition-all duration-150",
-                  isActive && "scale-110"
-                )}
-                style={isActive ? { background: REACTION_COLORS[key]?.bg, color: REACTION_COLORS[key]?.text } : {}}
-              >
-                <Icon size={24} animated={isActive} />
-                <span className="text-[9px] mt-0.5 text-muted-foreground leading-none">{REACTION_LABELS[key]}</span>
+          {/* Bottom sheet */}
+          <div
+            className={cn(
+              "absolute bottom-0 left-0 right-0 bg-card border-t border-border rounded-t-2xl shadow-xl",
+              closing ? "animate-bottom-sheet-out" : "animate-bottom-sheet-in"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle bar */}
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-8 h-1 rounded-full bg-muted-foreground/20" />
+            </div>
+
+            {/* Title */}
+            <div className="flex items-center justify-between px-5 pb-3">
+              <span className="text-sm font-semibold text-foreground">واکنش شما</span>
+              <button onClick={close} className="p-1 text-muted-foreground hover:text-foreground">
+                <X size={18} strokeWidth={1.5} />
               </button>
-            );
-          })}
+            </div>
+
+            {/* Reaction grid */}
+            <div className="flex items-center justify-around px-4 pb-6 safe-bottom">
+              {REACTION_KEYS.map((key) => {
+                const isActive = userReaction === key;
+                const Icon = REACTION_SVG_ICONS[key] || DefaultIcon;
+                const colors = REACTION_COLORS[key];
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => select(key)}
+                    className={cn(
+                      "flex flex-col items-center justify-center rounded-2xl transition-all duration-200 w-14 h-16",
+                      "active:scale-90",
+                      isActive && "scale-105"
+                    )}
+                    style={isActive ? {
+                      background: colors?.bg,
+                      boxShadow: `0 0 0 2px ${colors?.ring}`,
+                    } : {}}
+                  >
+                    <Icon size={28} animated={isActive} />
+                    <span className={cn(
+                      "text-[10px] mt-1 leading-none font-medium",
+                      isActive ? "text-foreground" : "text-muted-foreground/60"
+                    )}>
+                      {REACTION_LABELS[key]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>
