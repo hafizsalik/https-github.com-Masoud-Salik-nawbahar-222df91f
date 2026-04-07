@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ArticleFeed } from "@/components/articles/ArticleFeed";
+import { ContinueReading } from "@/components/articles/ContinueReading";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { SEOHead } from "@/components/SEOHead";
 import { useSmartFeed } from "@/hooks/useSmartFeed";
@@ -31,6 +32,9 @@ const Index = () => {
         <LoadingScreen />
       ) : (
         <>
+          {/* Continue Reading section */}
+          <ContinueReading />
+
           <ArticleFeed
             articles={articles}
             onRefresh={refetch}

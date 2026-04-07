@@ -2,7 +2,7 @@ import { useMemo, useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Hash, Flame } from "lucide-react";
 import { ArticleCard } from "@/components/articles/ArticleCard";
-import { usePublishedArticles } from "@/hooks/useArticles";
+import { useExploreArticles, useTrendingArticles } from "@/hooks/useExploreArticles";
 import { cn, toPersianNumber } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
@@ -22,10 +22,10 @@ const trendingHashtags = [
 ];
 
 const Explore = () => {
-  const { articles, refetch } = usePublishedArticles();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
   useEffect(() => {
     const category = searchParams.get("category");
@@ -36,25 +36,23 @@ const Explore = () => {
 
   const query = (searchParams.get("q") || "").trim();
 
-  const filteredArticles = useMemo(() => {
-    let result = articles;
-    if (activeTopic) result = result.filter(a => a.tags?.some(t => t.toLowerCase() === activeTopic.toLowerCase()));
-    if (activeTag) result = result.filter(a => a.tags?.some(t => t.toLowerCase() === activeTag.toLowerCase()));
-    if (query) {
-      const q = query.toLowerCase();
-      result = result.filter(a =>
-        a.title.toLowerCase().includes(q) || a.content.toLowerCase().includes(q) ||
-        a.author?.display_name?.toLowerCase().includes(q) || a.tags?.some(t => t.toLowerCase().includes(q))
-      );
-    }
-    return result;
-  }, [articles, activeTopic, activeTag, query]);
+  // Debounce search query
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(t);
+  }, [query]);
 
-  const trendingArticles = useMemo(() => {
-    return [...articles]
-      .sort((a, b) => ((b.reaction_count || 0) + (b.comment_count || 0) + (b.view_count || 0)) - ((a.reaction_count || 0) + (a.comment_count || 0) + (a.view_count || 0)))
-      .slice(0, 8);
-  }, [articles]);
+  const hasActiveFilters = Boolean(debouncedQuery || activeTopic || activeTag);
+
+  // Server-side filtered articles
+  const { data: filteredArticles = [], isLoading: filterLoading } = useExploreArticles({
+    topic: activeTopic,
+    tag: activeTag,
+    query: debouncedQuery || null,
+  });
+
+  // Trending articles (only shown when no filters)
+  const { data: trendingArticles = [], isLoading: trendingLoading } = useTrendingArticles();
 
   const handleTopicClick = (topicId: string) => {
     const newTopic = activeTopic === topicId ? null : topicId;
@@ -70,7 +68,6 @@ const Explore = () => {
   };
 
   const clearFilters = () => { setActiveTopic(null); setActiveTag(null); setSearchParams({}); };
-  const hasActiveFilters = Boolean(query || activeTopic || activeTag);
 
   return (
     <AppLayout>
@@ -136,9 +133,9 @@ const Explore = () => {
                   #{activeTag}
                 </span>
               )}
-              {query && (
+              {debouncedQuery && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-foreground rounded-full text-[10px] font-medium">
-                  {query}
+                  {debouncedQuery}
                 </span>
               )}
               <button onClick={clearFilters} className="text-[10px] text-muted-foreground/40 hover:text-foreground transition-colors">پاک کردن</button>
@@ -150,15 +147,23 @@ const Explore = () => {
         {hasActiveFilters ? (
           <div className="border-t border-border/30">
             <div className="px-5 py-2">
-              <p className="text-[11px] text-muted-foreground/40">
-                {filteredArticles.length > 0 ? `${toPersianNumber(filteredArticles.length)} نتیجه` : "نتیجه‌ای یافت نشد"}
-              </p>
+              {filterLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground/40">
+                  {filteredArticles.length > 0 ? `${toPersianNumber(filteredArticles.length)} نتیجه` : "نتیجه‌ای یافت نشد"}
+                </p>
+              )}
             </div>
-            <div className="divide-y divide-border/30">
-              {filteredArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} onDelete={refetch} />
-              ))}
-            </div>
+            {!filterLoading && (
+              <div className="divide-y divide-border/30">
+                {filteredArticles.map((article) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -167,11 +172,17 @@ const Explore = () => {
                 <Flame size={14} strokeWidth={1.5} className="text-muted-foreground/40" />
                 <span className="text-[12px] font-semibold text-muted-foreground/50">پرطرفدارترین‌ها</span>
               </div>
-              <div className="divide-y divide-border/30">
-                {trendingArticles.map((article) => (
-                  <ArticleCard key={article.id} article={article} onDelete={refetch} />
-                ))}
-              </div>
+              {trendingLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className="divide-y divide-border/30">
+                  {trendingArticles.map((article) => (
+                    <ArticleCard key={article.id} article={article} />
+                  ))}
+                </div>
+              )}
             </div>
             <div className="mt-6 px-5">
               <SuggestedWriters />
