@@ -1,126 +1,147 @@
-# Production Upgrade Plan — نوبهار
 
-## Identified Issues
 
-### Critical Bugs
+# Production Upgrade Plan — Reactions & Engagement
 
-1. **Analytics writes to non-existent tables**: `analyticsService` writes to `user_devices`, `activity_logs`, `user_sessions`, `user_presence` — none of these tables exist in the database. Every call silently fails, spamming console errors and wasting network requests.
-2. **Report system misuses** `reported_comments` **table**: `ArticleActionsMenu` inserts article reports into `reported_comments` using `comment_id: articleId` — semantically wrong and will cause confusion in admin moderation.
-3. **Reaction race condition**: In `toggleReaction`, the optimistic update reads `summary.userReaction` (stale closure) to decide the DB operation, but the state has already been updated optimistically. If the user had a reaction and taps the same type, the optimistic update removes it, but the DB branch still sees the old value and tries to delete — this can cause double-deletes or missed updates.
-4. `useCardReactions` **fetches per-card on mount**: Despite the memory note saying `autoFetch: false`, the feed passes `false` but the Article page passes `true` (default). Each card in the feed calls `getSession()` + queries `reactions` table — this is an N+1 query problem when scrolling. The `ensureFetched` lazy pattern is correct but the actual fetch also queries `profiles` for reactor names, which is unnecessary for the feed.
-5. **Missing** `defaultCover` **asset**: `ArticleCard` imports `@/assets/default-cover.jpg` — if this file doesn't exist, the build will fail.
-
-### UX / Design Issues
-
-6. **No guest-mode friction control**: Guest users can tap reactions, comments, and responses but get silent failures or cryptic errors instead of a clear "login required" prompt.
-7. **Article page uses raw** `article.content` **as plain text**: The content is rendered as `whitespace-pre-wrap` text — no markdown, no rich formatting. If the editor supports formatting (bold, italic, lists, quotes — the toolbar exists), the output is never parsed.
-8. **Explore page loads ALL articles then filters client-side**: `usePublishedArticles()` fetches all articles, then `Explore` filters by topic/tag/query in JS. For 2000+ users this will degrade quickly. Search and filtering should be server-side.
-9. **Hamburger menu opens from the right but the icon is on the left**: The button is on the left side of the header, but the drawer slides in from the right. This is counterintuitive for an RTL 
-10.  **Broken reaction UI rendering**  
-Reactions appear as colored squares instead of proper icons/emojis. This indicates incorrect rendering or missing assets. Reactions should display as standard emojis/icons with consistent styling, similar to modern social platforms.app.
-
-### Performance Issues
-
-10. `useComments` **called for every card**: Even with `lazy: true`, the hook still calls `checkAuth()` (which calls `getSession()`) on mount for every single card in the feed.
-11. **Header makes a DB query on every mount**: `Header` fetches the user's profile (`avatar_url`, `display_name`) via a raw query on every render/mount instead of using a shared cache or context.
-12. **No virtualization for long feeds**: The article feed renders all loaded articles in the DOM simultaneously. With infinite scroll loading 15+ pages, DOM complexity grows unbounded.
-
-### Security / Data Integrity
-
-13. **No** `reported_articles` **table**: Article reports go into `reported_comments` which is designed for comment reports. A dedicated table is needed.
-14. `hidden_articles` **stored only in localStorage**: The "Not Interested" feature doesn't persist across devices or survive cache clears.
+## Goal
+Upgrade the reaction system and overall engagement loop to production quality, inspired by Medium's approach: make reading rewarding, reactions meaningful, and the overall experience sticky enough that users return daily.
 
 ---
 
-## Implementation Plan
+## Phase 1 — Fix Broken Reaction Icons (P0)
 
-### Phase 1 — Fix Critical Bugs (Immediate)
+**Problem**: Reaction icons use CSS `mask-image` technique (`ReactionIcons.tsx`) which renders colored rectangles instead of actual icons when the SVG mask fails to load or when `currentColor` inheritance breaks.
 
-**Step 1: Neutralize broken analytics**
+**Fix**: Replace the `IconMask` approach with direct `<img>` tags (like `NawbaharIcon` already does) for the inactive state, and use the colored background approach only for the active state. This guarantees icons always render correctly.
 
-- Wrap all `analyticsService` methods in try-catch with silent fallback
-- Remove the `as any` type casts that hide missing tables
-- Either create the missing tables (`user_devices`, `activity_logs`, `user_sessions`, `user_presence`) via migration, or strip the analytics service to a no-op stub until tables exist
+**Files**: `src/components/articles/ReactionIcons.tsx`
 
-**Step 2: Fix reaction race condition**
+---
 
-- Capture `summary.userReaction` in a local variable before the optimistic update
-- Use that captured value for the DB operation branch logic
+## Phase 2 — Reaction Tray UX (Mobile-Critical)
 
-**Step 3: Fix article report misuse**
+**Problem**: The reaction picker tray opens above the button (`bottom-full mb-3`) which clips off-screen on mobile, especially for cards near the top. The tray is also too small and cramped.
 
-- Create a `reported_articles` table via migration with proper RLS
-- Update `ArticleActionsMenu` to insert into `reported_articles` instead of `reported_comments`
+**Fix**:
+- Change the reaction picker tray to a **bottom sheet** on mobile (consistent with the three-dot menu pattern already implemented)
+- Larger touch targets: 56px per reaction button instead of 48px
+- Add the Persian label below each icon clearly
+- Smooth spring animation on open/close
+- Show the user's current reaction with a subtle colored ring highlight
 
-**Step 4: Verify** `default-cover.jpg` **exists**
+**Files**: `src/components/articles/ReactionPicker.tsx`, `src/styles/reactions.css`
 
-- Check if the asset exists; if not, create a fallback or use a placeholder SVG
+---
 
-### Phase 2 — Performance (High Impact)
+## Phase 3 — Medium-Style "Clap" Counter & Reaction Summary
 
-**Step 5: Eliminate N+1 auth calls**
+**Problem**: Currently reactions show just a number. No social proof, no engagement pull.
 
-- Create a shared `AuthContext` provider that caches the session
-- Replace all `supabase.auth.getSession()` calls in hooks (`useComments`, `useCardReactions`, `ArticleActionsMenu`) with the context value
-- This alone eliminates dozens of redundant auth calls per page load
+**Fix** (inspired by Medium):
+- On the **Article page**, show a rich reaction bar:
+  - Top 3 reaction type icons stacked/overlapping (like LinkedIn)
+  - Total count in Persian
+  - Clicking the count opens the `ReactionDetailsModal`
+  - Add a **bookmark/save** button on the right side of the reaction bar (currently missing from Article page)
+  - Add a **share** button next to bookmark
+- On **feed cards**, keep it minimal: icon + count only (already done, just ensure icons render)
 
-**Step 6: Optimize feed reaction loading**
+**Files**: `src/components/articles/ArticleReactions.tsx`, `src/pages/Article.tsx`
 
-- Keep `autoFetch: false` for feed cards (already done)
-- Remove reactor name fetching from `fetchReactions` when called from feed context — names are not displayed
-- Batch-fetch user reactions for visible cards in a single query instead of per-card
+---
 
-**Step 7: Cache header profile data**
+## Phase 4 — Article Page Content Rendering
 
-- Use React Query or the auth context to cache the current user's profile
-- Remove the raw `supabase.from("profiles")` call in `Header`
+**Problem**: Article content renders as plain `whitespace-pre-wrap` text. All formatting from the editor (bold, italic, headings, lists) is lost.
 
-### Phase 3 — UX Polish
+**Fix**:
+- Install `react-markdown` (or use a simple HTML parser if content is stored as HTML)
+- Check what format the editor saves content in (plain text vs HTML vs markdown)
+- Render content with proper typography: headings, bold, italic, lists, blockquotes, links
+- Style with the existing `article-content` class using Tailwind prose-like styles
 
-**Step 8: Guest mode guardrails**
+**Files**: `src/pages/Article.tsx`, possibly `src/index.css` for article typography
 
-- Create a reusable `useRequireAuth()` hook that shows a toast + redirects to `/auth?view=login`
-- Apply it to: reaction toggle, comment submit, bookmark, follow, write
+---
 
-**Step 9: Server-side search/filter for Explore**
+## Phase 5 — Bookmark from Article Page
 
-- Add query params to the Supabase query in `usePublishedArticles` for tag/topic/text filtering
-- Create a dedicated `useExploreArticles(filters)` hook with server-side filtering
-- Use Supabase full-text search (`textSearch`) for the query parameter
+**Problem**: There's no way to bookmark/save an article from the article detail page. Users must go back to the feed.
 
-**Step 10: Article content rendering**
+**Fix**:
+- Add a bookmark toggle button in the Article page reaction bar
+- Use existing `bookmarks` table — insert/delete on toggle
+- Show filled/outlined bookmark icon based on state
+- Toast confirmation on save/unsave
 
-- Parse the content as markdown/rich text in the Article page
-- Support bold, italic, lists, quotes, headings that the editor toolbar provides
+**Files**: `src/pages/Article.tsx`, new hook `src/hooks/useBookmark.ts`
 
-### Phase 4 — Stability & Polish
+---
 
-**Step 11: RTL menu direction fix**
+## Phase 6 — Reading Progress Indicator
 
-- Move hamburger icon to the right side of the header (RTL convention) or change drawer to slide from the left
+**Problem**: No visual indicator of reading progress on articles. Medium uses a progress bar at the top.
 
-**Step 12: Add error boundaries to key sections**
+**Fix**:
+- Add a thin (2px) progress bar at the top of the Article page that fills as the user scrolls
+- Use brand purple color
+- Disappears when fully read (100%)
+- Lightweight: pure CSS + scroll event, no library
 
-- Wrap `ArticleCard`, `CommentSection`, and `ArticleReactions` in error boundaries to prevent single-card crashes from taking down the feed
+**Files**: `src/pages/Article.tsx`
 
-**Step 13: Feed virtualization**
+---
 
-- Implement windowed rendering for the feed using `react-window` or intersection observer-based lazy rendering to cap DOM nodes
+## Phase 7 — Explore Page Server-Side Search
+
+**Problem**: Explore fetches ALL articles and filters in JavaScript. Won't scale.
+
+**Fix**:
+- Create `useExploreArticles(filters)` hook that passes topic/tag/query to Supabase `.ilike()` and `.contains()` queries
+- Remove client-side filtering from `Explore.tsx`
+- Add debounced search (300ms) for text queries
+
+**Files**: `src/pages/Explore.tsx`, new `src/hooks/useExploreArticles.ts`
+
+---
+
+## Phase 8 — "Continue Reading" Section
+
+**Problem**: No way for users to resume articles they started but didn't finish. Medium prominently features this.
+
+**Fix**:
+- Track articles the user has opened (already done via `localStorage` view tracking)
+- On the home feed, show a "ادامه مطالعه" section at the top with 1-3 partially-read articles (opened but not fully scrolled)
+- Use the existing `useEngagementTracking` scroll percentage data
+- Simple horizontal scroll cards
+
+**Files**: `src/pages/Index.tsx`, `src/components/articles/ContinueReading.tsx`
+
+---
+
+## Phase 9 — Notification Badge on Bottom Nav
+
+**Problem**: The bell icon in bottom nav has no unread count badge. Users don't know they have new notifications.
+
+**Fix**:
+- Query unread notification count from `notifications` table where `is_read = false`
+- Show a small red dot or count badge on the bell icon in `BottomNav`
+- Use realtime subscription to update in real-time
+
+**Files**: `src/components/layout/BottomNav.tsx`
 
 ---
 
 ## Technical Summary
 
+| Phase | What | Impact | Effort |
+|-------|------|--------|--------|
+| 1 | Fix broken reaction icons | P0 — icons show as colored squares | Small |
+| 2 | Reaction tray as bottom sheet | P0 — mobile clipping | Medium |
+| 3 | Rich reaction bar on article page | Engagement — social proof | Medium |
+| 4 | Article content rendering | P1 — formatting completely lost | Medium |
+| 5 | Bookmark from article page | Retention — save for later | Small |
+| 6 | Reading progress bar | Engagement — completion motivation | Small |
+| 7 | Server-side search | Scalability — won't work past 1000 articles | Medium |
+| 8 | Continue Reading section | Retention — bring users back | Medium |
+| 9 | Notification badge | Engagement — pull users back | Small |
 
-| Priority | Issue                               | Impact                         |
-| -------- | ----------------------------------- | ------------------------------ |
-| P0       | Analytics writing to missing tables | Console spam, wasted requests  |
-| P0       | Reaction race condition             | Data inconsistency             |
-| P0       | Report table misuse                 | Wrong data in admin panel      |
-| P1       | N+1 auth/reaction queries           | Slow feed on mobile            |
-| P1       | Header profile re-fetch             | Unnecessary DB calls           |
-| P1       | Client-side search                  | Won't scale past 1000 articles |
-| P2       | Guest mode UX                       | Silent failures confuse users  |
-| P2       | Plain text article rendering        | Formatting lost                |
-| P2       | Feed virtualization                 | DOM bloat on long sessions     |
-| P3       | RTL menu direction                  | Minor UX inconsistency         |
