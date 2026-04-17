@@ -28,8 +28,8 @@ const STEPS = [
   },
   {
     title: "۴. انتشار!",
-    description: "پس از نگارش، «هوش مصنوعی نوبهار» مقاله را بر اساس ۵ معیار ارزیابی می‌کند، بازخورد می‌دهد و پس از تأیید منتشر می‌شود.
-یادآوری: انجام بهتر از کامل است.",
+    description: `نوشته‌ات را منتشر کن. پس از نگارش، «هوش مصنوعی نوبهار» مقاله را بر اساس ۵ معیار ارزیابی می‌کند، بازخورد می‌دهد و پس از تأیید منتشر می‌شود.
+یادآوری: انجام بهتر از کامل است.`,
     example: "نظر من این است که...",
   },
 ];
@@ -79,7 +79,7 @@ export function WritingGuidanceModal({ isOpen, onClose, onOpenEditor }: WritingG
 
           <div className="rounded-2xl border border-border bg-background p-4 text-right">
             <h3 className="text-sm font-semibold text-foreground mb-2">{STEPS[step].title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
               {STEPS[step].description}
             </p>
             <div className="mt-3 rounded-xl bg-muted/60 p-3 text-[13px] text-muted-foreground">
