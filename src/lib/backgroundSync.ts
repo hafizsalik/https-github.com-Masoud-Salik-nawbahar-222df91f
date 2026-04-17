@@ -55,7 +55,7 @@ export async function queueOfflineAction(
       const items = JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '[]');
       items.push({ url, options, timestamp: Date.now() });
       localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(items));
-    } catch {}
+    } catch { }
   }
 }
 

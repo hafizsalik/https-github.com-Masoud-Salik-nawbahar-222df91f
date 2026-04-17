@@ -195,7 +195,7 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
       <div className="mx-4 border-b border-border/40" />
     </article>
   );
-}, (prev, next) => 
+}, (prev, next) =>
   prev.article.id === next.article.id &&
   prev.searchQuery === next.searchQuery
 );

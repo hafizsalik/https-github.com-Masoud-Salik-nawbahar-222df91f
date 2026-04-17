@@ -181,7 +181,7 @@ const Notifications = () => {
                     />
                   </div>
                 ))}
-                
+
                 {/* Smart notification settings */}
                 <div className="border-t border-border/20 pt-2 mt-2">
                   <div className="flex items-center justify-between py-1.5">
@@ -198,7 +198,7 @@ const Notifications = () => {
                       aria-label="گروه‌بندی اعلان‌های مشابه"
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between py-1.5">
                     <div className="flex items-center gap-2.5">
                       <Lightbulb size={13} className="text-muted-foreground/50" aria-hidden="true" />
@@ -213,7 +213,7 @@ const Notifications = () => {
                       aria-label="اعلان‌های هوشمند"
                     />
                   </div>
-                  
+
                   {settings.contextAware && (
                     <div className="flex items-center justify-between py-1.5">
                       <div className="flex items-center gap-2.5">
@@ -227,8 +227,8 @@ const Notifications = () => {
                       </div>
                       <Switch
                         checked={settings.quietHours.enabled}
-                        onCheckedChange={(checked) => updateSettings({ 
-                          quietHours: { ...settings.quietHours, enabled: checked } 
+                        onCheckedChange={(checked) => updateSettings({
+                          quietHours: { ...settings.quietHours, enabled: checked }
                         })}
                         aria-label="ساعت‌های آرامش"
                       />
@@ -277,8 +277,8 @@ const Notifications = () => {
                             notification.type === "follow"
                               ? `/profile/${notification.actor_id}`
                               : notification.article_id
-                              ? `/article/${notification.article_id}`
-                              : "#"
+                                ? `/article/${notification.article_id}`
+                                : "#"
                           }
                           onClick={() => !notification.is_read && markAsRead(notification.id)}
                           className="flex items-start gap-2.5 flex-1 min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md"
