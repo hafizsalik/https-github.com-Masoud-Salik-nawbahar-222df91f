@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { useArticleSearch, addCitation } from "@/hooks/useCitations";
 import { usePublishingCapacity } from "@/hooks/usePublishingCapacity";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
+import { getKabulDateKey } from "@/hooks/useWritingMotivation";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -43,7 +44,7 @@ const ArticleEditor = () => {
   const [searchParams] = useSearchParams();
   const responseToId = searchParams.get("response_to");
   const editId = searchParams.get("edit");
-  
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -53,7 +54,7 @@ const ArticleEditor = () => {
   const [loading, setLoading] = useState(false);
   const [parentArticle, setParentArticle] = useState<{ id: string; title: string } | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+
   // AI Review state
   const [reviewState, setReviewState] = useState<"idle" | "reviewing" | "result">("idle");
   const [aiResult, setAiResult] = useState<AIResult | null>(null);
@@ -73,7 +74,9 @@ const ArticleEditor = () => {
   const { stats: capacityStats, canPublish, loading: capacityLoading } = usePublishingCapacity();
   const { loading: authLoading, isAuthenticated } = useProtectedRoute();
   const { user } = useAuth();
-  
+  const location = useLocation();
+  const [showMotivationHint, setShowMotivationHint] = useState(false);
+
   const [showSchedule, setShowSchedule] = useState(false);
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
@@ -84,6 +87,9 @@ const ArticleEditor = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const locationState = location.state as { motivationPrompt?: string; autoFocus?: boolean; bannerClick?: boolean } | null;
+  const motivationPrompt = locationState?.motivationPrompt;
+  const shouldAutoFocus = locationState?.autoFocus;
 
   // Load existing article for editing
   useEffect(() => {
@@ -150,6 +156,16 @@ const ArticleEditor = () => {
     }
   }, [responseToId, editId]);
 
+  useEffect(() => {
+    if (!responseToId && !editId && motivationPrompt && !content) {
+      setContent(motivationPrompt);
+    }
+    if (!responseToId && !editId && motivationPrompt && shouldAutoFocus) {
+      requestAnimationFrame(() => textareaRef.current?.focus());
+      setShowMotivationHint(true);
+    }
+  }, [responseToId, editId, motivationPrompt, shouldAutoFocus, content]);
+
   // Auto-save draft
   useEffect(() => {
     if (!responseToId) {
@@ -193,7 +209,7 @@ const ArticleEditor = () => {
       if (coverImage) {
         // Compress image before upload
         const compressedImage = await compressArticleImage(coverImage);
-        
+
         const fileExt = compressedImage.name.split('.').pop() || 'webp';
         const fileName = `${user.id}/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('article-covers').upload(fileName, compressedImage);
@@ -249,6 +265,9 @@ const ArticleEditor = () => {
         toast({ title: "✅ مقاله منتشر شد", description: "ارزیابی هوش مصنوعی در دسترس نبود" });
         playSuccessSound();
         if (!responseToId && !isEditMode) localStorage.removeItem(DRAFT_KEY);
+        if (user) {
+          storage.set(`last_publish_${user.id}`, getKabulDateKey());
+        }
         navigate("/");
         return;
       }
@@ -258,6 +277,9 @@ const ArticleEditor = () => {
 
       if (evalData.approved) {
         if (!responseToId && !isEditMode) localStorage.removeItem(DRAFT_KEY);
+        if (user) {
+          storage.set(`last_publish_${user.id}`, getKabulDateKey());
+        }
       }
     } catch (error: any) {
       toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
@@ -401,7 +423,7 @@ const ArticleEditor = () => {
     let result = content;
     const parts: { text: string; issue?: ProofIssue }[] = [];
     let remaining = result;
-    
+
     // Sort issues by position in text (first occurrence)
     const sortedIssues = [...proofIssues].sort((a, b) => {
       const posA = remaining.indexOf(a.word);
@@ -537,10 +559,10 @@ const ArticleEditor = () => {
               <Save size={14} strokeWidth={1.5} />
               <span className="hidden sm:inline">پیش‌نویس</span>
             </button>
-            <Button 
-              onClick={handlePublish} 
-              disabled={loading || !title.trim() || !content.trim()} 
-              size="sm" 
+            <Button
+              onClick={handlePublish}
+              disabled={loading || !title.trim() || !content.trim()}
+              size="sm"
               className="gap-1.5 h-8 px-4"
             >
               {loading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} strokeWidth={1.5} />}
@@ -611,9 +633,8 @@ const ArticleEditor = () => {
           <button
             onClick={proofActive ? () => { setProofActive(false); setProofIssues([]); setSelectedIssue(null); } : handleProofread}
             disabled={proofLoading}
-            className={`p-1.5 rounded-md transition-colors flex items-center gap-1 ${
-              proofActive ? "text-primary bg-primary/10" : "text-muted-foreground/50 hover:text-foreground"
-            }`}
+            className={`p-1.5 rounded-md transition-colors flex items-center gap-1 ${proofActive ? "text-primary bg-primary/10" : "text-muted-foreground/50 hover:text-foreground"
+              }`}
             title="ویراستاری هوشمند"
           >
             {proofLoading ? <Loader2 size={16} className="animate-spin" /> : <SpellCheck size={16} strokeWidth={1.5} />}
@@ -646,26 +667,24 @@ const ArticleEditor = () => {
                 style={{ lineHeight: '2.2' }}
                 onClick={() => textareaRef.current?.focus()}
               >
-                {parts.map((part, i) => 
+                {parts.map((part, i) =>
                   part.issue ? (
                     <span
                       key={i}
                       onClick={(e) => { e.stopPropagation(); setSelectedIssue(selectedIssue?.word === part.issue!.word ? null : part.issue!); }}
-                      className={`relative cursor-pointer border-b-2 transition-colors ${
-                        part.issue.type === "spelling" ? "border-destructive/60 bg-destructive/8" :
-                        part.issue.type === "grammar" ? "border-yellow-500/60 bg-yellow-500/8" :
-                        "border-blue-500/60 bg-blue-500/8"
-                      } ${selectedIssue?.word === part.issue.word ? "ring-2 ring-primary/30 rounded-sm" : ""}`}
+                      className={`relative cursor-pointer border-b-2 transition-colors ${part.issue.type === "spelling" ? "border-destructive/60 bg-destructive/8" :
+                          part.issue.type === "grammar" ? "border-yellow-500/60 bg-yellow-500/8" :
+                            "border-blue-500/60 bg-blue-500/8"
+                        } ${selectedIssue?.word === part.issue.word ? "ring-2 ring-primary/30 rounded-sm" : ""}`}
                     >
                       {part.text}
                       {/* Tooltip */}
                       {selectedIssue?.word === part.issue.word && (
                         <span className="absolute bottom-full right-0 mb-1 z-10 w-56 p-2.5 bg-popover border border-border rounded-lg shadow-lg text-right animate-fade-in" onClick={(e) => e.stopPropagation()}>
                           <span className="flex items-center gap-1.5 mb-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              part.issue!.type === "spelling" ? "bg-destructive" :
-                              part.issue!.type === "grammar" ? "bg-yellow-500" : "bg-blue-500"
-                            }`} />
+                            <span className={`w-1.5 h-1.5 rounded-full ${part.issue!.type === "spelling" ? "bg-destructive" :
+                                part.issue!.type === "grammar" ? "bg-yellow-500" : "bg-blue-500"
+                              }`} />
                             <span className="text-[10px] text-muted-foreground">
                               {part.issue!.type === "spelling" ? "املایی" : part.issue!.type === "grammar" ? "دستوری" : "سبکی"}
                             </span>
@@ -853,9 +872,8 @@ const ArticleEditor = () => {
                           <span className="text-[10px] text-muted-foreground w-14 text-left">{label}</span>
                           <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                percent >= 60 ? "bg-green-500" : percent >= 40 ? "bg-yellow-500" : "bg-destructive"
-                              }`}
+                              className={`h-full rounded-full transition-all duration-500 ${percent >= 60 ? "bg-green-500" : percent >= 40 ? "bg-yellow-500" : "bg-destructive"
+                                }`}
                               style={{ width: `${percent}%` }}
                             />
                           </div>
@@ -867,9 +885,8 @@ const ArticleEditor = () => {
                     })}
                     <div className="flex items-center justify-between pt-1.5 border-t border-border/30">
                       <span className="text-[10px] font-medium text-foreground">میانگین</span>
-                      <span className={`text-[11px] font-bold ${
-                        (aiResult.avg_percent || 0) >= 60 ? "text-green-600" : (aiResult.avg_percent || 0) >= 40 ? "text-yellow-600" : "text-destructive"
-                      }`}>
+                      <span className={`text-[11px] font-bold ${(aiResult.avg_percent || 0) >= 60 ? "text-green-600" : (aiResult.avg_percent || 0) >= 40 ? "text-yellow-600" : "text-destructive"
+                        }`}>
                         {toPersianNumber(aiResult.avg_percent || 0)}٪
                       </span>
                     </div>

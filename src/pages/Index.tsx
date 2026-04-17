@@ -1,12 +1,29 @@
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ArticleFeed } from "@/components/articles/ArticleFeed";
 import { ContinueReading } from "@/components/articles/ContinueReading";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { SEOHead } from "@/components/SEOHead";
+import { WritingMotivationBanner } from "@/components/WritingMotivationBanner";
 import { useSmartFeed } from "@/hooks/useSmartFeed";
+import { useAuth } from "@/hooks/useAuth";
+import { useWritingMotivation } from "@/hooks/useWritingMotivation";
+import { storage } from "@/lib/storage";
 
 const Index = () => {
   const { articles, loading, loadingMore, hasMore, refetch, loadMore } = useSmartFeed();
+  const { user } = useAuth();
+  const motivationData = useWritingMotivation();
+  const [bannerVisible, setBannerVisible] = useState(() => {
+    const dismissedUntil = storage.get<number>("writing_motivation_dismissed_until", 0);
+    return Date.now() > dismissedUntil;
+  });
+
+  const showMotivationBanner = !!user && bannerVisible;
+  const dismissBanner = () => {
+    storage.set("writing_motivation_dismissed_until", Date.now() + 4 * 60 * 60 * 1000);
+    setBannerVisible(false);
+  };
 
   return (
     <AppLayout>
@@ -32,6 +49,14 @@ const Index = () => {
         <LoadingScreen />
       ) : (
         <>
+          {showMotivationBanner && (
+            <WritingMotivationBanner
+              position="sticky-top"
+              motivationData={motivationData}
+              onDismiss={dismissBanner}
+            />
+          )}
+
           {/* Continue Reading section */}
           <ContinueReading />
 
