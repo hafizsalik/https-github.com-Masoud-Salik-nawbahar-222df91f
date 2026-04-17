@@ -215,7 +215,7 @@ Article Content: ${content.slice(0, 4000)}`;
 
     // Calculate average percentage
     const avgPercent = ((scores.science / 15 + scores.ethics / 10 + scores.writing / 10 + scores.timing / 10 + scores.innovation / 5) / 5) * 100;
-    
+
     const publishBlocked = evaluation.publish_blocked === true;
     const approved = evaluation.approved !== false && avgPercent >= 40 && !publishBlocked;
     const rejectionReason = !approved
@@ -243,8 +243,8 @@ Article Content: ${content.slice(0, 4000)}`;
       body: JSON.stringify(updateBody),
     });
 
-    return new Response(JSON.stringify({ 
-      approved, 
+    return new Response(JSON.stringify({
+      approved,
       publish_blocked: publishBlocked,
       rejection_reason: rejectionReason,
       strengths: evaluation.strengths || [],
