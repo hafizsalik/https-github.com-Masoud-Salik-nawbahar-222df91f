@@ -56,7 +56,7 @@ export function WritingMotivationBanner({ position, onDismiss, motivationData }:
                         <div className="flex items-center gap-2 mb-2">
                             <Sparkles size={18} className="text-primary" />
                             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                                    نوشتن سریع
+                                    نوشتن سریع   
                             </span>
                         </div>
                         <p className="text-sm font-semibold text-foreground leading-6">
@@ -70,7 +70,7 @@ export function WritingMotivationBanner({ position, onDismiss, motivationData }:
                             </span>
                             <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-medium dark:bg-slate-900/70">
                                 {motivationData.articlesThisMonth < motivationData.maxMonthly
-                                    ? `${motivationData.maxMonthly - motivationData.articlesThisMonth} مقاله باقی‌مانده این ماه`
+                                    ? `${motivationData.maxMonthly - motivationData.articlesThisMonth} مقاله باقی‌مانده این ماه برای تکمیل کردن نوشتن مقاله های ماهانه!`
                                     : "حداکثر مقاله‌های ماه را نوشته‌اید"}
                             </span>
                         </div>
