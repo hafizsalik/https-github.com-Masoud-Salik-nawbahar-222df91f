@@ -1,6 +1,6 @@
 import { MessageCircle, CheckCheck } from "lucide-react";
 import { cn, toPersianNumber } from "@/lib/utils";
-import { ReactionPicker } from "./ReactionPicker";
+import { ReactionPickerButton } from "./ReactionPickerButton";
 import { ReactionDetailsModal } from "./ReactionDetailsModal";
 import { REACTION_SVG_ICONS } from "./ReactionIcons";
 import { type ReactionKey, type ReactionSummary } from "@/hooks/useCardReactions";
@@ -37,42 +37,6 @@ export function ArticleCardMetrics({
 
   const displayCount = totalCount > 0 ? totalCount : reactionCount;
 
-  const buildReactionLabel = (): string | null => {
-    if (displayCount === 0) return null;
-
-    // Before fetch completes, show count from article data
-    if (totalCount === 0 && reactionCount > 0) {
-      return `${toPersianNumber(reactionCount)} واکنش`;
-    }
-
-    const names: string[] = [];
-    if (userReaction) names.push("شمااا");
-    reactorNames.forEach((n) => {
-      if (!names.includes(n)) names.push(n);
-    });
-
-    if (names.length === 0) return `${toPersianNumber(displayCount)} واکنش`;
-
-    const shown = names.slice(0, 2);
-    const remaining = Math.max(displayCount - shown.length, 0);
-
-    let text = shown.join("، ");
-    if (remaining > 0) text += ` و ${toPersianNumber(remaining)} نفر دیگر`;
-    return text;
-  };
-
-  const reactionText = buildReactionLabel();
-  const hasReactions = displayCount > 0;
-
-  const handleSummaryClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (hasReactions) {
-      onReactionHover?.();
-      setShowReactionDetails(true);
-    }
-  };
-
   return (
     <>
       <div className="mt-3 pb-4">
@@ -91,13 +55,11 @@ export function ArticleCardMetrics({
               </span>
             </button>
 
-            <ReactionPicker
+            <ReactionPickerButton
               userReaction={userReaction}
               onReact={onReact}
-              onHover={onReactionHover}
-              topTypes={reactionSummary.topTypes}
-              summaryText={reactionText || undefined}
-              onSummaryClick={hasReactions ? handleSummaryClick : undefined}
+              count={displayCount}
+              reactorNames={reactorNames}
             />
           </div>
 

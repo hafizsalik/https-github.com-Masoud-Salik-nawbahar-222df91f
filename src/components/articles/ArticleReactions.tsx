@@ -3,7 +3,7 @@ import { type ReactionKey, type ReactionSummary } from "@/hooks/useCardReactions
 import { cn, toPersianNumber } from "@/lib/utils";
 import { MessageCircle } from "lucide-react";
 import { ReactionDetailsModal } from "./ReactionDetailsModal";
-import { ReactionPicker } from "./ReactionPicker";
+import { ReactionPickerButton } from "./ReactionPickerButton";
 
 interface ArticleReactionsProps {
   articleId: string;
@@ -33,16 +33,18 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
   const label = buildLabel();
   const hasReactions = totalCount > 0;
 
-  const handleSummaryClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (hasReactions) setShowDetails(true);
-  };
-
   return (
     <>
       <div className="flex items-center justify-between py-4 my-6 border-t border-b border-border/30">
         <div className="flex items-center gap-4">
+          {/* Reaction picker button — new LinkedIn-style */}
+          <ReactionPickerButton
+            userReaction={userReaction}
+            onReact={onReact}
+            count={totalCount}
+            reactorNames={reactorNames}
+          />
+
           {/* Comment */}
           <button
             onClick={onCommentClick}
@@ -53,15 +55,6 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
               {commentCount > 0 ? `${toPersianNumber(commentCount)} نظر` : "نظر"}
             </span>
           </button>
-
-          {/* Reaction picker — same as card */}
-          <ReactionPicker
-            userReaction={userReaction}
-            onReact={onReact}
-            topTypes={topTypes}
-            summaryText={label || undefined}
-            onSummaryClick={hasReactions ? handleSummaryClick : undefined}
-          />
         </div>
       </div>
 
