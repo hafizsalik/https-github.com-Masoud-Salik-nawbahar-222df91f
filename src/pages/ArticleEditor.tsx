@@ -539,7 +539,7 @@ const ArticleEditor = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between px-4 h-12 max-w-screen-md mx-auto">
+        <div className="flex items-center justify-between px-3 sm:px-4 h-12 max-w-screen-md mx-auto">
           <button
             onClick={() => {
               if (window.history.length > 1) navigate(-1);
@@ -573,7 +573,7 @@ const ArticleEditor = () => {
       </header>
 
       {/* Editor */}
-      <main className="max-w-screen-md mx-auto px-5 pt-3 pb-28">
+      <main className="max-w-screen-md mx-auto px-4 sm:px-5 pt-3 pb-28">
         {/* Response indicator */}
         {parentArticle && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground p-2.5 mb-3 bg-primary/5 rounded-lg border border-primary/10">
@@ -592,7 +592,7 @@ const ArticleEditor = () => {
         {/* Cover Image Preview */}
         {coverPreview && (
           <div className="relative rounded-xl overflow-hidden mb-3">
-            <img src={coverPreview} alt="Cover" className="w-full h-36 object-cover" />
+            <img src={coverPreview} alt="Cover" className="w-full h-24 sm:h-36 object-cover" />
             <button onClick={removeCoverImage} className="absolute top-2 left-2 p-1.5 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors">
               <X size={14} strokeWidth={1.5} />
             </button>
@@ -653,7 +653,7 @@ const ArticleEditor = () => {
             placeholder="متن مقاله خود را بنویسید..."
             value={content}
             onChange={(e) => { setContent(e.target.value); if (proofActive) { setProofActive(false); setProofIssues([]); } }}
-            className={`min-h-[45vh] border-0 resize-none px-0 focus-visible:ring-0 bg-transparent text-[15px] placeholder:text-muted-foreground/25 ${proofActive && proofIssues.length > 0 ? "opacity-0 absolute inset-0" : ""}`}
+            className={`min-h-[35vh] sm:min-h-[45vh] border-0 resize-none px-0 focus-visible:ring-0 bg-transparent text-[15px] placeholder:text-muted-foreground/25 ${proofActive && proofIssues.length > 0 ? "opacity-0 absolute inset-0" : ""}`}
             style={{ lineHeight: '2.2' }}
           />
 
@@ -663,7 +663,7 @@ const ArticleEditor = () => {
             if (!parts) return null;
             return (
               <div
-                className="min-h-[45vh] text-[15px] text-foreground whitespace-pre-wrap cursor-text"
+                className="min-h-[35vh] sm:min-h-[45vh] text-[15px] text-foreground whitespace-pre-wrap cursor-text"
                 style={{ lineHeight: '2.2' }}
                 onClick={() => textareaRef.current?.focus()}
               >
