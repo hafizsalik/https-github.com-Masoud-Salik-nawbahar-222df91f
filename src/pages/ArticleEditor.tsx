@@ -24,6 +24,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogAction,
+  AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 
 const DRAFT_KEY = "nobahar_draft";
@@ -36,6 +37,11 @@ const SUGGESTED_TAGS = [
 interface AIResult {
   approved: boolean;
   rejection_reason: string;
+  publish_blocked?: boolean;
+  strengths?: string[];
+  improvement_advice?: string;
+  motivation_message?: string;
+  policy_issues?: string[];
   scores: { science: number; ethics: number; writing: number; timing: number; innovation: number };
   avg_percent: number;
 }
@@ -58,6 +64,7 @@ const ArticleEditor = () => {
   // AI Review state
   const [reviewState, setReviewState] = useState<"idle" | "reviewing" | "result">("idle");
   const [aiResult, setAiResult] = useState<AIResult | null>(null);
+  const [articleId, setArticleId] = useState<string | null>(null);
 
   // Proofreading state
   interface ProofIssue { word: string; suggestion: string; type: "spelling" | "grammar" | "style"; reason: string; }
@@ -244,6 +251,8 @@ const ArticleEditor = () => {
         articleId = insertedArticle.id;
       }
 
+      setArticleId(articleId);
+
       // Save citations
       if (citedArticles.length > 0) {
         // Remove old citations if editing
@@ -297,6 +306,28 @@ const ArticleEditor = () => {
       setAiResult(null);
     }
   };
+
+  const handlePublishAnyway = async () => {
+    if (!articleId) return;
+    if (!user) { navigate("/auth"); return; }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("articles").update({ status: "published" }).eq("id", articleId);
+      if (error) throw error;
+      if (!responseToId && !isEditMode) localStorage.removeItem(DRAFT_KEY);
+      if (user) storage.set(`last_publish_${user.id}`, getKabulDateKey());
+      toast({ title: "✅ مقاله منتشر شد", description: "مقاله شما منتشر شد و بعداً می‌توانید آن را بهبود دهید." });
+      playSuccessSound();
+      navigate("/");
+    } catch (error: any) {
+      toast({ title: "خطا", description: sanitizeError(error), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const canPublishAnyway = Boolean(aiResult && !aiResult.approved && !aiResult.publish_blocked);
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -859,7 +890,23 @@ const ArticleEditor = () => {
                 {aiResult?.approved ? (
                   <p className="text-xs text-muted-foreground mb-3">مقاله شما با موفقیت منتشر شد ✅</p>
                 ) : (
-                  <p className="text-xs text-destructive/80 mb-3 leading-relaxed">{aiResult?.rejection_reason}</p>
+                  <div className="space-y-3 mb-3">
+                    <p className="text-xs text-destructive/80 leading-relaxed">{aiResult?.rejection_reason}</p>
+                    {aiResult?.motivation_message && (
+                      <p className="text-xs text-muted-foreground leading-relaxed">{aiResult.motivation_message}</p>
+                    )}
+                    {aiResult?.improvement_advice && (
+                      <p className="text-xs text-muted-foreground leading-relaxed"><span className="font-medium">پیشنهاد بهبود:</span> {aiResult.improvement_advice}</p>
+                    )}
+                    {aiResult?.strengths?.length ? (
+                      <div className="rounded-lg border border-border/70 bg-muted p-3">
+                        <p className="text-[10px] text-muted-foreground mb-2">نقاط قوت مقاله:</p>
+                        <ul className="list-disc list-inside text-[10px] text-foreground space-y-1">
+                          {aiResult.strengths.map((strength, index) => <li key={index}>{strength}</li>)}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </div>
                 )}
                 {aiResult?.scores && (
                   <div className="space-y-1.5 pt-2 border-t border-border/50">
@@ -896,9 +943,20 @@ const ArticleEditor = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={handleResultClose} className="text-xs">
-              {aiResult?.approved ? "بازگشت به خانه" : "بازگشت و ویرایش"}
-            </AlertDialogAction>
+            {!aiResult?.approved ? (
+              <>
+                <AlertDialogCancel className="text-xs">بازگشت و ویرایش</AlertDialogCancel>
+                {canPublishAnyway ? (
+                  <AlertDialogAction onClick={handlePublishAnyway} className="text-xs">
+                    انتشار با وجود ضعف‌های جزئی
+                  </AlertDialogAction>
+                ) : null}
+              </>
+            ) : (
+              <AlertDialogAction onClick={handleResultClose} className="text-xs">
+                بازگشت به خانه
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -85,12 +85,12 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const prompt = `You are a strict editorial AI evaluator and content moderator for a Persian-language journal platform called Nobahar.
+    const prompt = `You are a professional and encouraging Persian-language editorial coach for a journal platform called Nobahar.
 
 Your job has TWO parts:
 
-PART 1 - CONTENT MODERATION:
-Check if this article contains any of the following prohibited content:
+PART 1 - SAFETY CHECK:
+Review the article for prohibited or unsafe content:
 - Hate speech, discrimination, or content promoting division between ethnic/religious groups
 - Insults, defamation, or personal attacks
 - Adult/sexual content
@@ -99,9 +99,9 @@ Check if this article contains any of the following prohibited content:
 - Spam, advertising, or meaningless content
 - Misinformation or dangerous health/medical claims
 
-If ANY prohibited content is found, set "approved" to false and provide a clear Persian-language reason in "rejection_reason".
+If any prohibited content is found, set "approved" to false and "publish_blocked" to true. Provide a clear Persian-language reason and list the policy issues found.
 
-PART 2 - QUALITY SCORING:
+PART 2 - QUALITY REVIEW:
 Evaluate the article on 5 criteria with integer scores:
 - science (0-15): Scientific accuracy, references, factual correctness
 - ethics (0-10): Ethical standards, respect, responsibility
@@ -109,9 +109,10 @@ Evaluate the article on 5 criteria with integer scores:
 - timing (0-10): Relevance, timeliness of the topic
 - innovation (0-5): Originality, fresh perspective
 
+If the article is safe but the quality is below the platform's desired level, set "approved" to false and "publish_blocked" to false. In that case provide a supportive rejection_reason, a short motivation_message, strengths, and improvement_advice.
+
 MINIMUM THRESHOLD: The average percentage score must be at least 40% for approval.
 Calculate: ((science/15 + ethics/10 + writing/10 + timing/10 + innovation/5) / 5) * 100
-If below 40%, set "approved" to false with reason explaining the quality is insufficient.
 
 Article Title: ${title}
 
@@ -126,7 +127,7 @@ Article Content: ${content.slice(0, 4000)}`;
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a strict content moderator and quality evaluator. Use the provided tool to return your evaluation." },
+          { role: "system", content: "You are a professional editorial coach and content safety reviewer. Use the provided tool to return structured feedback." },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -134,19 +135,32 @@ Article Content: ${content.slice(0, 4000)}`;
             type: "function",
             function: {
               name: "submit_evaluation",
-              description: "Submit article moderation and quality evaluation results",
+              description: "Submit article moderation, quality evaluation, and coaching feedback",
               parameters: {
                 type: "object",
                 properties: {
                   approved: { type: "boolean", description: "Whether the article passes moderation and quality checks" },
-                  rejection_reason: { type: "string", description: "Persian-language reason for rejection, empty string if approved" },
+                  publish_blocked: { type: "boolean", description: "Whether this article must be blocked from publication due to safety or policy issues" },
+                  rejection_reason: { type: "string", description: "Persian-language reason for rejection or improvement guidance" },
                   science: { type: "integer", minimum: 0, maximum: 15 },
                   ethics: { type: "integer", minimum: 0, maximum: 10 },
                   writing: { type: "integer", minimum: 0, maximum: 10 },
                   timing: { type: "integer", minimum: 0, maximum: 10 },
                   innovation: { type: "integer", minimum: 0, maximum: 5 },
+                  strengths: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "What the article does well",
+                  },
+                  improvement_advice: { type: "string", description: "A concise suggestion for how the author can improve the article" },
+                  motivation_message: { type: "string", description: "A short encouraging message for the author" },
+                  policy_issues: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Policy issues detected in the article, if any",
+                  },
                 },
-                required: ["approved", "rejection_reason", "science", "ethics", "writing", "timing", "innovation"],
+                required: ["approved", "publish_blocked", "rejection_reason", "science", "ethics", "writing", "timing", "innovation"],
                 additionalProperties: false,
               },
             },
@@ -202,8 +216,8 @@ Article Content: ${content.slice(0, 4000)}`;
     // Calculate average percentage
     const avgPercent = ((scores.science / 15 + scores.ethics / 10 + scores.writing / 10 + scores.timing / 10 + scores.innovation / 5) / 5) * 100;
     
-    // Determine final approval
-    const approved = evaluation.approved !== false && avgPercent >= 40;
+    const publishBlocked = evaluation.publish_blocked === true;
+    const approved = evaluation.approved !== false && avgPercent >= 40 && !publishBlocked;
     const rejectionReason = !approved
       ? (evaluation.rejection_reason || "کیفیت مقاله برای انتشار کافی نیست. لطفاً محتوا را بازبینی و بهبود دهید.")
       : "";
@@ -215,7 +229,7 @@ Article Content: ${content.slice(0, 4000)}`;
       ai_score_writing: scores.writing,
       ai_score_timing: scores.timing,
       ai_score_innovation: scores.innovation,
-      status: approved ? "published" : "rejected",
+      status: approved ? "published" : (publishBlocked ? "rejected" : "pending"),
     };
 
     await fetch(`${SUPABASE_URL}/rest/v1/articles?id=eq.${articleId}`, {
@@ -231,7 +245,11 @@ Article Content: ${content.slice(0, 4000)}`;
 
     return new Response(JSON.stringify({ 
       approved, 
-      rejection_reason: rejectionReason, 
+      publish_blocked: publishBlocked,
+      rejection_reason: rejectionReason,
+      strengths: evaluation.strengths || [],
+      improvement_advice: evaluation.improvement_advice || "",
+      motivation_message: evaluation.motivation_message || "",
       scores,
       avg_percent: Math.round(avgPercent),
     }), {
