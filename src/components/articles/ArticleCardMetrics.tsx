@@ -44,12 +44,13 @@ export function ArticleCardMetrics({
         {/* Right side: reaction + comment + response */}
         <div className="flex items-center gap-6">
           {/* Reactions — LinkedIn-style floating card picker */}
-          <div className="flex items-center gap-1.5" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <div 
+            className="flex items-center gap-1.5"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
             <ReactionPickerButton
               userReaction={userReaction}
               onReact={onReact}
-              onHover={onReactionHover}
-              count={displayReactionCount}
             />
             {displayReactionCount > 0 && (
               <span className="text-[13px] text-muted-foreground">

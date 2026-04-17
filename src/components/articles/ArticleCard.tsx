@@ -54,6 +54,11 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
     navigate(`/profile/${article.author_id}`);
   };
 
+  const handleReactionClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
   const handleCommentClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -151,18 +156,20 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         </div>
 
         {/* Metrics */}
-        <ArticleCardMetrics
-          articleId={article.id}
-          commentCount={article.comment_count}
-          reactionCount={article.reaction_count}
-          isRead={hasBeenRead}
-          commentsOpen={showComments}
-          onCommentClick={handleCommentClick}
-          onResponseClick={handleResponseClick}
-          reactionSummary={reactionSummary}
-          onReact={(type) => { toggleReaction(type); }}
-          onReactionHover={ensureFetched}
-        />
+        <div onClick={handleReactionClick}>
+          <ArticleCardMetrics
+            articleId={article.id}
+            commentCount={article.comment_count}
+            reactionCount={article.reaction_count}
+            isRead={hasBeenRead}
+            commentsOpen={showComments}
+            onCommentClick={handleCommentClick}
+            onResponseClick={handleResponseClick}
+            reactionSummary={reactionSummary}
+            onReact={(type) => { toggleReaction(type); }}
+            onReactionHover={ensureFetched}
+          />
+        </div>
       </Link>
 
       {showComments && (

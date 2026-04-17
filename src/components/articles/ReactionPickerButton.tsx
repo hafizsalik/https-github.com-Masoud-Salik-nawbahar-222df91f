@@ -12,17 +12,12 @@ import { triggerHaptic } from "@/lib/haptics";
 interface ReactionPickerButtonProps {
   userReaction: ReactionKey | null;
   onReact: (type: ReactionKey) => void;
-  onHover?: () => void;
-  count?: number;
   reactorNames?: string[];
 }
 
 export function ReactionPickerButton({
   userReaction,
   onReact,
-  onHover,
-  count = 0,
-  reactorNames = [],
 }: ReactionPickerButtonProps) {
   // State
   const [showCard, setShowCard] = useState(false);
@@ -44,7 +39,6 @@ export function ReactionPickerButton({
     e.preventDefault();
     e.stopPropagation();
 
-    onHover?.();
     isPointerDown.current = true;
     pointerStartTime.current = Date.now();
 
@@ -63,7 +57,7 @@ export function ReactionPickerButton({
       }
       longPressTimer.current = null;
     }, LONG_PRESS_DURATION);
-  }, [onHover]);
+  }, []);
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -140,22 +134,17 @@ export function ReactionPickerButton({
     <div className="relative flex items-center gap-1.5">
       {/* Main reaction button */}
       <button
-        type="button"
         ref={buttonRef}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
         className={cn(
           "flex items-center justify-center gap-2",
           "px-3 py-2 rounded-lg",
           "touch-none select-none",
-          "hover:bg-muted/50 active:scale-95",
+          "hover:scale-105 active:scale-95",
           "transition-all duration-200",
-          userReaction && "ring-1"
+          userReaction && "text-foreground"
         )}
         style={
           userReaction
@@ -176,13 +165,6 @@ export function ReactionPickerButton({
             animated={!!userReaction}
             className="reaction-icon"
           />
-        )}
-
-        {/* Count badge */}
-        {count > 0 && (
-          <span className="text-[10px] font-medium">
-            {count > 99 ? "99+" : count}
-          </span>
         )}
       </button>
 
@@ -318,7 +300,6 @@ function ReactionCardPickerInline({
 
           return (
             <button
-              type="button"
               key={key}
               onPointerMove={() => handleReactionHover(key)}
               onPointerUp={() => handleReactionSelect(key)}
