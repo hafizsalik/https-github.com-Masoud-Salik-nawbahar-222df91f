@@ -48,6 +48,7 @@ export function ArticleCardMetrics({
             <ReactionPickerButton
               userReaction={userReaction}
               onReact={onReact}
+              onHover={onReactionHover}
               count={displayReactionCount}
             />
             {displayReactionCount > 0 && (

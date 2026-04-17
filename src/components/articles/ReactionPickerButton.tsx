@@ -12,6 +12,7 @@ import { triggerHaptic } from "@/lib/haptics";
 interface ReactionPickerButtonProps {
   userReaction: ReactionKey | null;
   onReact: (type: ReactionKey) => void;
+  onHover?: () => void;
   count?: number;
   reactorNames?: string[];
 }
@@ -19,6 +20,7 @@ interface ReactionPickerButtonProps {
 export function ReactionPickerButton({
   userReaction,
   onReact,
+  onHover,
   count = 0,
   reactorNames = [],
 }: ReactionPickerButtonProps) {
@@ -42,6 +44,7 @@ export function ReactionPickerButton({
     e.preventDefault();
     e.stopPropagation();
 
+    onHover?.();
     isPointerDown.current = true;
     pointerStartTime.current = Date.now();
 
@@ -60,7 +63,7 @@ export function ReactionPickerButton({
       }
       longPressTimer.current = null;
     }, LONG_PRESS_DURATION);
-  }, []);
+  }, [onHover]);
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -137,10 +140,15 @@ export function ReactionPickerButton({
     <div className="relative flex items-center gap-1.5">
       {/* Main reaction button */}
       <button
+        type="button"
         ref={buttonRef}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
         className={cn(
           "flex items-center justify-center gap-2",
           "px-3 py-2 rounded-lg",
@@ -310,6 +318,7 @@ function ReactionCardPickerInline({
 
           return (
             <button
+              type="button"
               key={key}
               onPointerMove={() => handleReactionHover(key)}
               onPointerUp={() => handleReactionSelect(key)}
