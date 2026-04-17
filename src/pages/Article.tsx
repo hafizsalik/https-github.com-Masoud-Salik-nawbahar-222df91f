@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Star, CornerUpRight, Share2, Bookmark, BookmarkCheck } from "lucide-react";
+import { ArrowRight, Star, CornerUpRight, Share2, Bookmark, BookmarkCheck, ChevronUp, ChevronDown, X } from "lucide-react";
 import { formatSolarShort } from "@/lib/solarHijri";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -46,25 +46,52 @@ interface ArticleData {
 }
 
 /** Simple HTML content renderer — handles basic formatting from editor */
-function ArticleContent({ content }: { content: string }) {
+function ArticleContent({ content, searchQuery }: { content: string; searchQuery?: string }) {
   // Check if content contains HTML tags
   const isHTML = /<[a-z][\s\S]*>/i.test(content);
-  
+
   if (isHTML) {
     return (
-      <div 
+      <div
         className="article-prose"
-        dangerouslySetInnerHTML={{ __html: content }} 
+        dangerouslySetInnerHTML={{ __html: highlightText(content, searchQuery) }}
       />
     );
   }
-  
+
   // Plain text — render with whitespace preserved
   return (
     <div className="text-foreground whitespace-pre-wrap leading-[2.2] text-[15px]">
-      {content}
+      {highlightText(content, searchQuery)}
     </div>
   );
+}
+
+/** Highlight search matches in text */
+function highlightText(text: string, searchQuery?: string) {
+  if (!searchQuery || !searchQuery.trim()) return text;
+
+  const query = searchQuery.trim();
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+
+  if (/<[a-z][\s\S]*>/i.test(text)) {
+    // HTML content - highlight text nodes only
+    return text.replace(/(<[^>]*>)|([^<]+)/g, (match, tag, textContent) => {
+      if (tag) return tag; // Return HTML tags unchanged
+      if (textContent) {
+        return textContent.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800">$1</mark>');
+      }
+      return match;
+    });
+  } else {
+    // Plain text
+    const parts = text.split(regex);
+    return parts.map((part, index) =>
+      regex.test(part) ?
+        <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded-sm">{part}</mark> :
+        part
+    );
+  }
 }
 
 /** Reading progress bar */
@@ -98,17 +125,25 @@ const Article = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
-  
+
+  // Search highlighting state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [totalMatches, setTotalMatches] = useState(0);
+  const [showSearchBar, setShowSearchBar] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
   const { viewCount } = useViewCount(id || "");
   const { summary: reactionSummary, toggleReaction } = useCardReactions(id || "");
   const { responses, responseCount, parentArticle } = useResponseArticles(id || "");
   const { isBookmarked, toggle: toggleBookmark } = useBookmark(id || "");
-  
+
   const contentLength = article?.content?.length || 0;
   useEngagementTracking(id || "", contentLength);
 
@@ -124,6 +159,63 @@ const Article = () => {
       if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
     }
   }, [loading]);
+
+  // Initialize search from URL params
+  useEffect(() => {
+    const query = searchParams.get("q");
+    if (query && query.trim()) {
+      setSearchQuery(query.trim());
+      setShowSearchBar(true);
+    }
+  }, [searchParams]);
+
+  // Update matches when article or search query changes
+  useEffect(() => {
+    if (article && searchQuery) {
+      // Delay to ensure content is rendered
+      setTimeout(updateMatches, 50);
+    } else {
+      setTotalMatches(0);
+      setCurrentMatchIndex(0);
+    }
+  }, [article, searchQuery, updateMatches]);
+
+  const updateMatches = useCallback(() => {
+    if (!article || !searchQuery || !contentRef.current) return;
+
+    const content = article.content;
+    const regex = new RegExp(searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const matches = content.match(regex);
+    setTotalMatches(matches ? matches.length : 0);
+    setCurrentMatchIndex(0);
+
+    // Auto-scroll to first match
+    if (matches && matches.length > 0) {
+      setTimeout(() => scrollToMatch(0), 100);
+    }
+  }, [article, searchQuery]);
+
+  const scrollToMatch = (index: number) => {
+    if (!contentRef.current || !searchQuery) return;
+
+    const marks = contentRef.current.querySelectorAll('mark');
+    if (marks[index]) {
+      marks[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setCurrentMatchIndex(index);
+    }
+  };
+
+  const navigateMatch = (direction: 'prev' | 'next') => {
+    if (totalMatches === 0) return;
+
+    let newIndex;
+    if (direction === 'next') {
+      newIndex = (currentMatchIndex + 1) % totalMatches;
+    } else {
+      newIndex = currentMatchIndex === 0 ? totalMatches - 1 : currentMatchIndex - 1;
+    }
+    scrollToMatch(newIndex);
+  };
 
   const fetchArticle = async (articleId: string) => {
     setLoading(true);
@@ -252,6 +344,52 @@ const Article = () => {
         </div>
       </header>
 
+      {/* Search Bar */}
+      {showSearchBar && (
+        <div className="sticky top-[44px] z-40 bg-background/95 backdrop-blur-sm border-b border-border/50">
+          <div className="flex items-center gap-2 px-4 py-2 max-w-screen-md mx-auto">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="جستجو در مقاله..."
+              className="flex-1 px-3 py-1.5 text-sm bg-muted/50 border border-border/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              autoFocus
+            />
+            {totalMatches > 0 && (
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {toPersianNumber(currentMatchIndex + 1)} از {toPersianNumber(totalMatches)}
+              </span>
+            )}
+            <button
+              onClick={() => navigateMatch('prev')}
+              disabled={totalMatches === 0}
+              className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              <ChevronUp size={16} />
+            </button>
+            <button
+              onClick={() => navigateMatch('next')}
+              disabled={totalMatches === 0}
+              className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              <ChevronDown size={16} />
+            </button>
+            <button
+              onClick={() => {
+                setShowSearchBar(false);
+                setSearchQuery("");
+                setTotalMatches(0);
+                setCurrentMatchIndex(0);
+              }}
+              className="p-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Article Content */}
       <main className="max-w-screen-md mx-auto px-5 py-8 pb-24">
         {/* Response indicator */}
@@ -305,8 +443,8 @@ const Article = () => {
         )}
 
         {/* Content */}
-        <article className="article-content">
-          <ArticleContent content={article.content} />
+        <article className="article-content" ref={contentRef}>
+          <ArticleContent content={article.content} searchQuery={searchQuery} />
         </article>
 
         {/* Tags */}

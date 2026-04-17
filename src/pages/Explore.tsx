@@ -160,7 +160,7 @@ const Explore = () => {
             {!filterLoading && (
               <div className="divide-y divide-border/30">
                 {filteredArticles.map((article) => (
-                  <ArticleCard key={article.id} article={article} />
+                  <ArticleCard key={article.id} article={article} searchQuery={debouncedQuery} />
                 ))}
               </div>
             )}

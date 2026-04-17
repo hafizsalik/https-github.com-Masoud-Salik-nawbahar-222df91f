@@ -17,6 +17,7 @@ import userIcon from "@/assets/icons/user.svg";
 interface ArticleCardProps {
   article: FeedArticle;
   onDelete?: () => void;
+  searchQuery?: string;
 }
 
 function getExcerpt(content: string, maxChars: number = 180): string {
@@ -28,7 +29,7 @@ function isArticleRead(articleId: string): boolean {
   return storage.get(`article_viewed_${articleId}`, null) !== null;
 }
 
-export function ArticleCard({ article, onDelete }: ArticleCardProps) {
+export function ArticleCard({ article, onDelete, searchQuery }: ArticleCardProps) {
   const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -87,7 +88,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
         </Link>
       )}
 
-      <Link to={`/article/${article.id}`} className="block px-4 pt-4 pb-1">
+      <Link to={`/article/${article.id}${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`} className="block px-4 pt-4 pb-1">
         {/* Author row */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0" style={{ direction: "rtl" }}>
