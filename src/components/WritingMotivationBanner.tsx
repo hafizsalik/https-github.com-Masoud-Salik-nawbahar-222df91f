@@ -56,7 +56,7 @@ export function WritingMotivationBanner({ position, onDismiss, motivationData }:
                         <div className="flex items-center gap-2 mb-2">
                             <Sparkles size={18} className="text-primary" />
                             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                                    نوشتن سریع
+                                    نوشتن سریع   
                             </span>
                         </div>
                         <p className="text-sm font-semibold text-foreground leading-6">
