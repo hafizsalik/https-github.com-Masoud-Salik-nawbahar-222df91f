@@ -27,8 +27,9 @@ const STEPS = [
     example: "مثال: ...",
   },
   {
-    title: "۴. بفرست!",
-    description: "نوشته‌ات را منتشر کن. انجام بهتر از کامل است.",
+    title: "۴. انتشار!",
+    description: "پس از نگارش، «هوش مصنوعی نوبهار» مقاله را بر اساس ۵ معیار ارزیابی می‌کند، بازخورد می‌دهد و پس از تأیید منتشر می‌شود.
+یادآوری: انجام بهتر از کامل است.",
     example: "نظر من این است که...",
   },
 ];
@@ -51,7 +52,7 @@ export function WritingGuidanceModal({ isOpen, onClose, onOpenEditor }: WritingG
         <DialogHeader>
           <div className="flex items-center justify-between gap-2 mb-4">
             <div>
-              <DialogTitle className="text-base font-bold">راهنمای نوشتن سریع</DialogTitle>
+              <DialogTitle className="text-base font-bold">راهنمای شروع به نوشتن و نشر مقاله</DialogTitle>
               <DialogDescription className="text-[12px] text-muted-foreground">
                 ۴ مرحله ساده برای شروع نوشتن ۳-۵ خطی
               </DialogDescription>
@@ -103,7 +104,7 @@ export function WritingGuidanceModal({ isOpen, onClose, onOpenEditor }: WritingG
             onClick={() => setStep((value) => Math.max(0, value - 1))}
             disabled={step === 0}
           >
-            ← قبلی
+            → قبلی
           </Button>
 
           <div className="flex gap-2">
@@ -112,12 +113,12 @@ export function WritingGuidanceModal({ isOpen, onClose, onOpenEditor }: WritingG
               onClick={() => setStep((value) => Math.min(STEPS.length - 1, value + 1))}
               disabled={step === STEPS.length - 1}
             >
-              بعدی →
+              بعدی ←
             </Button>
             <Button onClick={(e) => {
               onClose(); // Close modal first
               setTimeout(() => onOpenEditor(e), 100); // Small delay to ensure modal closes
-            }}>شروع بنویس</Button>
+            }}>شروع به نوشتن</Button>
           </div>
         </div>
       </DialogContent>
