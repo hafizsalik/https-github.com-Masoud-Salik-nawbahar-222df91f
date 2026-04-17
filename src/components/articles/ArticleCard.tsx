@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { CornerUpRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
@@ -29,7 +29,7 @@ function isArticleRead(articleId: string): boolean {
   return storage.get(`article_viewed_${articleId}`, null) !== null;
 }
 
-export function ArticleCard({ article, onDelete, searchQuery }: ArticleCardProps) {
+export const ArticleCard = memo(function ArticleCard({ article, onDelete, searchQuery }: ArticleCardProps) {
   const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -195,4 +195,7 @@ export function ArticleCard({ article, onDelete, searchQuery }: ArticleCardProps
       <div className="mx-4 border-b border-border/40" />
     </article>
   );
-}
+}, (prev, next) => 
+  prev.article.id === next.article.id &&
+  prev.searchQuery === next.searchQuery
+);

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 export const REACTION_KEYS = ["like", "love", "insightful", "laugh", "sad"] as const;
 
@@ -143,7 +144,7 @@ export function useCardReactions(articleId: string, autoFetch = true) {
         // Success: Trust optimistic update, don't refetch
         return true;
       } catch (error) {
-        console.error('Reaction toggle failed:', error);
+        logger.error('Reaction toggle failed:', error);
         // Error: Refetch to sync state
         await fetchReactions();
         return false;

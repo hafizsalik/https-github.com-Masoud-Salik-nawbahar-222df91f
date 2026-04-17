@@ -4,43 +4,6 @@ import { FeedArticle } from "./useArticles";
 
 const PAGE_SIZE = 15;
 
-// YouTube-style randomized feed algorithm
-// Mixes high-ranked content with diverse content for engagement
-function shuffleWithRankingBias(articles: FeedArticle[]): FeedArticle[] {
-  if (articles.length <= 3) return articles;
-
-  // Separate articles into tiers based on engagement
-  const highEngagement = articles.filter(a => (a.reaction_count + a.comment_count + a.save_count) > 10);
-  const mediumEngagement = articles.filter(a => {
-    const score = a.reaction_count + a.comment_count + a.save_count;
-    return score > 0 && score <= 10;
-  });
-  const lowEngagement = articles.filter(a => (a.reaction_count + a.comment_count + a.save_count) === 0);
-
-  const result: FeedArticle[] = [];
-  let h = 0, m = 0, l = 0;
-
-  // Mix strategy: 60% high, 25% medium, 15% low (with randomization)
-  // This ensures good content surfaces but gives exposure to all
-  while (result.length < articles.length) {
-    const roll = Math.random();
-    
-    if (roll < 0.60 && h < highEngagement.length) {
-      result.push(highEngagement[h++]);
-    } else if (roll < 0.85 && m < mediumEngagement.length) {
-      result.push(mediumEngagement[m++]);
-    } else if (l < lowEngagement.length) {
-      result.push(lowEngagement[l++]);
-    } else if (h < highEngagement.length) {
-      result.push(highEngagement[h++]);
-    } else if (m < mediumEngagement.length) {
-      result.push(mediumEngagement[m++]);
-    }
-  }
-
-  return result;
-}
-
 export function useSmartFeed() {
   const {
     data,
@@ -109,8 +72,8 @@ export function useSmartFeed() {
         };
       });
 
-      // Apply YouTube-style randomized mixing per page
-      return shuffleWithRankingBias(transformed);
+      // Return articles ordered by backend (engagement_score + recency)
+      return transformed;
     },
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length === PAGE_SIZE

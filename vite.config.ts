@@ -218,13 +218,22 @@ export default defineConfig(async ({ mode }) => ({
     "import.meta.env.VITE_APP_VERSION": JSON.stringify(process.env.npm_package_version || "0.0.1"),
   },
   build: {
+    target: 'ES2020',
+    minify: 'terser',
     sourcemap: false,
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          supabase: ["@supabase/supabase-js"],
-          query: ["@tanstack/react-query"],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'supabase': ['@supabase/supabase-js'],
+          'ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
+          'query': ['@tanstack/react-query'],
         },
       },
     },

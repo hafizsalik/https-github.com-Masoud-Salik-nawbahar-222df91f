@@ -4,6 +4,8 @@
  * - Periodic Background Sync: refreshes article cache in the background
  */
 
+import { logger } from "./logger";
+
 interface SyncQueueItem {
   url: string;
   options: RequestInit;
@@ -107,11 +109,11 @@ export async function registerPeriodicSync() {
         await (registration as any).periodicSync.register('nawbahar-sync-articles', {
           minInterval: 60 * 60 * 1000, // 1 hour
         });
-        console.info('[PeriodicSync] Registered: nawbahar-sync-articles (1h interval)');
+        logger.info('PeriodicSync registered: nawbahar-sync-articles (1h interval)');
       }
     }
   } catch (err) {
     // Periodic Background Sync not supported or permission denied – graceful fallback
-    console.info('[PeriodicSync] Not available:', err);
+    logger.info('PeriodicSync not available:', err);
   }
 }
