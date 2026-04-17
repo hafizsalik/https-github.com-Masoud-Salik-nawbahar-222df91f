@@ -26,7 +26,7 @@ export function ReactionPickerButton({
   const [showCard, setShowCard] = useState(false);
   const [cardClosing, setCardClosing] = useState(false);
   const [pointPosition, setPointPosition] = useState<{ x: number; y: number } | null>(null);
-  
+
   // Refs
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -41,7 +41,7 @@ export function ReactionPickerButton({
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     isPointerDown.current = true;
     pointerStartTime.current = Date.now();
 
@@ -152,11 +152,11 @@ export function ReactionPickerButton({
         style={
           userReaction
             ? {
-                backgroundColor: REACTION_COLORS[userReaction]?.bg,
-                color: activeHexColor,
-                borderColor: REACTION_COLORS[userReaction]?.ring,
-                outlineColor: REACTION_COLORS[userReaction]?.ring,
-              }
+              backgroundColor: REACTION_COLORS[userReaction]?.bg,
+              color: activeHexColor,
+              borderColor: REACTION_COLORS[userReaction]?.ring,
+              outlineColor: REACTION_COLORS[userReaction]?.ring,
+            }
             : { color: "hsl(var(--muted-foreground))" }
         }
       >
@@ -331,10 +331,10 @@ function ReactionCardPickerInline({
                 animation: `reactionIconEnter 200ms ease-out ${index * 40}ms both`,
                 ...(isSelected
                   ? {
-                      backgroundColor: colors?.bg,
-                      boxShadow: `0 0 0 2px ${colors?.ring}`,
-                      color: colors?.text,
-                    }
+                    backgroundColor: colors?.bg,
+                    boxShadow: `0 0 0 2px ${colors?.ring}`,
+                    color: colors?.text,
+                  }
                   : {}),
               }}
             >
