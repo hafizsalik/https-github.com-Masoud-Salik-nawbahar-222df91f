@@ -13,11 +13,13 @@ interface ReactionPickerButtonProps {
   userReaction: ReactionKey | null;
   onReact: (type: ReactionKey) => void;
   reactorNames?: string[];
+  isProcessing?: boolean;
 }
 
 export function ReactionPickerButton({
   userReaction,
   onReact,
+  isProcessing = false,
 }: ReactionPickerButtonProps) {
   // State
   const [showCard, setShowCard] = useState(false);
@@ -138,13 +140,15 @@ export function ReactionPickerButton({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
+        disabled={isProcessing}
         className={cn(
           "flex items-center justify-center gap-2",
           "px-3 py-2 rounded-lg",
           "touch-none select-none",
           "hover:scale-105 active:scale-95",
           "transition-all duration-200",
-          userReaction && "text-foreground"
+          userReaction && "text-foreground",
+          isProcessing && "opacity-60 cursor-not-allowed"
         )}
         style={
           userReaction
@@ -228,20 +232,59 @@ function ReactionCardPickerInline({
     };
   }, [onClose]);
 
-  // Calculate card position (adaptive for mobile/desktop)
+  // Calculate card position with viewport boundary detection
   useEffect(() => {
     const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
     if (isMobile) {
-      // Mobile: Center at bottom
-      setCardPosition({
-        top: "auto",
-        left: "50%",
-      });
+      // Mobile: Center at bottom, but check viewport height
+      const viewportHeight = window.innerHeight;
+      const cardHeight = 80; // Approximate height of reaction picker
+      const safeMargin = 16;
+
+      // If card would overflow bottom, adjust position
+      if (viewportHeight < 160 + safeMargin) {
+        // Very short viewport - position above
+        setCardPosition({
+          top: `${safeMargin}px`,
+          left: "50%",
+        });
+      } else {
+        // Normal: center at bottom
+        setCardPosition({
+          top: "auto",
+          left: "50%",
+        });
+      }
     } else {
-      // Desktop: Near mouse position, adjusted for visibility
-      const y = position?.y ? Math.max(position.y - 100, 10) : 10;
-      const x = position?.x ? Math.max(position.x - 80, 10) : 10;
+      // Desktop: Smart positioning with viewport boundary detection
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const cardWidth = 360; // Approximate width of reaction card
+      const cardHeight = 80; // Approximate height
+      const safeMargin = 16;
+
+      let x = position?.x ? position.x - 80 : 10;
+      let y = position?.y ? position.y - 100 : 10;
+
+      // Check right edge overflow
+      if (x + cardWidth + safeMargin > viewportWidth) {
+        x = viewportWidth - cardWidth - safeMargin;
+      }
+      // Check left edge
+      if (x < safeMargin) {
+        x = safeMargin;
+      }
+
+      // Check bottom edge overflow
+      if (y + cardHeight + safeMargin > viewportHeight) {
+        y = position?.y ? position.y - cardHeight - safeMargin : viewportHeight - cardHeight - safeMargin;
+      }
+      // Check top edge
+      if (y < safeMargin) {
+        y = safeMargin;
+      }
+
       setCardPosition({
         top: `${y}px`,
         left: `${x}px`,
@@ -279,7 +322,7 @@ function ReactionCardPickerInline({
           "px-3 py-2.5",
           "bg-card rounded-full",
           "shadow-lg border border-border",
-          "pointer-events-auto",
+          "pointer-events-auto overflow-visible",
           isMobile
             ? "bottom-16 left-1/2 -translate-x-1/2"
             : ""
@@ -288,7 +331,7 @@ function ReactionCardPickerInline({
           ...(!isMobile && cardPosition),
           animation: isClosing
             ? "reactionCardExit 150ms ease-out forwards"
-            : "reactionCardEnter 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+            : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -318,12 +361,13 @@ function ReactionCardPickerInline({
                 "hover:scale-110 active:scale-90"
               )}
               style={{
-                animation: `reactionIconEnter 200ms ease-out ${index * 40}ms both`,
+                animation: `reactionIconEnter 100ms ease-out ${index * 25}ms both`,
                 ...(isSelected
                   ? {
                     backgroundColor: colors?.bg,
-                    boxShadow: `0 0 0 2px ${colors?.ring}`,
+                    boxShadow: `0 0 0 3px ${colors?.ring}, 0 0 12px ${colors?.ring}80`,
                     color: colors?.text,
+                    transform: 'scale(1.08)',
                   }
                   : {}),
               }}
@@ -346,7 +390,8 @@ function ReactionCardPickerInline({
         @keyframes reactionCardEnter {
           0% {
             opacity: 0;
-            transform: scale(0.6) translateY(12px);
+            transform: scale(0.7) translateY(10px);
+            will-change: transform, opacity;
           }
           100% {
             opacity: 1;
@@ -361,14 +406,15 @@ function ReactionCardPickerInline({
           }
           100% {
             opacity: 0;
-            transform: scale(0.8);
+            transform: scale(0.75);
           }
         }
 
         @keyframes reactionIconEnter {
           0% {
             opacity: 0;
-            transform: scale(0.4) rotateZ(-20deg);
+            transform: scale(0.5) rotateZ(-15deg);
+            will-change: transform, opacity;
           }
           100% {
             opacity: 1;

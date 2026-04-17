@@ -1,7 +1,7 @@
 import { CheckCheck } from "lucide-react";
 import { cn, toPersianNumber } from "@/lib/utils";
 import { ReactionPickerButton } from "./ReactionPickerButton";
-import { type ReactionKey, type ReactionSummary } from "@/hooks/useCardReactions";
+import { type ReactionKey, type ReactionSummary, REACTION_EMOJIS, REACTION_LABELS } from "@/hooks/useCardReactions";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 
 import commentIcon from "@/assets/icons/comment.svg";
@@ -18,6 +18,7 @@ interface ArticleCardMetricsProps {
   reactionSummary: ReactionSummary;
   onReact: (type: ReactionKey) => void;
   onReactionHover?: () => void;
+  isProcessing?: boolean;
 }
 
 export function ArticleCardMetrics({
@@ -31,6 +32,7 @@ export function ArticleCardMetrics({
   reactionSummary,
   onReact,
   onReactionHover,
+  isProcessing = false,
 }: ArticleCardMetricsProps) {
   const { totalCount, userReaction, topTypes } = reactionSummary;
 
@@ -51,8 +53,16 @@ export function ArticleCardMetrics({
             <ReactionPickerButton
               userReaction={userReaction}
               onReact={onReact}
+              isProcessing={isProcessing}
             />
-            {displayReactionCount > 0 && (
+            {/* User reaction indicator badge */}
+            {userReaction && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted/60 text-foreground font-medium flex items-center gap-1">
+                {REACTION_EMOJIS[userReaction]}
+                <span className="hidden sm:inline">{REACTION_LABELS[userReaction]}</span>
+              </span>
+            )}
+            {displayReactionCount > 0 && !userReaction && (
               <span className="text-[13px] text-muted-foreground">
                 {toPersianNumber(displayReactionCount)}
               </span>

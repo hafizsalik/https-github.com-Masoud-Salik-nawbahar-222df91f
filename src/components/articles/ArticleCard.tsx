@@ -43,7 +43,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
     submitting,
   } = useComments(article.id, { lazy: !showComments });
 
-  const { summary: reactionSummary, toggleReaction, ensureFetched } = useCardReactions(article.id, false);
+  const { summary: reactionSummary, toggleReaction, ensureFetched, isProcessing } = useCardReactions(article.id, false);
 
   const coverImage = article.cover_image_url || defaultCover;
   const hasBeenRead = useMemo(() => isArticleRead(article.id), [article.id]);
@@ -168,6 +168,7 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
             reactionSummary={reactionSummary}
             onReact={(type) => { toggleReaction(type); }}
             onReactionHover={ensureFetched}
+            isProcessing={isProcessing}
           />
         </div>
       </Link>
