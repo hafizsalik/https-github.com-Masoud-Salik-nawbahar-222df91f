@@ -44,7 +44,7 @@ export function ArticleCardMetrics({
         {/* Right side: reaction + comment + response */}
         <div className="flex items-center gap-6">
           {/* Reactions — LinkedIn-style floating card picker */}
-          <div 
+          <div
             className="flex items-center gap-1.5"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >
