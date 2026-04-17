@@ -114,7 +114,10 @@ export function WritingGuidanceModal({ isOpen, onClose, onOpenEditor }: WritingG
             >
               بعدی →
             </Button>
-            <Button onClick={onOpenEditor}>شروع بنویس</Button>
+            <Button onClick={(e) => {
+              onClose(); // Close modal first
+              setTimeout(() => onOpenEditor(e), 100); // Small delay to ensure modal closes
+            }}>شروع بنویس</Button>
           </div>
         </div>
       </DialogContent>

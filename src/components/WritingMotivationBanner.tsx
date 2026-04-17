@@ -21,13 +21,18 @@ export function WritingMotivationBanner({ position, onDismiss, motivationData }:
         (e: MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             e.stopPropagation();
-            navigate("/editor", {
-                state: {
-                    motivationPrompt: "امروز یاد گرفتم...",
-                    autoFocus: true,
-                    bannerClick: true,
-                },
-            });
+            // Close any open guidance modal first
+            setShowGuidance(false);
+            // Small delay to ensure modal closes before navigation
+            setTimeout(() => {
+                navigate("/editor", {
+                    state: {
+                        motivationPrompt: "امروز یاد گرفتم...",
+                        autoFocus: true,
+                        bannerClick: true,
+                    },
+                });
+            }, 100);
         },
         [navigate],
     );
@@ -99,10 +104,10 @@ export function WritingMotivationBanner({ position, onDismiss, motivationData }:
                             e.stopPropagation();
                             onDismiss();
                         }}
-                        className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground hover:text-foreground"
+                        className="absolute right-2 top-2 z-20 rounded-full bg-background/90 p-2 text-muted-foreground hover:text-foreground hover:bg-background shadow-sm border border-border/50 transition-all"
                         aria-label="بستن"
                     >
-                        <X size={18} />
+                        <X size={20} />
                     </button>
                 )}
             </div>
@@ -113,7 +118,8 @@ export function WritingMotivationBanner({ position, onDismiss, motivationData }:
                     onClose={() => setShowGuidance(false)}
                     onOpenEditor={(e) => {
                         setShowGuidance(false);
-                        handleOpenEditor(e);
+                        // Small delay to ensure modal closes before navigation
+                        setTimeout(() => handleOpenEditor(e), 150);
                     }}
                 />
             )}
