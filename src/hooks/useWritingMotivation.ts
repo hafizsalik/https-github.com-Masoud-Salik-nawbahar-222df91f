@@ -29,12 +29,12 @@ export interface WritingMotivationData {
 
 const DAY_MESSAGES: Record<number, string> = {
     0: "یکشنبهٔ نو: یک فکر بنویس",
-    1: "دوشنبه شروع: یک بینش بنویس",
+    1: "دوشنبه 🚀: برای خوانده شدن بنویس!",
     2: "سه‌شنبه نکته: یک حقیقت تدریس کن",
     3: "چهارشنبه: سریع بنویس، الآن بفرست",
-    4: "پنج‌شنبه فکر: ۳ خط بنویس",
-    5: "جمعه درخشش: یک ایده بنویس",
-    6: "شنبه گرمایش: یک نظر و دلیل بنویس",
+    4: "پنج‌شنبه:چیزی بنویس!",
+    5: "جمعه مبارک!🌿:امروز شروع کن",
+    6: "شنبه: آغاز هفته🧠 چیزی بنویس تا خوانده شوی",
 };
 
 const DAY_NAMES_PERSIAN = [
@@ -65,7 +65,7 @@ const DEFAULT_MOTIVATION_DATA: WritingMotivationData = {
     longestStreak: 0,
     articlesThisWeek: 0,
     articlesThisMonth: 0,
-    maxMonthly: 20,
+    maxMonthly: 14,
     maxWeekly: 5,
     hasWrittenToday: false,
     nextResetTime: Date.now() + 86400000,
