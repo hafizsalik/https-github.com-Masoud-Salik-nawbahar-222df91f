@@ -1,4 +1,4 @@
-import { Info, LogOut, Shield, MessageSquare, Share2 } from "lucide-react";
+import { Info, LogOut, Shield, MessageSquare, Share2, BookOpen } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { LogoutConfirmDialog } from "@/components/EnhancedButtons";
 import { Input } from "@/components/ui/input";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
+import { WritingGuidanceModal } from "@/components/WritingGuidanceModal";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -28,6 +29,7 @@ export function Header() {
   const [searchValue, setSearchValue] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showWritingGuide, setShowWritingGuide] = useState(false);
 
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -263,6 +265,12 @@ export function Header() {
                 درباره نوبهار
               </button>
 
+              <button onClick={() => { smoothCloseMenu(); setShowWritingGuide(true); }}
+                className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
+                <BookOpen size={16} strokeWidth={1.5} className="text-muted-foreground" />
+                راهنمای نویسندگی
+              </button>
+
               <button onClick={() => { smoothCloseMenu(); navigate("/install"); }}
                 className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
@@ -305,6 +313,19 @@ export function Header() {
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={confirmSignOut}
         isLoading={isLoggingOut}
+      />
+
+      <WritingGuidanceModal
+        isOpen={showWritingGuide}
+        onClose={() => setShowWritingGuide(false)}
+        onOpenEditor={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowWritingGuide(false);
+          setTimeout(() => {
+            navigate("/write");
+          }, 150);
+        }}
       />
     </>
   );
