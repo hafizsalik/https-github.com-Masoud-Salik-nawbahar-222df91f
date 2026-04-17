@@ -85,7 +85,7 @@ export default function Install() {
             </div>
 
             <CardTitle>
-              {isPWA ? "با موفقیت نصب شد ✅" : "نصب برنامه"}
+              {isPWA ? "با موفقیت نصب شد ✅" : "...نصب برنامه"}
             </CardTitle>
           </CardHeader>
 
