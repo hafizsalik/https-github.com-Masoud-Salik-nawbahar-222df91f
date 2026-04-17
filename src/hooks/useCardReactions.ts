@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-/** Reaction keys — rendered as Lucide outline icons */
 export const REACTION_KEYS = ["like", "love", "insightful", "laugh", "sad"] as const;
 
 export const REACTION_LABELS: Record<string, string> = {
@@ -12,7 +11,6 @@ export const REACTION_LABELS: Record<string, string> = {
   sad: "تأسف‌بار",
 };
 
-/** Keep REACTION_EMOJIS for backward compat (details modal, summary) */
 export const REACTION_EMOJIS: Record<string, string> = {
   like: "👍",
   love: "❤️",
@@ -21,13 +19,12 @@ export const REACTION_EMOJIS: Record<string, string> = {
   sad: "😔",
 };
 
-/** Vivid colors — lively and engaging with clear differentiation */
 export const REACTION_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
-  like:       { bg: "hsl(217 85% 56% / 0.12)", text: "hsl(217 85% 50%)", ring: "hsl(217 85% 56% / 0.25)" },
-  love:       { bg: "hsl(348 80% 55% / 0.12)", text: "hsl(348 80% 50%)", ring: "hsl(348 80% 55% / 0.25)" },
-  insightful: { bg: "hsl(45 90% 48% / 0.14)",  text: "hsl(40 85% 42%)",  ring: "hsl(45 90% 48% / 0.25)" },
-  laugh:      { bg: "hsl(28 85% 52% / 0.12)",  text: "hsl(28 85% 46%)",  ring: "hsl(28 85% 52% / 0.25)" },
-  sad:        { bg: "hsl(200 55% 48% / 0.12)",  text: "hsl(200 55% 42%)", ring: "hsl(200 55% 48% / 0.25)" },
+  like:       { bg: "hsl(217 55% 58% / 0.10)", text: "hsl(217 50% 55%)", ring: "hsl(217 55% 58% / 0.20)" },
+  love:       { bg: "hsl(348 55% 58% / 0.10)", text: "hsl(348 50% 55%)", ring: "hsl(348 55% 58% / 0.20)" },
+  insightful: { bg: "hsl(42 60% 50% / 0.10)",  text: "hsl(40 55% 48%)",  ring: "hsl(42 60% 50% / 0.20)" },
+  laugh:      { bg: "hsl(28 55% 55% / 0.10)",  text: "hsl(28 50% 50%)",  ring: "hsl(28 55% 55% / 0.20)" },
+  sad:        { bg: "hsl(200 40% 52% / 0.10)",  text: "hsl(200 38% 48%)", ring: "hsl(200 40% 52% / 0.20)" },
 };
 
 export type ReactionKey = keyof typeof REACTION_EMOJIS;
@@ -47,9 +44,8 @@ const EMPTY_SUMMARY: ReactionSummary = {
 };
 
 /**
- * Instant card reactions hook — optimized for zero-delay loading
- * Uses article.reaction_count for display count.
- * Full reaction data is pre-fetched for instant interaction.
+ * Card reactions hook — fixed race condition in toggleReaction.
+ * Captures userReaction BEFORE optimistic update to ensure correct DB branch.
  */
 export function useCardReactions(articleId: string, autoFetch = true) {
   const [summary, setSummary] = useState<ReactionSummary>(EMPTY_SUMMARY);
@@ -60,7 +56,6 @@ export function useCardReactions(articleId: string, autoFetch = true) {
   const fetchReactions = useCallback(async () => {
     setLoading(true);
     
-    // Optimized: Get session and reactions in parallel
     const [{ data: { session } }, { data: reactions }] = await Promise.all([
       supabase.auth.getSession(),
       supabase
@@ -80,7 +75,6 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       return;
     }
 
-    // Optimized: Process data efficiently
     const typeCounts: Record<string, number> = {};
     const userReactionType = currentUserId 
       ? reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined
@@ -95,30 +89,11 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       .map(([key]) => key as ReactionKey);
     const topTypes = sorted.slice(0, 2);
 
-    const userReaction = userReactionType || null;
-
-    const uniqueOtherReactorIds = Array.from(
-      new Set(reactions.filter((r) => r.user_id !== currentUserId).map((r) => r.user_id))
-    );
-
-    let reactorNames: string[] = [];
-    if (uniqueOtherReactorIds.length > 0) {
-      const reactorIdsToShow = uniqueOtherReactorIds.slice(0, 2);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", reactorIdsToShow);
-
-      const profileMap = new Map((profiles || []).map((p) => [p.id, p.display_name]));
-      reactorNames = reactorIdsToShow.map((id) => profileMap.get(id)).filter((name): name is string => Boolean(name));
-    }
-
-    setSummary({ topTypes, totalCount: reactions.length, reactorNames, userReaction });
+    setSummary({ topTypes, totalCount: reactions.length, reactorNames: [], userReaction: userReactionType || null });
     setFetched(true);
     setLoading(false);
   }, [articleId]);
 
-  // Instant fetch on mount for zero-delay interaction
   useEffect(() => {
     if (autoFetch && !fetched && !loading) {
       fetchReactions();
@@ -130,59 +105,40 @@ export function useCardReactions(articleId: string, autoFetch = true) {
   }, [fetched, fetchReactions]);
 
   const toggleReaction = async (type: ReactionKey) => {
-    // Instant response - no waiting for fetch
-    const optimisticUpdate = () => {
-      if (summary.userReaction === type) {
-        // Remove reaction
-        setSummary(prev => ({
-          ...prev,
-          userReaction: null,
-          totalCount: Math.max(0, prev.totalCount - 1)
-        }));
-      } else if (summary.userReaction) {
-        // Change reaction
-        setSummary(prev => ({
-          ...prev,
-          userReaction: type
-        }));
-      } else {
-        // Add reaction
-        setSummary(prev => ({
-          ...prev,
-          userReaction: type,
-          totalCount: prev.totalCount + 1
-        }));
-      }
-    };
+    // CRITICAL: Capture current state BEFORE optimistic update to fix race condition
+    const previousReaction = summary.userReaction;
 
-    // Apply optimistic update immediately
-    optimisticUpdate();
+    // Optimistic update
+    if (previousReaction === type) {
+      setSummary(prev => ({ ...prev, userReaction: null, totalCount: Math.max(0, prev.totalCount - 1) }));
+    } else if (previousReaction) {
+      setSummary(prev => ({ ...prev, userReaction: type }));
+    } else {
+      setSummary(prev => ({ ...prev, userReaction: type, totalCount: prev.totalCount + 1 }));
+    }
 
-    // Get session and perform database operation
     const { data: { session } } = await supabase.auth.getSession();
     const uid = session?.user?.id;
     if (!uid) {
-      // Revert optimistic update if not authenticated
       await fetchReactions();
       return false;
     }
 
     try {
-      if (summary.userReaction === type) {
+      // Use captured previousReaction for DB branch logic
+      if (previousReaction === type) {
         await supabase.from("reactions").delete().eq("article_id", articleId).eq("user_id", uid);
-      } else if (summary.userReaction) {
+      } else if (previousReaction) {
         await supabase.from("reactions").update({ reaction_type: type }).eq("article_id", articleId).eq("user_id", uid);
       } else {
         await supabase.from("reactions").insert({ article_id: articleId, user_id: uid, reaction_type: type });
       }
     } catch (error) {
-      // Revert on error
       console.error('Reaction toggle failed:', error);
       await fetchReactions();
       return false;
     }
 
-    // Refresh data to ensure consistency
     await fetchReactions();
     return true;
   };

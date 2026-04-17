@@ -41,11 +41,11 @@ export function FollowersList({ isOpen, onClose, userId, type }: FollowersListPr
 
     if (userIds && (userIds as string[]).length > 0) {
       const { data: profiles } = await supabase
-        .from("public_profiles")
+        .from("public_profiles" as any)
         .select("id, display_name, avatar_url, specialty")
         .in("id", userIds as string[]);
       
-      setUsers(profiles || []);
+      setUsers((profiles || []) as any);
     } else {
       setUsers([]);
     }

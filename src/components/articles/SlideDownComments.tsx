@@ -278,22 +278,8 @@ export function SlideDownComments({
             >
               {uploadingImage ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             </Button>
-            <Button
-              onClick={handlePublishAsPublicComment}
-              variant="ghost"
-              size="icon"
-              disabled={!userId || !newComment.trim() || publishingPublic}
-              className="shrink-0 h-8 w-8 text-primary"
-              title="نشر عمومی (بررسی هوش مصنوعی)"
-            >
-              {publishingPublic ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
-            </Button>
           </div>
         </div>
-        <p className="text-[10px] text-muted-foreground/40 mt-1.5 flex items-center gap-1">
-          <Globe size={9} />
-          دکمه 🌐 نظر را هم ثبت و هم به عنوان مقاله عمومی منتشر می‌کند (پس از بررسی)
-        </p>
       </div>
 
       {/* Comments List */}

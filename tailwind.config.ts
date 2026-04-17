@@ -65,16 +65,6 @@ export default {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
-  			persian: {
-  				DEFAULT: 'hsl(var(--persian-green))',
-  				light: 'hsl(var(--persian-green-light))',
-  				dark: 'hsl(var(--persian-green-dark))'
-  			},
-  			gold: {
-  				DEFAULT: 'hsl(var(--gold))',
-  				light: 'hsl(var(--gold-light))'
-  			},
-  			cream: 'hsl(var(--cream))',
   			ink: 'hsl(var(--ink))'
   		},
   		borderRadius: {
@@ -119,9 +109,9 @@ export default {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-  			'fade-in': 'fade-in 0.4s ease-out forwards',
-  			'slide-up': 'slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-  			'scale-in': 'scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+  			'fade-in': 'fade-in 0.3s ease-out forwards',
+  			'slide-up': 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+  			'scale-in': 'scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
   		}
   	}
   },

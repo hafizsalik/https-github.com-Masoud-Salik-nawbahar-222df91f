@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Camera, User, Briefcase, FileText, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { compressProfileImage } from "@/lib/imageCompression";
-import nawbaharLogo from "@/assets/nawbahar-logo.png";
+import nawbaharLogo from "@/assets/logo.png";
 
 type OnboardingStep = "welcome" | "avatar" | "specialty" | "bio" | "completion";
 

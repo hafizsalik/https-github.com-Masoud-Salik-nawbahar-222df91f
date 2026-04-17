@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { type ReactionKey, type ReactionSummary } from "@/hooks/useCardReactions";
 import { cn, toPersianNumber } from "@/lib/utils";
-import { MessageCircle } from "lucide-react";
 import { ReactionDetailsModal } from "./ReactionDetailsModal";
 import { ReactionPickerButton } from "./ReactionPickerButton";
+import { NawbaharIcon } from "@/components/NawbaharIcon";
+import commentIcon from "@/assets/icons/comment.svg";
 
 interface ArticleReactionsProps {
   articleId: string;
@@ -33,11 +34,17 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
   const label = buildLabel();
   const hasReactions = totalCount > 0;
 
+  const handleSummaryClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (hasReactions) setShowDetails(true);
+  };
+
   return (
     <>
-      <div className="flex items-center justify-between py-4 my-6 border-t border-b border-border/30">
-        <div className="flex items-center gap-4">
-          {/* Reaction picker button — new LinkedIn-style */}
+      <div className="flex items-center justify-between py-4 my-6 border-t border-b border-border/40">
+        <div className="flex items-center gap-5">
+          {/* Reaction picker button — LinkedIn-style floating card */}
           <ReactionPickerButton
             userReaction={userReaction}
             onReact={onReact}
@@ -48,10 +55,10 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
           {/* Comment */}
           <button
             onClick={onCommentClick}
-            className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <MessageCircle size={14} strokeWidth={1.5} />
-            <span className="text-[11.5px]">
+            <NawbaharIcon src={commentIcon} size={16} className="opacity-30 dark:invert" />
+            <span className="text-[12px]">
               {commentCount > 0 ? `${toPersianNumber(commentCount)} نظر` : "نظر"}
             </span>
           </button>

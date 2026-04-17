@@ -74,6 +74,11 @@ const ArticleEditor = () => {
   const { loading: authLoading, isAuthenticated } = useProtectedRoute();
   const { user } = useAuth();
   
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [showExtras, setShowExtras] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textFileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -187,12 +192,7 @@ const ArticleEditor = () => {
       let coverImageUrl = coverPreview;
       if (coverImage) {
         // Compress image before upload
-        const compressedImage = await compressArticleImage(coverImage, {
-          maxSizeKB: 800,
-          maxWidth: 1920,
-          maxHeight: 1080,
-          quality: 0.82,
-        });
+        const compressedImage = await compressArticleImage(coverImage);
         
         const fileExt = compressedImage.name.split('.').pop() || 'webp';
         const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -427,9 +427,6 @@ const ArticleEditor = () => {
     { key: "innovation", label: "نوآوری", max: 5 },
   ] as const;
 
-  const [showSchedule, setShowSchedule] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
 
   const handleSaveDraft = async () => {
     const titleError = validation.title.validate(title);
@@ -515,7 +512,6 @@ const ArticleEditor = () => {
     }
   };
 
-  const [showExtras, setShowExtras] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -555,7 +551,7 @@ const ArticleEditor = () => {
       </header>
 
       {/* Editor */}
-      <main className="max-w-screen-md mx-auto px-4 pt-3 pb-28">
+      <main className="max-w-screen-md mx-auto px-5 pt-3 pb-28">
         {/* Response indicator */}
         {parentArticle && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground p-2.5 mb-3 bg-primary/5 rounded-lg border border-primary/10">

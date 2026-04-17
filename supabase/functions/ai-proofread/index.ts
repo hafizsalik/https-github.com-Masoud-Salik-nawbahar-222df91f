@@ -2,130 +2,159 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory rate limiter
+const rateMap = new Map<string, number[]>();
+
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS")
+    return new Response(null, { headers: corsHeaders });
 
   try {
-    // Validate caller is authenticated
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ issues: [] }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ issues: [], error: "unauthorized" }, 401);
     }
 
-    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-    const supabaseAuth = createClient(
+    const { createClient } = await import(
+      "https://esm.sh/@supabase/supabase-js@2"
+    );
+
+    const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(authHeader.replace('Bearer ', ''));
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ issues: [] }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data?.user) {
+      return json({ issues: [], error: "invalid_token" }, 401);
     }
+
+    const userId = data.user.id;
 
     const { text } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     if (!text || text.trim().length < 10) {
-      return new Response(JSON.stringify({ issues: [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ issues: [] });
     }
 
-    const prompt = `You are a Persian/Dari language proofreader. Analyze the following text and find spelling, grammar, and style issues.
+    const cleanText = text.slice(0, 3000);
 
-For each issue found, return:
-- "word": the exact problematic word/phrase as it appears in the text
-- "suggestion": the corrected version
-- "type": one of "spelling", "grammar", "style"
-- "reason": a very brief Persian explanation (max 15 words)
+    // Rate limit
+    const now = Date.now();
+    const userRate = rateMap.get(userId) || [];
+    const recent = userRate.filter((t: number) => now - t < 60000);
+    if (recent.length > 20) {
+      return json({ issues: [], error: "rate_limited" }, 429);
+    }
+    rateMap.set(userId, [...recent, now]);
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("Missing API key");
+
+    const prompt = `
+Return ONLY valid JSON.
+
+Analyze Persian/Dari text and return issues:
+
+Format:
+{
+  "issues": [
+    {
+      "word": "...",
+      "suggestion": "...",
+      "type": "spelling | grammar | style",
+      "reason": "...",
+      "index": number,
+      "severity": "low | medium | high"
+    }
+  ]
+}
 
 Rules:
-- Focus on Persian/Dari language errors
-- Don't flag proper nouns, technical terms, or intentional style choices
-- Maximum 15 issues per request
-- If the text is clean, return an empty array
-- Be conservative — only flag clear errors
+- Max 15 issues
+- Be conservative
+- Ignore proper nouns
+- Short Persian reasons
+- If clean → { "issues": [] }
 
-Text to proofread:
-${text.slice(0, 3000)}`;
+Text:
+${cleanText}
+`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          { role: "system", content: "You are a Persian proofreader. Use the provided tool to return issues found." },
-          { role: "user", content: prompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "submit_issues",
-              description: "Submit proofreading issues found in the text",
-              parameters: {
-                type: "object",
-                properties: {
-                  issues: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        word: { type: "string" },
-                        suggestion: { type: "string" },
-                        type: { type: "string", enum: ["spelling", "grammar", "style"] },
-                        reason: { type: "string" },
-                      },
-                      required: ["word", "suggestion", "type", "reason"],
-                    },
-                  },
-                },
-                required: ["issues"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "submit_issues" } },
-      }),
-    });
+    const response = await fetch(
+      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          temperature: 0,
+          max_tokens: 800,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      }
+    );
 
     if (!response.ok) {
-      console.error("AI proofread error:", response.status);
-      return new Response(JSON.stringify({ issues: [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("AI error:", response.status);
+      return json({ issues: [], error: "ai_failed" });
     }
 
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    let result = { issues: [] };
+    const dataAI = await response.json();
 
-    if (toolCall?.function?.arguments) {
-      result = JSON.parse(toolCall.function.arguments);
+    interface ProofreadIssue {
+      word: string;
+      suggestion: string;
+      type: string;
+      reason: string;
+      index: number;
+      severity: string;
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    let result: { issues: ProofreadIssue[] } = { issues: [] };
+
+    try {
+      const content = dataAI.choices?.[0]?.message?.content;
+      if (content) {
+        result = JSON.parse(content);
+      }
+    } catch {
+      console.warn("Fallback parsing failed");
+    }
+
+    if (!Array.isArray(result.issues)) {
+      result = { issues: [] };
+    }
+
+    result.issues = result.issues.slice(0, 15).map((i: ProofreadIssue) => ({
+      word: i.word || "",
+      suggestion: i.suggestion || "",
+      type: i.type || "style",
+      reason: i.reason || "",
+      index: typeof i.index === "number" ? i.index : -1,
+      severity: i.severity || "low",
+    }));
+
+    return json(result);
   } catch (e) {
-    console.error("ai-proofread error:", e);
-    return new Response(JSON.stringify({ issues: [] }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("fatal:", e);
+    return json({ issues: [], error: "server_error" });
   }
 });
+
+function json(data: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}

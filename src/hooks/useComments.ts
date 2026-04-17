@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validation } from "@/lib/errorHandler";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface Comment {
   id: string;
@@ -24,23 +25,18 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const userId = user?.id || null;
   const { toast } = useToast();
   const lazy = options?.lazy ?? false;
 
   useEffect(() => {
-    checkAuth();
     if (!lazy) {
       fetchComments();
     } else {
       setLoading(false);
     }
   }, [articleId, lazy]);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setUserId(session?.user?.id || null);
-  };
 
   const fetchComments = async () => {
     setLoading(true);

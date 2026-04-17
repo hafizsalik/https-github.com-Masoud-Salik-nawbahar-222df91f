@@ -59,10 +59,6 @@ export function usePushNotifications() {
         toast({
           title: 'اعلان‌ها غیرفعال است',
           description: 'لطفاً در تنظیمات مرورگر اعلان‌ها را فعال کنید',
-          action: {
-            label: 'کمک',
-            onClick: () => window.open('/help/notifications'),
-          }
         });
         return false;
       }

@@ -1,10 +1,16 @@
-Type
-External commit
-Created
-Mar 23, 9:30 PMimport { useState, useRef, useEffect, useCallback } from "react";
-import { REACTION_KEYS, REACTION_LABELS, REACTION_COLORS, type ReactionKey } from "@/hooks/useCardReactions";
+import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  REACTION_KEYS,
+  REACTION_LABELS,
+  REACTION_COLORS,
+  type ReactionKey,
+} from "@/hooks/useCardReactions";
 import { REACTION_SVG_ICONS } from "./ReactionIcons";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { X } from "lucide-react";
 
 interface ReactionPickerProps {
   userReaction: ReactionKey | null;
@@ -15,260 +21,174 @@ interface ReactionPickerProps {
   onSummaryClick?: (e: React.MouseEvent) => void;
 }
 
-export function ReactionPicker({ userReaction, onReact, onHover, topTypes, summaryText, onSummaryClick }: ReactionPickerProps) {
+export function ReactionPicker({
+  userReaction,
+  onReact,
+  onHover,
+}: ReactionPickerProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [closing, setClosing] = useState(false);
   const [justReacted, setJustReacted] = useState(false);
-  const prevReaction = useRef(userReaction);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (prevReaction.current !== userReaction && prevReaction.current !== undefined) {
-      if (prevReaction.current !== null || justReacted) {
-        setJustReacted(true);
-        const t = setTimeout(() => setJustReacted(false), 400);
-        return () => clearTimeout(t);
-      }
+  const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const guardAuth = useCallback(() => {
+    if (!user) {
+      toast({ title: "برای واکنش باید وارد شوید", variant: "destructive" });
+      navigate("/auth?view=login");
+      return false;
     }
-    prevReaction.current = userReaction;
-  }, [userReaction]);
+    return true;
+  }, [user, navigate, toast]);
 
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: Event) => {
-      if (containerRef.current?.contains(e.target as Node)) return;
+  const close = useCallback(() => {
+    setClosing(true);
+    setTimeout(() => {
       setOpen(false);
-    };
-    window.addEventListener("scroll", close, { passive: true, capture: true });
-    return () => window.removeEventListener("scroll", close, true);
-  }, [open]);
+      setClosing(false);
+    }, 250);
+  }, []);
 
+  // Close on outside click/touch
   useEffect(() => {
     if (!open) return;
-    const handler = (e: Event) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+    const handler = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) close();
     };
-    document.addEventListener("pointerdown", handler);
-    return () => document.removeEventListener("pointerdown", handler);
-  }, [open]);
+    document.addEventListener("pointerdown", handler, true);
+    return () => document.removeEventListener("pointerdown", handler, true);
+  }, [open, close]);
 
-  // Tap = quick like, long press = open picker
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // Close on back button / escape
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open, close]);
+
+  const handlePress = () => {
     onHover?.();
-    longPressTimer.current = setTimeout(() => {
-      longPressTimer.current = null;
-      setOpen(true);
-    }, 400);
-  }, [onHover]);
+    timer.current = setTimeout(() => {
+      if (guardAuth()) setOpen(true);
+    }, 350);
+  };
 
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-      // Quick tap = toggle like
-      if (userReaction === "like") {
-        onReact("like"); // removes it
-      } else if (!userReaction) {
-        setJustReacted(true);
+  const handleRelease = () => {
+    if (!timer.current) return;
+    clearTimeout(timer.current);
+    timer.current = null;
+    if (!open) {
+      if (!guardAuth()) return;
+      if (!userReaction) {
         onReact("like");
+        setJustReacted(true);
       } else {
-        // Already has a different reaction, open picker
         setOpen(true);
       }
     }
-  }, [userReaction, onReact]);
-
-  const handlePointerCancel = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
-  // Desktop: click opens picker
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Only use on non-touch devices
-    if (window.matchMedia("(hover: hover)").matches) {
-      onHover?.();
-      setOpen(prev => !prev);
-    }
   };
 
-  const handleSelect = (type: ReactionKey, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setJustReacted(true);
+  const select = (type: ReactionKey) => {
     onReact(type);
-    setOpen(false);
+    setJustReacted(true);
+    close();
   };
 
-  const isReacted = Boolean(userReaction);
   const activeColor = userReaction ? REACTION_COLORS[userReaction]?.text : undefined;
-
-  const renderInlineIcon = () => {
-    const IconComponent = (userReaction && REACTION_SVG_ICONS[userReaction]) ? REACTION_SVG_ICONS[userReaction] : REACTION_SVG_ICONS.like;
-    const style = justReacted ? { animation: "reaction-pop-enhanced 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both" } : {};
-    
-    if (!IconComponent) {
-      return <span className="w-4 h-4 text-muted-foreground/50 reaction-icon">👍</span>;
-    }
-
-    return (
-      <span style={style} className="flex items-center reaction-icon">
-        <IconComponent 
-          size={16} 
-          strokeWidth={userReaction ? 2.2 : 1.8}
-          animated={justReacted}
-          className={cn(
-            "reaction-instant",
-            userReaction ? "" : "text-muted-foreground/50"
-          )}
-        />
-      </span>
-    );
-  };
-
-  const handleSummaryClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onSummaryClick) {
-      onSummaryClick(e);
-    } else {
-      onHover?.();
-      setOpen((prev) => !prev);
-    }
-  };
+  const DefaultIcon = REACTION_SVG_ICONS["like"];
+  const ActiveIcon = userReaction ? (REACTION_SVG_ICONS[userReaction] || DefaultIcon) : DefaultIcon;
 
   return (
-    <div ref={containerRef} className="relative flex items-center gap-1 sm:gap-1.5">
-      {/* Main icon button */}
+    <div ref={ref} className="relative flex items-center">
+      {/* Main reaction button */}
       <button
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-        onClick={handleClick}
-        className="flex items-center touch-none select-none reaction-instant hover:scale-105 active:scale-95"
-        style={activeColor ? { color: activeColor } : {}}
+        onPointerDown={handlePress}
+        onPointerUp={handleRelease}
+        className="reaction-instant flex items-center justify-center p-1"
       >
-        {renderInlineIcon()}
-      </button>
-
-      {/* Summary text */}
-      <button
-        onClick={handleSummaryClick}
-        className="text-[10.5px] sm:text-[11px] truncate max-w-[120px] sm:max-w-[150px] text-muted-foreground/60 hover:text-foreground reaction-instant hover:scale-105 active:scale-95"
-      >
-        {summaryText || "واکنش"}
-      </button>
-
-      {/* Reaction picker panel */}
-      {open && (
-        <div
-          className={cn(
-            "fixed inset-x-0 bottom-0 z-50",
-            "sm:absolute sm:inset-auto sm:bottom-full sm:mb-2.5 sm:left-1/2 sm:-translate-x-1/2",
-            "flex items-center justify-center",
-            "sm:rounded-full rounded-t-2xl",
-            "px-3 sm:px-2 py-3 sm:py-1.5",
-            "animate-scale-in"
-          )}
-          style={{
-            background: "hsl(var(--card))",
-            boxShadow: "0 -6px 30px -6px hsl(var(--foreground) / 0.12), 0 0 0 1px hsl(var(--border) / 0.4)",
-          }}
+        <span
+          className="inline-flex"
+          style={justReacted ? { animation: "reaction-pop 0.35s ease" } : undefined}
         >
-          <div className="flex items-center gap-0.5 sm:gap-0">
-            {REACTION_KEYS.map((key, i) => {
-              const isActive = userReaction === key;
-              const IconComponent = REACTION_SVG_ICONS[key] || REACTION_SVG_ICONS.like;
-              const color = REACTION_COLORS[key] || REACTION_COLORS.like;
-              return (
-                <button
-                  key={key}
-                  onClick={(e) => handleSelect(key as ReactionKey, e)}
-                  className={cn(
-                    "flex flex-col items-center justify-center rounded-2xl reaction-instant reaction-icon",
-                    "w-[54px] h-[58px] sm:w-[42px] sm:h-[42px]",
-                    "hover:scale-[1.15] hover:-translate-y-1.5 active:scale-90 hover:shadow-lg",
-                    isActive && "scale-[1.05] shadow-md"
-                  )}
-                  style={{
-                    animation: `reaction-entry-enhanced 0.25s ease-out ${i * 35}ms both`,
-                    ...(isActive ? { backgroundColor: color.bg } : {}),
-                  }}
-                >
-                  <IconComponent 
-                    size={22}
-                    strokeWidth={isActive ? 2.2 : 1.8}
-                    animated={isActive}
+          <ActiveIcon size={20} animated={!!userReaction} />
+        </span>
+      </button>
+
+      {/* Bottom sheet overlay for mobile */}
+      {(open || closing) && (
+        <div
+          className="fixed inset-0 z-[60]"
+          onClick={(e) => { e.stopPropagation(); close(); }}
+        >
+          {/* Backdrop */}
+          <div className={cn(
+            "absolute inset-0 bg-background/20 backdrop-blur-[2px]",
+            closing ? "animate-fade-out" : "animate-fade-in"
+          )} />
+
+          {/* Bottom sheet */}
+          <div
+            className={cn(
+              "absolute bottom-0 left-0 right-0 bg-card border-t border-border rounded-t-2xl shadow-xl",
+              closing ? "animate-bottom-sheet-out" : "animate-bottom-sheet-in"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle bar */}
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-8 h-1 rounded-full bg-muted-foreground/20" />
+            </div>
+
+            {/* Title */}
+            <div className="flex items-center justify-between px-5 pb-3">
+              <span className="text-sm font-semibold text-foreground">واکنش شما</span>
+              <button onClick={close} className="p-1 text-muted-foreground hover:text-foreground">
+                <X size={18} strokeWidth={1.5} />
+              </button>
+            </div>
+
+            {/* Reaction grid */}
+            <div className="flex items-center justify-around px-4 pb-6 safe-bottom">
+              {REACTION_KEYS.map((key) => {
+                const isActive = userReaction === key;
+                const Icon = REACTION_SVG_ICONS[key] || DefaultIcon;
+                const colors = REACTION_COLORS[key];
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => select(key)}
                     className={cn(
-                      "reaction-instant reaction-icon",
-                      isActive ? "" : "text-muted-foreground hover:text-foreground"
+                      "flex flex-col items-center justify-center rounded-2xl transition-all duration-200 w-14 h-16",
+                      "active:scale-90",
+                      isActive && "scale-105"
                     )}
-                  />
-                  <span className={cn(
-                    "text-[8.5px] sm:hidden mt-1 leading-none",
-                    isActive ? "font-medium" : "text-muted-foreground/60"
-                  )}
-                    style={isActive ? { color: color.text } : {}}
+                    style={isActive ? {
+                      background: colors?.bg,
+                      boxShadow: `0 0 0 2px ${colors?.ring}`,
+                    } : {}}
                   >
-                    {REACTION_LABELS[key]}
-                  </span>
-                </button>
-              );
-            })}
+                    <Icon size={28} animated={isActive} />
+                    <span className={cn(
+                      "text-[10px] mt-1 leading-none font-medium",
+                      isActive ? "text-foreground" : "text-muted-foreground/60"
+                    )}>
+                      {REACTION_LABELS[key]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
-
-      {/* Backdrop for mobile */}
-      {open && (
-        <div
-          className="fixed inset-0 z-40 bg-background/15 sm:hidden"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); }}
-        />
-      )}
-
-      <style>{`
-        @keyframes reaction-pop {
-          0% { transform: scale(0.4); opacity: 0; }
-          50% { transform: scale(1.3); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes reaction-entry {
-          0% { transform: scale(0) translateY(8px); opacity: 0; }
-          100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        /* Enhanced hover effects */
-        .reaction-picker-item {
-          position: relative;
-          overflow: hidden;
-        }
-        .reaction-picker-item::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 0;
-          height: 0;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.1);
-          transform: translate(-50%, -50%);
-          transition: width 0.3s, height 0.3s;
-        }
-        .reaction-picker-item:hover::before {
-          width: 100%;
-          height: 100%;
-        }
-      `}</style>
     </div>
   );
 }

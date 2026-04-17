@@ -10,17 +10,14 @@
     "strictBindCallApply": false,
     "strictPropertyInitialization": false,
     "noImplicitThis": false,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
     },
     "skipLibCheck": true
   },
-  "include": [
-    "src"
-  ],
+  "files": [],
   "references": [
     {
       "path": "./tsconfig.app.json"

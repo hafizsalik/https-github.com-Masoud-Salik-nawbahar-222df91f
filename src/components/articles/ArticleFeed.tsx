@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { ArticleCard } from "./ArticleCard";
+import { CardErrorBoundary } from "@/components/CardErrorBoundary";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -65,7 +66,9 @@ export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadM
           style={{ animationDelay: `${Math.min(index * 25, 120)}ms` }}
         >
           <div className="mx-2">
-            <ArticleCard article={article} onDelete={onRefresh} />
+            <CardErrorBoundary>
+              <ArticleCard article={article} onDelete={onRefresh} />
+            </CardErrorBoundary>
           </div>
           {index < articles.length - 1 && (
             <div className="mx-6 border-b border-border/30" />

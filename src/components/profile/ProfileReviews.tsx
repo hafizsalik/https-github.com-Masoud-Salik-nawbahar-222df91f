@@ -46,12 +46,12 @@ export function ProfileReviews({ profileId, isOwnProfile }: ProfileReviewsProps)
     if (data && data.length > 0) {
       const reviewerIds = [...new Set(data.map((r) => r.reviewer_id))];
       const { data: profiles } = await supabase
-        .from("public_profiles")
+        .from("public_profiles" as any)
         .select("id, display_name, avatar_url")
         .in("id", reviewerIds);
 
       const profileMap = new Map(
-        (profiles || []).map((p) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }])
+        (profiles as any[] || []).map((p: any) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }])
       );
 
       const enriched = data.map((r) => ({

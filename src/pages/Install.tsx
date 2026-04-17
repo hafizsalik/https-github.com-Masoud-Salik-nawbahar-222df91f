@@ -7,7 +7,7 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { motion } from "framer-motion";
+const motion = { div: 'div' as any, li: 'li' as any };
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 

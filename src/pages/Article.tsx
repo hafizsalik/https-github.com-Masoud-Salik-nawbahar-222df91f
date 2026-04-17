@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Star, CornerUpRight, Share2 } from "lucide-react";
+import { ArrowRight, Star, CornerUpRight, Share2, Bookmark, BookmarkCheck } from "lucide-react";
 import { formatSolarShort } from "@/lib/solarHijri";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -10,6 +10,7 @@ import { useCardReactions } from "@/hooks/useCardReactions";
 import { useResponseArticles } from "@/hooks/useResponseArticles";
 import { useViewCount } from "@/hooks/useViewCount";
 import { useEngagementTracking } from "@/hooks/useEngagementTracking";
+import { useBookmark } from "@/hooks/useBookmark";
 import { CommentSection } from "@/components/articles/CommentSection";
 import { ArticleRatingModal } from "@/components/admin/ArticleRatingModal";
 import { ArticleActionsMenu } from "@/components/articles/ArticleActionsMenu";
@@ -44,6 +45,55 @@ interface ArticleData {
   };
 }
 
+/** Simple HTML content renderer — handles basic formatting from editor */
+function ArticleContent({ content }: { content: string }) {
+  // Check if content contains HTML tags
+  const isHTML = /<[a-z][\s\S]*>/i.test(content);
+  
+  if (isHTML) {
+    return (
+      <div 
+        className="article-prose"
+        dangerouslySetInnerHTML={{ __html: content }} 
+      />
+    );
+  }
+  
+  // Plain text — render with whitespace preserved
+  return (
+    <div className="text-foreground whitespace-pre-wrap leading-[2.2] text-[15px]">
+      {content}
+    </div>
+  );
+}
+
+/** Reading progress bar */
+function ReadingProgress() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight <= 0) return;
+      const p = Math.min(100, Math.round((window.scrollY / scrollHeight) * 100));
+      setProgress(p);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  if (progress >= 100) return null;
+
+  return (
+    <div className="fixed top-[44px] left-0 right-0 z-50 h-[2px] bg-transparent">
+      <div
+        className="h-full bg-primary transition-[width] duration-150 ease-out"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+}
+
 const Article = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -57,6 +107,7 @@ const Article = () => {
   const { viewCount } = useViewCount(id || "");
   const { summary: reactionSummary, toggleReaction } = useCardReactions(id || "");
   const { responses, responseCount, parentArticle } = useResponseArticles(id || "");
+  const { isBookmarked, toggle: toggleBookmark } = useBookmark(id || "");
   
   const contentLength = article?.content?.length || 0;
   useEngagementTracking(id || "", contentLength);
@@ -133,7 +184,7 @@ const Article = () => {
   if (!article) return null;
 
   const readTime = Math.max(1, Math.ceil(article.content.split(/\s+/).length / 200));
-  const articleDescription = article.content.replace(/\s+/g, " ").slice(0, 155).trim() + "…";
+  const articleDescription = article.content.replace(/\s+/g, " ").replace(/<[^>]*>/g, "").slice(0, 155).trim() + "…";
 
   return (
     <div className="min-h-screen bg-background">
@@ -165,6 +216,10 @@ const Article = () => {
           keywords: article.tags?.join(", "),
         }}
       />
+
+      {/* Reading progress bar */}
+      <ReadingProgress />
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 h-11 max-w-screen-md mx-auto">
@@ -172,6 +227,18 @@ const Article = () => {
             <ArrowRight size={22} strokeWidth={1.5} />
           </button>
           <div className="flex items-center gap-1">
+            {/* Bookmark */}
+            <button
+              onClick={toggleBookmark}
+              className="p-2 text-muted-foreground/45 hover:text-foreground transition-colors"
+              aria-label={isBookmarked ? "حذف از ذخیره‌شده‌ها" : "ذخیره مقاله"}
+            >
+              {isBookmarked ? (
+                <BookmarkCheck size={18} strokeWidth={1.5} className="text-primary" />
+              ) : (
+                <Bookmark size={18} strokeWidth={1.5} />
+              )}
+            </button>
             <button onClick={handleShare} className="p-2 text-muted-foreground/45 hover:text-foreground transition-colors">
               <Share2 size={18} strokeWidth={1.5} />
             </button>
@@ -239,7 +306,7 @@ const Article = () => {
 
         {/* Content */}
         <article className="article-content">
-          <div className="text-foreground whitespace-pre-wrap leading-[2.2] text-[15px]">{article.content}</div>
+          <ArticleContent content={article.content} />
         </article>
 
         {/* Tags */}
