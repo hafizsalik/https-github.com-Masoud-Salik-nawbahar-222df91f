@@ -48,7 +48,7 @@ export function WritingGuidanceModal({ isOpen, onClose, onOpenEditor }: WritingG
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md" dir="rtl">
+      <DialogContent className="w-[90vw] max-w-md max-h-[90vh] overflow-y-auto sm:max-w-md" dir="rtl">
         <DialogHeader>
           <div className="flex items-center justify-between gap-2 mb-4">
             <div>

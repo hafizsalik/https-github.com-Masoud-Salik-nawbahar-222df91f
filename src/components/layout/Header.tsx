@@ -238,13 +238,13 @@ export function Header() {
                 <button
                   onClick={() => setIsDark(!isDark)}
                   className={cn(
-                    "w-10 h-[22px] rounded-full flex items-center transition-colors relative",
+                    "w-10 h-[22px] rounded-full flex items-center transition-colors relative overflow-hidden flex-shrink-0",
                     isDark ? "bg-primary" : "bg-muted"
                   )}
                 >
                   <div className={cn(
                     "w-4 h-4 rounded-full bg-white shadow transition-transform absolute",
-                    isDark ? "translate-x-1" : "translate-x-5"
+                    isDark ? "translate-x-0.5" : "translate-x-4"
                   )} />
                 </button>
               </div>
