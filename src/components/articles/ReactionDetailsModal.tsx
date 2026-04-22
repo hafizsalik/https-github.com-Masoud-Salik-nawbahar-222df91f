@@ -33,7 +33,7 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
     const fetchReactions = async () => {
       const { data } = await supabase
         .from("reactions")
-        .select("user_id, reaction_type, created_at")
+        .select("user_id, reaction_type, created_at, profiles!inner(display_name, avatar_url)")
         .eq("article_id", articleId)
         .order("created_at", { ascending: false });
 
@@ -43,22 +43,46 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
         return;
       }
 
-      const userIds = [...new Set(data.map(r => r.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", userIds);
+      // Map profile data directly from join
+      const formattedReactions = data.map(r => ({
+        user_id: r.user_id,
+        reaction_type: r.reaction_type,
+        created_at: r.created_at,
+        profile: r.profiles
+          ? {
+              display_name: (r.profiles as any).display_name,
+              avatar_url: (r.profiles as any).avatar_url,
+            }
+          : undefined,
+      }));
 
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-
-      setReactions(data.map(r => ({
-        ...r,
-        profile: profileMap.get(r.user_id) || undefined,
-      })));
+      setReactions(formattedReactions);
       setLoading(false);
     };
 
     fetchReactions();
+
+    // FIXED: Subscribe to real-time changes
+    const subscription = supabase
+      .channel(`reactions-${articleId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "reactions",
+          filter: `article_id=eq.${articleId}`,
+        },
+        () => {
+          // Refetch on any change (insert, update, delete)
+          fetchReactions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [articleId, isOpen]);
 
   useEffect(() => {

@@ -58,42 +58,60 @@ export function useCardReactions(articleId: string, autoFetch = true) {
   const fetchReactions = useCallback(async () => {
     setLoading(true);
 
-    const [{ data: { session } }, { data: reactions }] = await Promise.all([
-      supabase.auth.getSession(),
-      supabase
-        .from("reactions")
-        .select("reaction_type, user_id, created_at")
-        .eq("article_id", articleId)
-        .order("created_at", { ascending: false })
-    ]);
+    try {
+      const [{ data: { session } }, { data: reactions }] = await Promise.all([
+        supabase.auth.getSession(),
+        supabase
+          .from("reactions")
+          .select("reaction_type, user_id, created_at, profiles!inner(display_name)")
+          .eq("article_id", articleId)
+          .order("created_at", { ascending: false })
+      ]);
 
-    const currentUserId = session?.user?.id || null;
-    setUserId(currentUserId);
+      const currentUserId = session?.user?.id || null;
+      setUserId(currentUserId);
 
-    if (!reactions || reactions.length === 0) {
+      if (!reactions || reactions.length === 0) {
+        setSummary(EMPTY_SUMMARY);
+        setFetched(true);
+        setLoading(false);
+        return;
+      }
+
+      const typeCounts: Record<string, number> = {};
+      const userReactionType = currentUserId
+        ? reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined
+        : null;
+
+      reactions.forEach((r) => {
+        typeCounts[r.reaction_type] = (typeCounts[r.reaction_type] || 0) + 1;
+      });
+
+      const sorted = Object.entries(typeCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key]) => key as ReactionKey);
+      const topTypes = sorted.slice(0, 2);
+
+      // FIXED: Fetch top 3 reactor names (excluding current user)
+      const topReactors = reactions
+        .filter(r => r.user_id !== currentUserId)
+        .slice(0, 3)
+        .map((r: any) => r.profiles?.display_name || "کاربر");
+
+      setSummary({ 
+        topTypes, 
+        totalCount: reactions.length, 
+        reactorNames: topReactors, 
+        userReaction: userReactionType || null 
+      });
+      setFetched(true);
+      setLoading(false);
+    } catch (error) {
+      logger.error('Failed to fetch reactions:', error);
       setSummary(EMPTY_SUMMARY);
       setFetched(true);
       setLoading(false);
-      return;
     }
-
-    const typeCounts: Record<string, number> = {};
-    const userReactionType = currentUserId
-      ? reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined
-      : null;
-
-    reactions.forEach((r) => {
-      typeCounts[r.reaction_type] = (typeCounts[r.reaction_type] || 0) + 1;
-    });
-
-    const sorted = Object.entries(typeCounts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([key]) => key as ReactionKey);
-    const topTypes = sorted.slice(0, 2);
-
-    setSummary({ topTypes, totalCount: reactions.length, reactorNames: [], userReaction: userReactionType || null });
-    setFetched(true);
-    setLoading(false);
   }, [articleId]);
 
   useEffect(() => {
@@ -107,45 +125,61 @@ export function useCardReactions(articleId: string, autoFetch = true) {
   }, [fetched, fetchReactions]);
 
   const toggleReaction = async (type: ReactionKey) => {
-    // Prevent double-submit while processing
+    // Prevent double-submit while processing (atomic guarantee)
     if (isProcessing) return false;
     setIsProcessing(true);
 
     try {
-      // CRITICAL: Capture current state BEFORE optimistic update to fix race condition
+      // Capture current state for optimistic update
       const previousReaction = summary.userReaction;
 
-      // Optimistic update
+      // Optimistic update immediately
       if (previousReaction === type) {
-        setSummary(prev => ({ ...prev, userReaction: null, totalCount: Math.max(0, prev.totalCount - 1) }));
+        setSummary(prev => ({ 
+          ...prev, 
+          userReaction: null, 
+          totalCount: Math.max(0, prev.totalCount - 1) 
+        }));
       } else if (previousReaction) {
         setSummary(prev => ({ ...prev, userReaction: type }));
       } else {
-        setSummary(prev => ({ ...prev, userReaction: type, totalCount: prev.totalCount + 1 }));
+        setSummary(prev => ({ 
+          ...prev, 
+          userReaction: type, 
+          totalCount: prev.totalCount + 1 
+        }));
       }
 
       const { data: { session } } = await supabase.auth.getSession();
       const uid = session?.user?.id;
       if (!uid) {
+        logger.warn('Not authenticated for reaction');
         await fetchReactions();
         setIsProcessing(false);
         return false;
       }
 
       try {
-        // Use captured previousReaction for DB branch logic
-        if (previousReaction === type) {
-          await supabase.from("reactions").delete().eq("article_id", articleId).eq("user_id", uid);
-        } else if (previousReaction) {
-          await supabase.from("reactions").update({ reaction_type: type }).eq("article_id", articleId).eq("user_id", uid);
-        } else {
-          await supabase.from("reactions").insert({ article_id: articleId, user_id: uid, reaction_type: type });
+        // FIXED: Use RPC function for atomic operation
+        const { data, error } = await supabase.rpc('toggle_reaction', {
+          p_article_id: articleId,
+          p_user_id: uid,
+          p_reaction_type: type,
+        });
+
+        if (error) {
+          throw error;
         }
-        // Success: Trust optimistic update, don't refetch
+
+        // Server returned result - update with authoritative data
+        if (data) {
+          // Fetch fresh data to ensure consistency
+          await fetchReactions();
+        }
         return true;
       } catch (error) {
         logger.error('Reaction toggle failed:', error);
-        // Error: Refetch to sync state
+        // Error: Refetch to sync state with DB
         await fetchReactions();
         return false;
       }

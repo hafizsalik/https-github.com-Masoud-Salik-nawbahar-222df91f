@@ -33,8 +33,9 @@ export function ReactionPickerButton({
   const isPointerDown = useRef(false);
 
   // Constants
-  const TAP_THRESHOLD = 300; // ms
-  const LONG_PRESS_DURATION = 400; // ms
+  const isMobileView = typeof window !== "undefined" && window.innerWidth < 640;
+  const TAP_THRESHOLD = isMobileView ? 150 : 200; // Faster tap detection on mobile
+  const LONG_PRESS_DURATION = isMobileView ? 350 : 400; // Shorter long-press on mobile
 
   // Handlers
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
@@ -237,58 +238,35 @@ function ReactionCardPickerInline({
     const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
     if (isMobile) {
-      // Mobile: Center at bottom, but check viewport height
-      const viewportHeight = window.innerHeight;
-      const cardHeight = 80; // Approximate height of reaction picker
-      const safeMargin = 16;
-
-      // If card would overflow bottom, adjust position
-      if (viewportHeight < 160 + safeMargin) {
-        // Very short viewport - position above
-        setCardPosition({
-          top: `${safeMargin}px`,
-          left: "50%",
-        });
-      } else {
-        // Normal: center at bottom
-        setCardPosition({
-          top: "auto",
-          left: "50%",
-        });
-      }
+      // Mobile: Fixed bottom position with proper centering
+      // No calculation needed - use CSS classes
+      setCardPosition({ top: "auto", left: "50%" });
     } else {
       // Desktop: Smart positioning with viewport boundary detection
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const cardWidth = 360; // Approximate width of reaction card
-      const cardHeight = 80; // Approximate height
+      const cardWidth = 360;
+      const cardHeight = 100;
       const safeMargin = 16;
 
-      let x = position?.x ? position.x - 80 : 10;
-      let y = position?.y ? position.y - 100 : 10;
+      let x = position?.x ? position.x - cardWidth / 2 : 10;
+      let y = position?.y ? position.y - cardHeight - 12 : 10;
 
-      // Check right edge overflow
+      // Constrain to viewport
       if (x + cardWidth + safeMargin > viewportWidth) {
         x = viewportWidth - cardWidth - safeMargin;
       }
-      // Check left edge
       if (x < safeMargin) {
         x = safeMargin;
       }
-
-      // Check bottom edge overflow
       if (y + cardHeight + safeMargin > viewportHeight) {
-        y = position?.y ? position.y - cardHeight - safeMargin : viewportHeight - cardHeight - safeMargin;
+        y = position?.y ? position.y + 12 : viewportHeight - cardHeight - safeMargin;
       }
-      // Check top edge
       if (y < safeMargin) {
         y = safeMargin;
       }
 
-      setCardPosition({
-        top: `${y}px`,
-        left: `${x}px`,
-      });
+      setCardPosition({ top: `${y}px`, left: `${x}px` });
     }
   }, [position]);
 
@@ -323,16 +301,24 @@ function ReactionCardPickerInline({
           "bg-card rounded-full",
           "shadow-lg border border-border",
           "pointer-events-auto overflow-visible",
-          isMobile
-            ? "bottom-16 left-1/2 -translate-x-1/2"
-            : ""
+          isMobile && "bottom-16 left-1/2 -translate-x-1/2"
         )}
-        style={{
-          ...(!isMobile && cardPosition),
-          animation: isClosing
-            ? "reactionCardExit 150ms ease-out forwards"
-            : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-        }}
+        style={
+          isMobile 
+            ? {
+                animation: isClosing
+                  ? "reactionCardExit 150ms ease-out forwards"
+                  : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+              }
+            : {
+                top: cardPosition.top,
+                left: cardPosition.left,
+                transform: "translateX(-50%)",
+                animation: isClosing
+                  ? "reactionCardExit 150ms ease-out forwards"
+                  : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+              }
+        }
         onClick={(e) => e.stopPropagation()}
       >
         {REACTION_KEYS.map((key, index) => {
