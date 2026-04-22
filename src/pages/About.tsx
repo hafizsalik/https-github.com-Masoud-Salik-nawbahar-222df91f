@@ -1,4 +1,4 @@
-﻿import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { ArrowRight, Heart, Globe, Shield, Users } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
@@ -98,7 +98,7 @@ const About = () => {
         {/* Footer */}
         <div className="text-center py-6 space-y-2">
           <p className="text-xs text-muted-foreground">
-            نسخه 1.5
+            نسخه 1.69 بیتا
           </p>
           <p className="text-xs text-muted-foreground">
             ساخته شده با ❤️ در افغانستان
