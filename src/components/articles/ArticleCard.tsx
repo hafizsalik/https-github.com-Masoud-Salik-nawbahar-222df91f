@@ -5,6 +5,7 @@ import type { FeedArticle } from "@/hooks/useArticles";
 import { useComments } from "@/hooks/useComments";
 import { useCardReactions } from "@/hooks/useCardReactions";
 import { ArticleActionsMenu } from "./ArticleActionsMenu";
+import { highlightTextSegments } from "@/lib/fuzzySearch";
 import { cn } from "@/lib/utils";
 import { SlideDownComments } from "./SlideDownComments";
 import { formatSolarShort } from "@/lib/solarHijri";
@@ -128,14 +129,17 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
             hasBeenRead ? "text-muted-foreground/60" : "text-foreground"
           )}
         >
-          {article.title}
+          {searchQuery ? highlightTextSegments(article.title, searchQuery) : article.title}
         </h3>
 
         {/* Content row: excerpt + image */}
         <div className="flex gap-3" style={{ direction: "rtl" }}>
           <div className="flex-1 min-w-0">
             <p className="text-[14px] leading-[1.7] line-clamp-4 text-muted-foreground">
-              {getExcerpt(article.content, 180)}
+              {searchQuery
+                ? highlightTextSegments(getExcerpt(article.content, 180), searchQuery)
+                : getExcerpt(article.content, 180)
+              }
             </p>
           </div>
           <div

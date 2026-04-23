@@ -8,6 +8,8 @@ import { LogoutConfirmDialog } from "@/components/EnhancedButtons";
 import { Input } from "@/components/ui/input";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 import { WritingGuidanceModal } from "@/components/WritingGuidanceModal";
+import { SearchDropdown } from "@/components/SearchDropdown";
+import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -27,6 +29,8 @@ export function Header() {
   const [menuClosing, setMenuClosing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [searchValue, setSearchValue] = useState("");
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showWritingGuide, setShowWritingGuide] = useState(false);
@@ -47,6 +51,9 @@ export function Header() {
       localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
+
+  // Search suggestions
+  const { articles: articleSuggestions, profiles: profileSuggestions } = useSearchSuggestions(searchValue);
 
   const smoothCloseMenu = useCallback(() => {
     if (!menuOpen) return;
@@ -69,6 +76,19 @@ export function Header() {
       document.removeEventListener('pointerdown', handler, true);
     };
   }, [menuOpen, smoothCloseMenu]);
+
+  useEffect(() => {
+    if (!showSearchDropdown) return;
+    const handler = (e: Event) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener('pointerdown', handler, true);
+    return () => {
+      document.removeEventListener('pointerdown', handler, true);
+    };
+  }, [showSearchDropdown]);
 
   useEffect(() => {
     if (location.pathname !== "/explore") return;
@@ -134,18 +154,32 @@ export function Header() {
           </button>
 
           {/* Center: Search bar */}
-          <form onSubmit={handleSearchSubmit} className="flex-1 mx-3 max-w-[240px]">
-            <div className="relative">
-              <NawbaharIcon src={searchIcon} size={14} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-30 dark:invert" />
-              <Input
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="دنبال چی می‌گردی؟"
-                className="pr-8 pl-3 bg-muted/40 border-0 rounded-full h-[36px] text-[13px] focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/40"
-                aria-label="جستجو"
-              />
-            </div>
-          </form>
+          <div className="flex-1 mx-3 max-w-[240px] relative" ref={searchRef}>
+            <form onSubmit={handleSearchSubmit} className="w-full">
+              <div className="relative">
+                <NawbaharIcon src={searchIcon} size={14} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-30 dark:invert" />
+                <Input
+                  value={searchValue}
+                  onChange={(e) => {
+                    setSearchValue(e.target.value);
+                    setShowSearchDropdown(true);
+                  }}
+                  onFocus={() => searchValue && setShowSearchDropdown(true)}
+                  placeholder="دنبال چی می‌گردی؟"
+                  className="pr-8 pl-3 bg-muted/40 border-0 rounded-full h-[36px] text-[13px] focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/40"
+                  aria-label="جستجو"
+                />
+              </div>
+            </form>
+            {/* Search suggestions dropdown */}
+            <SearchDropdown
+              articleResults={articleSuggestions}
+              profileResults={profileSuggestions}
+              query={searchValue}
+              isOpen={showSearchDropdown && searchValue.trim().length > 0}
+              onClose={() => setShowSearchDropdown(false)}
+            />
+          </div>
 
           {/* Right: User avatar or guest icon */}
           <Link
