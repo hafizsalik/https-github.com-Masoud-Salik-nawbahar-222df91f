@@ -45,11 +45,11 @@ export function ReactionPickerButton({
     isPointerDown.current = true;
     pointerStartTime.current = Date.now();
 
-    // Get position for card placement
+    // Get position for card placement (store center X to match translateX(-50%))
     const rect = buttonRef.current?.getBoundingClientRect();
     setPointPosition({
-      x: rect?.left || e.clientX,
-      y: rect?.top || e.clientY,
+      x: rect ? rect.left + rect.width / 2 : e.clientX,
+      y: rect ? rect.top : e.clientY,
     });
 
     // Start long press timer
@@ -240,36 +240,52 @@ function ReactionCardPickerInline({
 
     if (isMobile) {
       // Mobile: Fixed bottom position with proper centering
-      // No calculation needed - use CSS classes
       setCardPosition({ top: "auto", left: "50%" });
-    } else {
-      // Desktop: Smart positioning with viewport boundary detection
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const cardWidth = 360;
-      const cardHeight = 100;
-      const safeMargin = 16;
-
-      let x = position?.x ? position.x - cardWidth / 2 : 10;
-      let y = position?.y ? position.y - cardHeight - 12 : 10;
-
-      // Constrain to viewport
-      if (x + cardWidth + safeMargin > viewportWidth) {
-        x = viewportWidth - cardWidth - safeMargin;
-      }
-      if (x < safeMargin) {
-        x = safeMargin;
-      }
-      if (y + cardHeight + safeMargin > viewportHeight) {
-        y = position?.y ? position.y + 12 : viewportHeight - cardHeight - safeMargin;
-      }
-      if (y < safeMargin) {
-        y = safeMargin;
-      }
-
-      setCardPosition({ top: `${y}px`, left: `${x}px` });
+      return;
     }
+
+    // Desktop: Smart positioning with viewport boundary detection
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const safeMargin = 16;
+    const cardWidth = cardRef.current?.offsetWidth || 360;
+    const cardHeight = cardRef.current?.offsetHeight || 100;
+
+    let centerX = position?.x ?? viewportWidth / 2;
+    let y = position?.y ? position.y - cardHeight - 12 : 10;
+
+    // Constrain to viewport by center coordinates
+    const minCenterX = safeMargin + cardWidth / 2;
+    const maxCenterX = viewportWidth - safeMargin - cardWidth / 2;
+    if (centerX < minCenterX) {
+      centerX = minCenterX;
+    }
+    if (centerX > maxCenterX) {
+      centerX = maxCenterX;
+    }
+
+    if (y + cardHeight + safeMargin > viewportHeight) {
+      y = position?.y ? position.y + 12 : viewportHeight - cardHeight - safeMargin;
+    }
+    if (y < safeMargin) {
+      y = safeMargin;
+    }
+
+    setCardPosition({ top: `${y}px`, left: `${centerX}px` });
   }, [position]);
+
+  const handleReactionHover = useCallback((type: ReactionKey) => {
+    setActiveReaction(type);
+    triggerHaptic("light");
+  }, []);
+
+  const handleReactionSelect = useCallback(
+    (type: ReactionKey) => {
+      onReact(type);
+      setIsDragging(false);
+    },
+    [onReact]
+  );
 
   const handleCardPointerMove = useCallback((e: React.PointerEvent) => {
     if (!cardRef.current) return;
@@ -328,6 +344,8 @@ function ReactionCardPickerInline({
         style={
           isMobile
             ? {
+              width: "min(100vw - 32px, 100%)",
+              maxWidth: "calc(100vw - 32px)",
               animation: isClosing
                 ? "reactionCardExit 150ms ease-out forwards"
                 : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
