@@ -213,6 +213,7 @@ function ReactionCardPickerInline({
     top: "0",
     left: "0",
   });
+  const [isDragging, setIsDragging] = useState(false);
 
   // Close on backdrop click
   useEffect(() => {
@@ -270,14 +271,35 @@ function ReactionCardPickerInline({
     }
   }, [position]);
 
-  const handleReactionHover = (type: ReactionKey) => {
-    setActiveReaction(type);
-    triggerHaptic("light");
-  };
+  const handleCardPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!cardRef.current) return;
 
-  const handleReactionSelect = (type: ReactionKey) => {
-    onReact(type);
-  };
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const cardWidth = rect.width;
+    const reactionWidth = cardWidth / REACTION_KEYS.length;
+    const index = Math.floor(x / reactionWidth);
+
+    if (index >= 0 && index < REACTION_KEYS.length) {
+      const reaction = REACTION_KEYS[index];
+      if (reaction !== activeReaction) {
+        setActiveReaction(reaction);
+        setIsDragging(true);
+        triggerHaptic("light");
+      }
+    }
+  }, [activeReaction]);
+
+  const handleCardPointerDown = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleCardPointerUp = useCallback(() => {
+    if (isDragging && activeReaction) {
+      onReact(activeReaction);
+    }
+    setIsDragging(false);
+  }, [isDragging, activeReaction, onReact]);
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
@@ -304,22 +326,25 @@ function ReactionCardPickerInline({
           isMobile && "bottom-16 left-1/2 -translate-x-1/2"
         )}
         style={
-          isMobile 
+          isMobile
             ? {
-                animation: isClosing
-                  ? "reactionCardExit 150ms ease-out forwards"
-                  : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-              }
+              animation: isClosing
+                ? "reactionCardExit 150ms ease-out forwards"
+                : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+            }
             : {
-                top: cardPosition.top,
-                left: cardPosition.left,
-                transform: "translateX(-50%)",
-                animation: isClosing
-                  ? "reactionCardExit 150ms ease-out forwards"
-                  : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-              }
+              top: cardPosition.top,
+              left: cardPosition.left,
+              transform: "translateX(-50%)",
+              animation: isClosing
+                ? "reactionCardExit 150ms ease-out forwards"
+                : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+            }
         }
         onClick={(e) => e.stopPropagation()}
+        onPointerMove={handleCardPointerMove}
+        onPointerDown={handleCardPointerDown}
+        onPointerUp={handleCardPointerUp}
       >
         {REACTION_KEYS.map((key, index) => {
           const isActive = activeReaction === key;

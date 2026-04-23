@@ -17,11 +17,11 @@ import { createClient } from '@supabase/supabase-js';
 // Mock data
 const MOCK_ARTICLE_ID = '550e8400-e29b-41d4-a716-446655440000';
 const MOCK_USER_ID = 'user-123';
-const MOCK_REACTION_TYPES = ['like', 'love', 'insightful', 'laugh', 'sad'];
+const MOCK_REACTION_TYPES = ['like', 'celebrate', 'support', 'insightful', 'appreciate', 'funny'];
 
 const MOCK_REACTIONS = [
   { article_id: MOCK_ARTICLE_ID, user_id: MOCK_USER_ID, reaction_type: 'like', created_at: '2026-04-17T10:00:00Z' },
-  { article_id: MOCK_ARTICLE_ID, user_id: 'user-456', reaction_type: 'love', created_at: '2026-04-17T10:05:00Z' },
+  { article_id: MOCK_ARTICLE_ID, user_id: 'user-456', reaction_type: 'celebrate', created_at: '2026-04-17T10:05:00Z' },
   { article_id: MOCK_ARTICLE_ID, user_id: 'user-789', reaction_type: 'like', created_at: '2026-04-17T10:10:00Z' },
 ];
 
@@ -71,7 +71,7 @@ describe('Reactions System - End-to-End Tests', () => {
           user_reaction: 'like',
           total_count: 3,
           top_types: ['like', 'love'],
-          counts_by_type: { like: 2, love: 1, insightful: 0, laugh: 0, sad: 0 }
+          counts_by_type: { like: 2, celebrate: 1, insightful: 0, support: 0, appreciate: 0, funny: 0 }
         }
       });
 
@@ -112,7 +112,7 @@ describe('Reactions System - End-to-End Tests', () => {
         .eq('article_id', MOCK_ARTICLE_ID);
 
       expect(fromMock).toHaveBeenCalledWith('reactions');
-      
+
       // Verify profiles are included
       if (result.data) {
         const firstReaction = result.data[0];
@@ -161,7 +161,7 @@ describe('Reactions System - End-to-End Tests', () => {
     it('should use faster tap threshold on mobile (150ms vs 200ms desktop)', () => {
       const isMobileView = typeof window !== 'undefined' && window.innerWidth < 640;
       const TAP_THRESHOLD = isMobileView ? 150 : 200;
-      
+
       // Simulate mobile viewport
       Object.defineProperty(window, 'innerWidth', { value: 320, writable: true });
       const mobileThreshold = window.innerWidth < 640 ? 150 : 200;
@@ -187,7 +187,7 @@ describe('Reactions System - End-to-End Tests', () => {
       // Mobile positioning should use CSS classes, not JS calculation
       const isMobile = true;
       const mobileClasses = isMobile && 'bottom-16 left-1/2 -translate-x-1/2';
-      
+
       expect(mobileClasses).toContain('bottom-16');
       expect(mobileClasses).toContain('left-1/2');
       expect(mobileClasses).toContain('-translate-x-1/2');
@@ -219,7 +219,7 @@ describe('Reactions System - End-to-End Tests', () => {
     it('should apply translateX(-50%) transform for desktop card centering', () => {
       const cardPosition = { top: '100px', left: '500px' };
       const transform = 'translateX(-50%)';
-      
+
       // Desktop style should include transform
       const desktopStyle = {
         top: cardPosition.top,
@@ -271,7 +271,7 @@ describe('Reactions System - End-to-End Tests', () => {
 
       const channelId = `reactions-${MOCK_ARTICLE_ID}`;
       const channel = mockSupabase.channel(channelId);
-      
+
       channel.on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -330,7 +330,7 @@ describe('Reactions System - End-to-End Tests', () => {
       const toggleReaction = async () => {
         if (isProcessing) return false;
         isProcessing = true;
-        
+
         try {
           // Simulate API call
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -352,7 +352,7 @@ describe('Reactions System - End-to-End Tests', () => {
 
     it('should refetch data on RPC error to sync state', async () => {
       const refetchMock = vi.fn();
-      
+
       try {
         mockSupabase.rpc = vi.fn().mockRejectedValue(new Error('RPC failed'));
         await mockSupabase.rpc('toggle_reaction', {});
@@ -369,17 +369,17 @@ describe('Reactions System - End-to-End Tests', () => {
 describe('User Interaction Flow', () => {
   it('should complete full reaction lifecycle: tap -> toggle -> refetch', async () => {
     // This test demonstrates the full flow with all fixes applied
-    
+
     // 1. User taps reaction button (fast: 150ms on mobile, 200ms on desktop)
     const tapTime = 150;
-    
+
     // 2. System sends RPC call with atomic guarantee
     const rpcCall = {
       p_article_id: MOCK_ARTICLE_ID,
       p_user_id: MOCK_USER_ID,
       p_reaction_type: 'like'
     };
-    
+
     // 3. Server returns authoritative data
     const rpcResponse = {
       user_reaction: 'like',
@@ -387,7 +387,7 @@ describe('User Interaction Flow', () => {
       top_types: ['like', 'love'],
       reactorNames: ['فاطمه', 'محمد']
     };
-    
+
     // 4. Modal subscribers get real-time update via postgres_changes
     const realtimeEvent = {
       table: 'reactions',
@@ -395,7 +395,7 @@ describe('User Interaction Flow', () => {
     };
 
     expect(tapTime).toBeLessThanOrEqual(200);
-    expect(rpcCall.p_reaction_type).toMatch(/^(like|love|insightful|laugh|sad)$/);
+    expect(rpcCall.p_reaction_type).toMatch(/^(like|celebrate|support|insightful|appreciate|funny)$/);
     expect(rpcResponse.reactorNames).toHaveLength(2);
     expect(['INSERT', 'UPDATE', 'DELETE']).toContain(realtimeEvent.action);
   });

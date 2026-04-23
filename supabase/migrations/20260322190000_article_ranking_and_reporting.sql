@@ -22,6 +22,7 @@ RETURNS FLOAT AS $$
 DECLARE
   score FLOAT := 0;
   article_record RECORD;
+  reaction_score INTEGER := 0;
 BEGIN
   -- Get article metrics
   SELECT 
@@ -40,12 +41,17 @@ BEGIN
     RETURN 0;
   END IF;
 
+  -- Get reaction algorithm score (weighted by reaction quality)
+  SELECT COALESCE(algorithm_score, 0) INTO reaction_score
+  FROM public.reaction_summary
+  WHERE article_id = article_uuid;
+
   -- Weighted scoring (adjustable)
   -- Views: 1 point each (but capped to prevent spam)
   score := score + LEAST(COALESCE(article_record.view_count, 0), 1000) * 1.0;
   
-  -- Reactions: 3 points each (strong engagement signal)
-  score := score + COALESCE(article_record.reaction_count, 0) * 3.0;
+  -- Reactions: use algorithm score (quality-weighted) instead of simple count
+  score := score + reaction_score * 1.0;
   
   -- Comments: 5 points each (highest engagement)
   score := score + COALESCE(article_record.comment_count, 0) * 5.0;

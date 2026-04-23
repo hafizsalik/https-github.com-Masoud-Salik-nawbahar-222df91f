@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
 import likeIcon from "@/assets/icons/reaction-like.svg";
-import loveIcon from "@/assets/icons/reaction-love.svg";
+import celebrateIcon from "@/assets/icons/reaction-celebrate.svg";
+import supportIcon from "@/assets/icons/reaction-support.svg";
 import insightfulIcon from "@/assets/icons/reaction-insightful.svg";
-import laughIcon from "@/assets/icons/reaction-laugh.svg";
-import sadIcon from "@/assets/icons/reaction-sad.svg";
+import appreciateIcon from "@/assets/icons/reaction-appreciate.svg";
+import funnyIcon from "@/assets/icons/reaction-funny.svg";
 
 interface IconProps {
   size?: number;
@@ -36,25 +37,30 @@ export function ThumbsUpIcon({ size = 24, className, animated = false }: IconPro
 }
 
 export function HeartIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={loveIcon} alt="love" />;
+  return <ReactionImg size={size} animated={animated} className={className} icon={celebrateIcon} alt="celebrate" />;
+}
+
+export function SupportIcon({ size = 24, className, animated = false }: IconProps) {
+  return <ReactionImg size={size} animated={animated} className={className} icon={supportIcon} alt="support" />;
 }
 
 export function LightbulbIcon({ size = 24, className, animated = false }: IconProps) {
   return <ReactionImg size={size} animated={animated} className={className} icon={insightfulIcon} alt="insightful" />;
 }
 
-export function SmileIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={laughIcon} alt="laugh" />;
+export function HandshakeIcon({ size = 24, className, animated = false }: IconProps) {
+  return <ReactionImg size={size} animated={animated} className={className} icon={appreciateIcon} alt="appreciate" />;
 }
 
-export function FrownIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={sadIcon} alt="sad" />;
+export function FunnyIcon({ size = 24, className, animated = false }: IconProps) {
+  return <ReactionImg size={size} animated={animated} className={className} icon={funnyIcon} alt="funny" />;
 }
 
 export const REACTION_SVG_ICONS: Record<string, (props: IconProps) => JSX.Element> = {
   like: ThumbsUpIcon,
-  love: HeartIcon,
+  celebrate: HeartIcon,
+  support: SupportIcon,
   insightful: LightbulbIcon,
-  laugh: SmileIcon,
-  sad: FrownIcon,
+  appreciate: HandshakeIcon,
+  funny: FunnyIcon,
 };

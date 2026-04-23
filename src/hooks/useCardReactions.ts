@@ -2,30 +2,33 @@ import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 
-export const REACTION_KEYS = ["like", "love", "insightful", "laugh", "sad"] as const;
+export const REACTION_KEYS = ["like", "celebrate", "support", "insightful", "appreciate", "funny"] as const;
 
 export const REACTION_LABELS: Record<string, string> = {
   like: "پسند",
-  love: "عالی",
+  celebrate: "عالی",
+  support: "حمایت",
   insightful: "آموزنده",
-  laugh: "سرگرم‌کننده",
-  sad: "تأسف‌بار",
+  appreciate: "قدردانی",
+  funny: "سرگرم‌کننده",
 };
 
 export const REACTION_EMOJIS: Record<string, string> = {
   like: "👍",
-  love: "❤️",
+  celebrate: "❤️",
+  support: "💙",
   insightful: "💡",
-  laugh: "😄",
-  sad: "😔",
+  appreciate: "🤝",
+  funny: "😄",
 };
 
 export const REACTION_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
   like: { bg: "hsl(217 55% 58% / 0.10)", text: "hsl(217 50% 55%)", ring: "hsl(217 55% 58% / 0.20)" },
-  love: { bg: "hsl(348 55% 58% / 0.10)", text: "hsl(348 50% 55%)", ring: "hsl(348 55% 58% / 0.20)" },
+  celebrate: { bg: "hsl(348 55% 58% / 0.10)", text: "hsl(348 50% 55%)", ring: "hsl(348 55% 58% / 0.20)" },
+  support: { bg: "hsl(210 55% 58% / 0.10)", text: "hsl(210 50% 55%)", ring: "hsl(210 55% 58% / 0.20)" },
   insightful: { bg: "hsl(42 60% 50% / 0.10)", text: "hsl(40 55% 48%)", ring: "hsl(42 60% 50% / 0.20)" },
-  laugh: { bg: "hsl(28 55% 55% / 0.10)", text: "hsl(28 50% 50%)", ring: "hsl(28 55% 55% / 0.20)" },
-  sad: { bg: "hsl(200 40% 52% / 0.10)", text: "hsl(200 38% 48%)", ring: "hsl(200 40% 52% / 0.20)" },
+  appreciate: { bg: "hsl(120 40% 45% / 0.10)", text: "hsl(120 38% 42%)", ring: "hsl(120 40% 45% / 0.20)" },
+  funny: { bg: "hsl(28 55% 55% / 0.10)", text: "hsl(28 50% 50%)", ring: "hsl(28 55% 55% / 0.20)" },
 };
 
 export type ReactionKey = keyof typeof REACTION_EMOJIS;
@@ -98,11 +101,11 @@ export function useCardReactions(articleId: string, autoFetch = true) {
         .slice(0, 3)
         .map((r: any) => r.profiles?.display_name || "کاربر");
 
-      setSummary({ 
-        topTypes, 
-        totalCount: reactions.length, 
-        reactorNames: topReactors, 
-        userReaction: userReactionType || null 
+      setSummary({
+        topTypes,
+        totalCount: reactions.length,
+        reactorNames: topReactors,
+        userReaction: userReactionType || null
       });
       setFetched(true);
       setLoading(false);
@@ -135,18 +138,18 @@ export function useCardReactions(articleId: string, autoFetch = true) {
 
       // Optimistic update immediately
       if (previousReaction === type) {
-        setSummary(prev => ({ 
-          ...prev, 
-          userReaction: null, 
-          totalCount: Math.max(0, prev.totalCount - 1) 
+        setSummary(prev => ({
+          ...prev,
+          userReaction: null,
+          totalCount: Math.max(0, prev.totalCount - 1)
         }));
       } else if (previousReaction) {
         setSummary(prev => ({ ...prev, userReaction: type }));
       } else {
-        setSummary(prev => ({ 
-          ...prev, 
-          userReaction: type, 
-          totalCount: prev.totalCount + 1 
+        setSummary(prev => ({
+          ...prev,
+          userReaction: type,
+          totalCount: prev.totalCount + 1
         }));
       }
 
