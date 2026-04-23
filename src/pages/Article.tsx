@@ -169,17 +169,6 @@ const Article = () => {
     }
   }, [searchParams]);
 
-  // Update matches when article or search query changes
-  useEffect(() => {
-    if (article && searchQuery) {
-      // Delay to ensure content is rendered
-      setTimeout(updateMatches, 50);
-    } else {
-      setTotalMatches(0);
-      setCurrentMatchIndex(0);
-    }
-  }, [article, searchQuery, updateMatches]);
-
   const updateMatches = useCallback(() => {
     if (!article || !searchQuery || !contentRef.current) return;
 
@@ -194,6 +183,17 @@ const Article = () => {
       setTimeout(() => scrollToMatch(0), 100);
     }
   }, [article, searchQuery]);
+
+  // Update matches when article or search query changes
+  useEffect(() => {
+    if (article && searchQuery) {
+      // Delay to ensure content is rendered
+      setTimeout(updateMatches, 50);
+    } else {
+      setTotalMatches(0);
+      setCurrentMatchIndex(0);
+    }
+  }, [article, searchQuery, updateMatches]);
 
   const scrollToMatch = (index: number) => {
     if (!contentRef.current || !searchQuery) return;

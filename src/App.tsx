@@ -46,6 +46,11 @@ const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
     const updateServiceWorker = registerSW({
       immediate: true,
       onNeedRefresh() {
+        // Detect if on mobile
+        const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+          navigator.userAgent.toLowerCase()
+        );
+
         toast({
           title: "نسخه جدید آماده شد",
           description: "برای دریافت آخرین تغییرات، بروزرسانی را انجام دهید.",
@@ -60,6 +65,15 @@ const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
             </button>
           ),
         });
+
+        // On mobile, auto-update after 10 seconds if user doesn't dismiss
+        if (isMobile) {
+          const autoUpdateTimer = setTimeout(async () => {
+            await updateServiceWorker?.(true);
+          }, 10000);
+
+          return () => clearTimeout(autoUpdateTimer);
+        }
       },
       onOfflineReady() {
         toast({
@@ -69,7 +83,24 @@ const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
       },
     });
 
+    // Check for updates when page becomes visible (especially important for mobile)
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "visible" && "serviceWorker" in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            await registration.update();
+          }
+        } catch (error) {
+          console.error("Failed to check for updates on visibility change:", error);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       // registerSW manages its own listeners
     };
   }, [toast]);

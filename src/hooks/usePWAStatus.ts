@@ -243,6 +243,14 @@ export function usePWAStatus(): PWAStatus {
     let active = true;
     let intervalId: ReturnType<typeof setInterval> | undefined;
     let detachUpdateFound: (() => void) | undefined;
+    let detachVisibilityChange: (() => void) | undefined;
+
+    // Detect if on mobile/Android
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+      navigator.userAgent.toLowerCase()
+    );
+    // Check for shorter interval on mobile (5 minutes instead of 30)
+    const updateCheckInterval = isMobile ? 5 * 60 * 1000 : 30 * 60 * 1000;
 
     const setup = async () => {
       try {
@@ -267,10 +275,23 @@ export function usePWAStatus(): PWAStatus {
         swRegistration.addEventListener("updatefound", handleUpdateFound);
         detachUpdateFound = () => swRegistration.removeEventListener("updatefound", handleUpdateFound);
 
+        // Check for updates when visibility changes (app comes back to focus)
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === "visible" && active) {
+            void runUpdateCheck(false);
+          }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        detachVisibilityChange = () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+        // Initial check
         await runUpdateCheck(false);
+
+        // Set up periodic checks with mobile-optimized interval
         intervalId = window.setInterval(() => {
           void runUpdateCheck(false);
-        }, 30 * 60 * 1000);
+        }, updateCheckInterval);
       } catch (error) {
         console.error("Service worker setup failed:", error);
         if (active) {
@@ -287,6 +308,7 @@ export function usePWAStatus(): PWAStatus {
         clearInterval(intervalId);
       }
       detachUpdateFound?.();
+      detachVisibilityChange?.();
     };
   }, [prepareUpdate, runUpdateCheck]);
 
