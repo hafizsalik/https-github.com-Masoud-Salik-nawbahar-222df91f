@@ -1,4 +1,5 @@
 import Fuse from 'fuse.js';
+import React from 'react';
 
 export interface SearchArticle {
     id: string;
@@ -96,9 +97,9 @@ export function fuzzySearchProfiles(
 
 /**
  * Highlight text segments with case-insensitive regex
- * Returns JSX-compatible array with marked segments
+ * Returns JSX with marked segments
  */
-export function highlightTextSegments(text: string, query: string) {
+export function highlightTextSegments(text: string, query: string): React.ReactNode {
     if (!query || !text) return text;
 
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -107,13 +108,13 @@ export function highlightTextSegments(text: string, query: string) {
 
     return parts.map((part, index) =>
         regex.test(part) ? (
-            <mark key= { index } className = "bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded-sm" >
-            { part }
+            <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded-sm">
+                {part}
             </mark>
-    ) : (
-        part
-    )
-  );
+        ) : (
+            part
+        )
+    );
 }
 
 /**
