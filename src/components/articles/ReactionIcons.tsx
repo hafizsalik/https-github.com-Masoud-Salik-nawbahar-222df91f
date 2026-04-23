@@ -1,59 +1,87 @@
 import { cn } from "@/lib/utils";
-import likeIcon from "@/assets/icons/reaction-like.svg";
-import celebrateIcon from "@/assets/icons/reaction-celebrate.svg";
-import supportIcon from "@/assets/icons/reaction-support.svg";
-import insightfulIcon from "@/assets/icons/reaction-insightful.svg";
-import appreciateIcon from "@/assets/icons/reaction-appreciate.svg";
-import funnyIcon from "@/assets/icons/reaction-funny.svg";
+import type { CSSProperties, ReactNode } from "react";
 
 interface IconProps {
   size?: number;
   className?: string;
-  strokeWidth?: number;
   animated?: boolean;
+  style?: CSSProperties;
 }
 
-/** Direct <img> rendering — guarantees icons display on all platforms */
-function ReactionImg({ size = 24, className, animated, icon, alt }: IconProps & { icon: string; alt: string }) {
+function SvgIcon({ size = 24, className, style, animated, children }: IconProps & { children: ReactNode }) {
   return (
-    <img
-      src={icon}
-      alt={alt}
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
       width={size}
       height={size}
-      draggable={false}
+      fill="currentColor"
+      style={style}
       className={cn(
         "inline-block flex-shrink-0 transition-transform duration-200",
         animated && "animate-reaction-pop-enhanced",
         className
       )}
       aria-hidden="true"
-    />
+    >
+      {children}
+    </svg>
   );
 }
 
-export function ThumbsUpIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={likeIcon} alt="like" />;
+export function ThumbsUpIcon({ size = 24, className, animated = false, style }: IconProps) {
+  return (
+    <SvgIcon size={size} className={className} animated={animated} style={style}>
+      <path d="M175.7,392.9c-7.9,0-15.2-4.4-18-11.7c-6.3-16.1-9.6-33.3-9.6-50.7c0-32.3,11.1-62,29.6-85.6c2.8-3.5,6.9-5.7,11.1-7.3 c8.7-3.4,16.4-9.5,22.4-17.1c14.3-18.3,32.3-33.4,52.9-44.3c13.4-7.1,24.9-17.7,30.5-31.7c3.9-9.8,6-20.3,5.9-30.9v-11.7 c0-7.7,6.2-13.9,13.9-13.9c23,0,41.6,18.6,41.6,41.6c0,21.3-4.8,41.4-13.4,59.5c-4.9,10.3,2,23.7,13.4,23.7h57.8 c19,0,35.9,12.8,38,31.7c0.8,7.8,1.3,15.7,1.3,23.7c0.1,50.6-17.2,99.6-48.9,139c-7.2,8.9-18.2,13.5-29.7,13.5h-74.2 c-8.9,0-17.8-1.4-26.3-4.2l-57.5-19.2c-8.5-2.8-17.4-4.3-26.3-4.2C190.1,392.9,175.7,392.9,175.7,392.9z M80.4,249.3 C70.2,275.2,65,302.8,65,330.6c0,22,3.2,43.8,9.6,64.8c4.8,15.7,20,25.3,36.5,25.3h16.7c8.2,0,13.3-9.2,9.7-16.6 c-11.3-22.9-17.1-48-17.1-73.5c0-31.6,8.8-61.1,24.1-86.2c4.5-7.4-0.5-17.7-9.2-17.7h-19.4C100.4,226.6,86,235,80.4,249.3L80.4,249.3z" />
+    </SvgIcon>
+  );
 }
 
-export function HeartIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={celebrateIcon} alt="celebrate" />;
+export function HeartIcon({ size = 24, className, animated = false, style }: IconProps) {
+  return (
+    <SvgIcon size={size} className={className} animated={animated} style={style}>
+      <path d="M253.3,81C180.8,81,122,139.7,122,212.3c0,46.9,25,90.2,65.5,113.6c10.9,6.3,17.7,16,18,25.8c0.2,5.4,3.9,10,9.2,11.2 c5.6,1.3,11.3,2.4,17.1,3.1c5.1,0.7,9.5-3.5,9.5-8.7v-74.2c-5-0.6-10-1.5-14.9-2.7c-6.4-1.6-10.2-8.2-8.6-14.5 c1.6-6.4,8.2-10.2,14.5-8.6c13.7,3.5,28.1,3.5,41.8,0c6.3-1.8,12.9,1.8,14.8,8.2c1.8,6.3-1.8,12.9-8.2,14.8 c-0.2,0.1-0.4,0.1-0.7,0.2c-4.9,1.3-9.9,2.2-14.9,2.7v74.2c0,5.2,4.4,9.3,9.5,8.7c5.8-0.7,11.5-1.8,17.1-3.1c5.2-1.2,9-5.8,9.2-11.2 c0.3-9.8,7.1-19.5,18-25.8c62.7-36.3,84.2-116.6,47.8-179.4C343.5,106,300.2,81,253.3,81z" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M205.8,385.7c1.2-6.5,7.5-10.7,13.9-9.5c0,0,0,0,0,0c22.2,4.2,45,4.2,67.2,0c6.4-1.4,12.8,2.7,14.2,9.1 c1.4,6.4-2.7,12.8-9.1,14.2c-0.2,0-0.4,0.1-0.7,0.1c-25.1,4.8-50.9,4.8-76.1,0C208.8,398.4,204.6,392.2,205.8,385.7z M217.6,424.6 c0.7-6.6,6.6-11.3,13.1-10.6c0,0,0,0,0,0c15,1.6,30.2,1.6,45.3,0c6.6-0.7,12.4,4.1,13.1,10.6c0.7,6.6-4.1,12.4-10.6,13.1 c-16.7,1.7-33.5,1.7-50.2,0C221.6,437,216.9,431.2,217.6,424.6C217.6,424.6,217.6,424.6,217.6,424.6z" />
+    </SvgIcon>
+  );
 }
 
-export function SupportIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={supportIcon} alt="support" />;
+export function SupportIcon({ size = 24, className, animated = false, style }: IconProps) {
+  return (
+    <SvgIcon size={size} className={className} animated={animated} style={style}>
+      <path fillRule="evenodd" clipRule="evenodd" d="M256,90.5c-91.4,0-165.5,74.1-165.5,165.5S164.6,421.5,256,421.5S421.5,347.4,421.5,256S347.4,90.5,256,90.5z M211.4,192.3c-9.2,0-14.1,7.1-15.9,10.8c-2.2,4.6-3.3,9.6-3.2,14.7c0,5.1,1,10.3,3.2,14.7c1.8,3.6,6.7,10.8,15.9,10.8 c9.2,0,14.1-7.1,15.9-10.8c2.2-4.4,3.2-9.6,3.2-14.7s-1-10.3-3.2-14.7C225.5,199.5,220.6,192.3,211.4,192.3z M284.7,203.1 c1.8-3.6,6.7-10.8,15.9-10.8c9.2,0,14.1,7.1,15.9,10.8c2.2,4.4,3.2,9.6,3.2,14.7s-1,10.3-3.2,14.7c-1.8,3.6-6.7,10.8-15.9,10.8 c-9.2,0-14.1-7.1-15.9-10.8c-2.2-4.6-3.3-9.6-3.2-14.7C281.5,212.7,282.5,207.5,284.7,203.1z M211,338.3c-5.1,4.9-13.1,4.8-18-0.3 c-4.8-4.9-4.8-12.8,0-17.7c16.8-16.8,39.6-26.2,63.3-26.1c23.5,0.1,46.1,9.4,62.7,26.1c5.1,4.9,5.2,12.9,0.3,18 c-4.9,5.1-12.9,5.2-18,0.3c-0.1-0.1-0.2-0.2-0.3-0.3c-11.9-11.9-28-18.6-44.8-18.6C239.3,319.6,223,326.3,211,338.3z" />
+    </SvgIcon>
+  );
 }
 
-export function LightbulbIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={insightfulIcon} alt="insightful" />;
+export function LightbulbIcon({ size = 24, className, animated = false, style }: IconProps) {
+  return (
+    <SvgIcon size={size} className={className} animated={animated} style={style}>
+      <path d="M256,74.9c-78.6,0-142.3,63.7-142.3,142.3c0,50.8,27.1,97.7,71,123.2c11.8,6.9,19.2,17.4,19.6,28c0.2,5.8,4.3,10.8,10,12.2 c6.1,1.4,12.2,2.6,18.5,3.4c5.6,0.7,10.3-3.8,10.3-9.4v-80.4c-5.5-0.6-10.9-1.6-16.2-2.9c-6.9-1.8-11.1-8.8-9.3-15.8 c1.8-6.9,8.8-11.1,15.8-9.3c14.9,3.8,30.4,3.8,45.3,0c6.9-2,14,2,16,8.8s-2,14-8.8,16c-0.2,0.1-0.5,0.1-0.7,0.2 c-5.3,1.4-10.7,2.4-16.2,3v80.4c0,5.6,4.8,10.1,10.3,9.4c6.3-0.8,12.5-1.9,18.5-3.4c5.7-1.3,9.8-6.3,10-12.2 c0.3-10.6,7.7-21.1,19.6-28c68-39.4,91.2-126.4,51.9-194.5C353.7,101.9,306.8,74.9,256,74.9z" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M204.5,405.2c1.3-7,8.1-11.6,15.1-10.3c0,0,0,0,0,0c24,4.6,48.7,4.6,72.8,0c7-1.5,13.9,2.9,15.4,9.9 c1.5,7-2.9,13.9-9.9,15.4c-0.2,0.1-0.5,0.1-0.7,0.1c-27.2,5.2-55.2,5.2-82.5,0C207.7,419,203.1,412.2,204.5,405.2z M217.2,447.4 c0.7-7.1,7.1-12.3,14.2-11.5c0,0,0,0,0,0c16.3,1.7,32.7,1.7,49.1,0c7.1-0.7,13.5,4.4,14.2,11.5c0.7,7.1-4.4,13.5-11.5,14.2 c-18.1,1.9-36.3,1.9-54.4,0C221.7,460.8,216.5,454.5,217.2,447.4C217.2,447.4,217.2,447.4,217.2,447.4z" />
+    </SvgIcon>
+  );
 }
 
-export function HandshakeIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={appreciateIcon} alt="appreciate" />;
+export function HandshakeIcon({ size = 24, className, animated = false, style }: IconProps) {
+  return (
+    <SvgIcon size={size} className={className} animated={animated} style={style}>
+      <path d="M376.2,224.5c-9.7,0-19.1-3.8-26.3-10.7l-54.6-52.5c-7.2-6.9-11.4-16.5-11.4-26.7v-33.4c0-10.2,4.2-19.8,11.4-26.7 l54.6-52.5c7.2-6.9,16.6-10.7,26.3-10.7c9.7,0,19.1,3.8,26.3,10.7l54.6,52.5c7.2,6.9,11.4,16.5,11.4,26.7v33.4 c0,10.2-4.2,19.8-11.4,26.7l-54.6,52.5C395.3,220.7,385.9,224.5,376.2,224.5z" />
+      <path d="M135.8,224.5c-9.7,0-19.1-3.8-26.3-10.7l-54.6-52.5c-7.2-6.9-11.4-16.5-11.4-26.7v-33.4c0-10.2,4.2-19.8,11.4-26.7 l54.6-52.5c7.2-6.9,16.6-10.7,26.3-10.7c9.7,0,19.1,3.8,26.3,10.7l54.6,52.5c7.2,6.9,11.4,16.5,11.4,26.7v33.4 c0,10.2-4.2,19.8-11.4,26.7l-54.6,52.5C154.9,220.7,145.5,224.5,135.8,224.5z" />
+      <path d="M256,320c-8.8,0-16-7.2-16-16v-64c0-8.8,7.2-16,16-16s16,7.2,16,16v64C272,312.8,264.8,320,256,320z" />
+      <path d="M256,416c-8.8,0-16-7.2-16-16v-64c0-8.8,7.2-16,16-16s16,7.2,16,16v64C272,408.8,264.8,416,256,416z" />
+      <path d="M320,368c-8.8,0-16-7.2-16-16v-64c0-8.8,7.2-16,16-16s16,7.2,16,16v64C336,360.8,328.8,368,320,368z" />
+      <path d="M192,368c-8.8,0-16-7.2-16-16v-64c0-8.8,7.2-16,16-16s16,7.2,16,16v64C208,360.8,200.8,368,192,368z" />
+    </SvgIcon>
+  );
 }
 
-export function FunnyIcon({ size = 24, className, animated = false }: IconProps) {
-  return <ReactionImg size={size} animated={animated} className={className} icon={funnyIcon} alt="funny" />;
+export function FunnyIcon({ size = 24, className, animated = false, style }: IconProps) {
+  return (
+    <SvgIcon size={size} className={className} animated={animated} style={style}>
+      <path d="M253.5,77C152.7,77,71,158.7,71,259.5S152.7,442,253.5,442S436,360.3,436,259.5S354.3,77,253.5,77z M204.4,189.3 c-10.1,0-15.5,7.8-17.5,11.9c-2.4,5.1-3.6,10.6-3.5,16.2c0,5.6,1.1,11.3,3.5,16.2c2,4,7.4,11.9,17.5,11.9 c10.1,0,15.5-7.8,17.5-11.9c2.4-4.9,3.5-10.6,3.5-16.2s-1.1-11.3-3.5-16.2C219.9,197.2,214.5,189.3,204.4,189.3z M285.1,201.2 c2-4,7.4-11.9,17.5-11.9c10.1,0,15.5,7.8,17.5,11.9c2.4,4.9,3.5,10.6,3.5,16.2s-1.1,11.3-3.5,16.2c-2,4-7.4,11.9-17.5,11.9 c-10.1,0-15.5-7.8-17.5-11.9c-2.4-5.1-3.6-10.6-3.5-16.2C281.6,211.8,282.7,206.1,285.1,201.2z M323,329c5.7-5.3,6-14.2,0.7-19.8 s-14.2-6-19.8-0.7c-0.2,0.2-0.5,0.5-0.7,0.7c-27.4,27.4-71.9,27.4-99.3,0c0,0,0,0,0,0c-5.7-5.3-14.6-5-19.8,0.7 c-5,5.4-5,13.7,0,19.1C222.4,367.3,284.6,367.3,323,329z" />
+    </SvgIcon>
+  );
 }
 
 export const REACTION_SVG_ICONS: Record<string, (props: IconProps) => JSX.Element> = {

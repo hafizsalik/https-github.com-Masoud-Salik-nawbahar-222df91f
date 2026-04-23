@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { REACTION_LABELS, type ReactionKey } from "@/hooks/useCardReactions";
+import { REACTION_COLORS, REACTION_LABELS, type ReactionKey } from "@/hooks/useCardReactions";
 import { REACTION_SVG_ICONS } from "./ReactionIcons";
 import { getRelativeTime } from "@/lib/relativeTime";
 import { toPersianNumber } from "@/lib/utils";
@@ -29,7 +29,7 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
-    
+
     const fetchReactions = async () => {
       const { data } = await supabase
         .from("reactions")
@@ -50,9 +50,9 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
         created_at: r.created_at,
         profile: r.profiles
           ? {
-              display_name: (r.profiles as any).display_name,
-              avatar_url: (r.profiles as any).avatar_url,
-            }
+            display_name: (r.profiles as any).display_name,
+            avatar_url: (r.profiles as any).avatar_url,
+          }
           : undefined,
       }));
 
@@ -149,11 +149,11 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
                   )}
                 >
                   {IconComponent ? (
-                    <IconComponent 
-                      size={14} 
-                      strokeWidth={1.8}
+                    <IconComponent
+                      size={14}
                       animated={activeFilter === type}
                       className="reaction-icon"
+                      style={{ color: REACTION_COLORS[type]?.text }}
                     />
                   ) : <span>{type}</span>}
                   <span>{toPersianNumber(count)}</span>
@@ -202,11 +202,11 @@ export function ReactionDetailsModal({ articleId, isOpen, onClose }: ReactionDet
                     </div>
                     <div className="flex items-center gap-1.5">
                       {IconComponent && (
-                        <IconComponent 
-                          size={18} 
-                          strokeWidth={1.8}
+                        <IconComponent
+                          size={18}
                           animated={true}
-                          className="reaction-icon text-muted-foreground"
+                          className="reaction-icon"
+                          style={{ color: REACTION_COLORS[reaction.reaction_type]?.text }}
                         />
                       )}
                       <span className="text-[10px] text-muted-foreground">

@@ -117,7 +117,7 @@ export function ReactionPicker({
           className="inline-flex"
           style={justReacted ? { animation: "reaction-pop 0.35s ease" } : undefined}
         >
-          <ActiveIcon size={20} animated={!!userReaction} />
+          <ActiveIcon size={20} animated={!!userReaction} style={activeColor ? { color: activeColor } : undefined} />
         </span>
       </button>
 
@@ -170,10 +170,13 @@ export function ReactionPicker({
                       "active:scale-90",
                       isActive && "scale-105"
                     )}
-                    style={isActive ? {
-                      background: colors?.bg,
-                      boxShadow: `0 0 0 2px ${colors?.ring}`,
-                    } : {}}
+                    style={{
+                      color: colors?.text,
+                      ...(isActive ? {
+                        background: colors?.bg,
+                        boxShadow: `0 0 0 2px ${colors?.ring}`,
+                      } : {}),
+                    }}
                   >
                     <Icon size={28} animated={isActive} />
                     <span className={cn(

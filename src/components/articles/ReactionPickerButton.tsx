@@ -391,11 +391,11 @@ function ReactionCardPickerInline({
               )}
               style={{
                 animation: `reactionIconEnter 100ms ease-out ${index * 25}ms both`,
+                color: colors?.text,
                 ...(isSelected
                   ? {
                     backgroundColor: colors?.bg,
                     boxShadow: `0 0 0 3px ${colors?.ring}, 0 0 12px ${colors?.ring}80`,
-                    color: colors?.text,
                     transform: 'scale(1.08)',
                   }
                   : {}),
