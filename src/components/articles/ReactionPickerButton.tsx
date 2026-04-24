@@ -230,32 +230,34 @@ function ReactionCardPickerInline({
 
   // Calculate card position with viewport boundary detection using the button's live location
   useEffect(() => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-    if (isMobile) {
-      setCardPosition({ top: "auto", left: "50%" });
-      return;
-    }
+    if (!showCard) return;
 
-    const buttonRect = buttonRef.current?.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const safeMargin = 16;
-    const cardWidth = cardRef.current?.offsetWidth || 360;
+    const cardWidth = Math.min(cardRef.current?.offsetWidth || 360, viewportWidth - safeMargin * 2);
     const cardHeight = cardRef.current?.offsetHeight || 100;
 
+    const buttonRect = buttonRef?.current?.getBoundingClientRect();
     let centerX = buttonRect ? buttonRect.left + buttonRect.width / 2 : viewportWidth / 2;
-    let y = buttonRect ? buttonRect.top - cardHeight - 12 : 10;
+    centerX = Math.min(
+      Math.max(centerX, safeMargin + cardWidth / 2),
+      viewportWidth - safeMargin - cardWidth / 2
+    );
 
-    const minCenterX = safeMargin + cardWidth / 2;
-    const maxCenterX = viewportWidth - safeMargin - cardWidth / 2;
-    if (centerX < minCenterX) centerX = minCenterX;
-    if (centerX > maxCenterX) centerX = maxCenterX;
-
-    if (y + cardHeight + safeMargin > viewportHeight) {
-      y = buttonRect ? buttonRect.bottom + 12 : viewportHeight - cardHeight - safeMargin;
-    }
-    if (y < safeMargin) {
-      y = safeMargin;
+    let y = safeMargin;
+    if (buttonRect) {
+      const above = buttonRect.top - cardHeight - 12;
+      const below = buttonRect.bottom + 12;
+      if (above >= safeMargin) {
+        y = above;
+      } else if (below + cardHeight + safeMargin <= viewportHeight) {
+        y = below;
+      } else {
+        y = Math.max(safeMargin, viewportHeight - cardHeight - safeMargin);
+      }
+    } else {
+      y = viewportHeight - cardHeight - safeMargin;
     }
 
     setCardPosition({ top: `${y}px`, left: `${centerX}px` });
@@ -325,27 +327,18 @@ function ReactionCardPickerInline({
           "px-3 py-2.5",
           "bg-card rounded-full",
           "shadow-lg border border-border",
-          "pointer-events-auto overflow-visible",
-          isMobile && "bottom-16 left-1/2 -translate-x-1/2"
+          "pointer-events-auto overflow-visible"
         )}
-        style={
-          isMobile
-            ? {
-              width: "min(100vw - 32px, 100%)",
-              maxWidth: "calc(100vw - 32px)",
-              animation: isClosing
-                ? "reactionCardExit 150ms ease-out forwards"
-                : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-            }
-            : {
-              top: cardPosition.top,
-              left: cardPosition.left,
-              transform: "translateX(-50%)",
-              animation: isClosing
-                ? "reactionCardExit 150ms ease-out forwards"
-                : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-            }
-        }
+        style={{
+          width: "min(100vw - 32px, 100%)",
+          maxWidth: "calc(100vw - 32px)",
+          top: cardPosition.top,
+          left: cardPosition.left,
+          transform: "translateX(-50%)",
+          animation: isClosing
+            ? "reactionCardExit 150ms ease-out forwards"
+            : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        }}
         onClick={(e) => e.stopPropagation()}
         onPointerMove={handleCardPointerMove}
         onPointerDown={handleCardPointerDown}
