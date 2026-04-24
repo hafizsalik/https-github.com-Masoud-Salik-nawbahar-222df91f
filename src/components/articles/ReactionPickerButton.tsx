@@ -24,7 +24,10 @@ export function ReactionPickerButton({
   // State
   const [showCard, setShowCard] = useState(false);
   const [cardClosing, setCardClosing] = useState(false);
-  const [pointPosition, setPointPosition] = useState<{ x: number; y: number } | null>(null);
+  const [cardPosition, setCardPosition] = useState<{ top: string; left: string }>({
+    top: "0",
+    left: "50%",
+  });
 
   // Refs
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
@@ -44,13 +47,6 @@ export function ReactionPickerButton({
 
     isPointerDown.current = true;
     pointerStartTime.current = Date.now();
-
-    // Get position for card placement (store center X to match translateX(-50%))
-    const rect = buttonRef.current?.getBoundingClientRect();
-    setPointPosition({
-      x: rect ? rect.left + rect.width / 2 : e.clientX,
-      y: rect ? rect.top : e.clientY,
-    });
 
     // Start long press timer
     longPressTimer.current = setTimeout(() => {
@@ -179,7 +175,6 @@ export function ReactionPickerButton({
           onReact={handleReactionSelect}
           onClose={closeCard}
           userReaction={userReaction}
-          position={pointPosition}
           isClosing={cardClosing}
         />
       )}
@@ -194,7 +189,6 @@ interface ReactionCardPickerInlineProps {
   onReact: (type: ReactionKey) => void;
   onClose: () => void;
   userReaction?: ReactionKey | null;
-  position?: { x: number; y: number } | null;
   isClosing?: boolean;
 }
 
@@ -202,7 +196,6 @@ function ReactionCardPickerInline({
   onReact,
   onClose,
   userReaction,
-  position,
   isClosing = false,
 }: ReactionCardPickerInlineProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -234,45 +227,38 @@ function ReactionCardPickerInline({
     };
   }, [onClose]);
 
-  // Calculate card position with viewport boundary detection
+  // Calculate card position with viewport boundary detection using the button's live location
   useEffect(() => {
     const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-
     if (isMobile) {
-      // Mobile: Fixed bottom position with proper centering
       setCardPosition({ top: "auto", left: "50%" });
       return;
     }
 
-    // Desktop: Smart positioning with viewport boundary detection
+    const buttonRect = buttonRef.current?.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const safeMargin = 16;
     const cardWidth = cardRef.current?.offsetWidth || 360;
     const cardHeight = cardRef.current?.offsetHeight || 100;
 
-    let centerX = position?.x ?? viewportWidth / 2;
-    let y = position?.y ? position.y - cardHeight - 12 : 10;
+    let centerX = buttonRect ? buttonRect.left + buttonRect.width / 2 : viewportWidth / 2;
+    let y = buttonRect ? buttonRect.top - cardHeight - 12 : 10;
 
-    // Constrain to viewport by center coordinates
     const minCenterX = safeMargin + cardWidth / 2;
     const maxCenterX = viewportWidth - safeMargin - cardWidth / 2;
-    if (centerX < minCenterX) {
-      centerX = minCenterX;
-    }
-    if (centerX > maxCenterX) {
-      centerX = maxCenterX;
-    }
+    if (centerX < minCenterX) centerX = minCenterX;
+    if (centerX > maxCenterX) centerX = maxCenterX;
 
     if (y + cardHeight + safeMargin > viewportHeight) {
-      y = position?.y ? position.y + 12 : viewportHeight - cardHeight - safeMargin;
+      y = buttonRect ? buttonRect.bottom + 12 : viewportHeight - cardHeight - safeMargin;
     }
     if (y < safeMargin) {
       y = safeMargin;
     }
 
     setCardPosition({ top: `${y}px`, left: `${centerX}px` });
-  }, [position]);
+  }, [showCard]);
 
   const handleReactionHover = useCallback((type: ReactionKey) => {
     setActiveReaction(type);
