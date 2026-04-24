@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   REACTION_KEYS,
-  REACTION_LABELS,
   REACTION_COLORS,
   type ReactionKey,
 } from "@/hooks/useCardReactions";
@@ -24,13 +23,9 @@ export function ReactionPickerButton({
   // State
   const [showCard, setShowCard] = useState(false);
   const [cardClosing, setCardClosing] = useState(false);
-  const [cardPosition, setCardPosition] = useState<{ top: string; left: string }>({
-    top: "0",
-    left: "50%",
-  });
 
   // Refs
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const pointerStartTime = useRef<number>(0);
   const isPointerDown = useRef(false);
@@ -176,6 +171,8 @@ export function ReactionPickerButton({
           onClose={closeCard}
           userReaction={userReaction}
           isClosing={cardClosing}
+          buttonRef={buttonRef}
+          showCard={showCard}
         />
       )}
     </div>
@@ -190,6 +187,8 @@ interface ReactionCardPickerInlineProps {
   onClose: () => void;
   userReaction?: ReactionKey | null;
   isClosing?: boolean;
+  buttonRef?: React.RefObject<HTMLButtonElement>;
+  showCard?: boolean;
 }
 
 function ReactionCardPickerInline({
@@ -197,6 +196,8 @@ function ReactionCardPickerInline({
   onClose,
   userReaction,
   isClosing = false,
+  buttonRef,
+  showCard,
 }: ReactionCardPickerInlineProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [activeReaction, setActiveReaction] = useState<ReactionKey | null>(
@@ -258,7 +259,7 @@ function ReactionCardPickerInline({
     }
 
     setCardPosition({ top: `${y}px`, left: `${centerX}px` });
-  }, [showCard]);
+  }, [showCard, buttonRef]);
 
   const handleReactionHover = useCallback((type: ReactionKey) => {
     setActiveReaction(type);

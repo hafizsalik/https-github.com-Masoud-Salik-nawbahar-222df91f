@@ -6,9 +6,10 @@ interface IconProps {
   className?: string;
   animated?: boolean;
   style?: CSSProperties;
+  strokeWidth?: number;
 }
 
-function SvgIcon({ size = 24, className, style, animated, children }: IconProps & { children: ReactNode }) {
+function SvgIcon({ size = 24, className, style, animated, strokeWidth, children }: IconProps & { children: ReactNode }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -16,6 +17,7 @@ function SvgIcon({ size = 24, className, style, animated, children }: IconProps 
       width={size}
       height={size}
       fill="currentColor"
+      strokeWidth={strokeWidth}
       style={style}
       className={cn(
         "inline-block flex-shrink-0 transition-transform duration-200",
