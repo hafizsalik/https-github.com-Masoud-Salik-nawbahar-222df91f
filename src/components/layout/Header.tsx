@@ -302,7 +302,7 @@ export function Header() {
               <button onClick={() => { smoothCloseMenu(); setShowWritingGuide(true); }}
                 className="w-full px-5 py-3.5 flex items-center gap-3 text-[13px] text-foreground hover:bg-muted/50 transition-colors">
                 <BookOpen size={16} strokeWidth={1.5} className="text-muted-foreground" />
-                راهنمای نویسندگی
+                راهنمایی نوشتن
               </button>
 
               <button onClick={() => { smoothCloseMenu(); navigate("/install"); }}
