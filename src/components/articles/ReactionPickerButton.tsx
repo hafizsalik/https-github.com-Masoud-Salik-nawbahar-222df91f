@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import {
   REACTION_KEYS,
   REACTION_COLORS,
@@ -187,8 +187,8 @@ interface ReactionCardPickerInlineProps {
   onClose: () => void;
   userReaction?: ReactionKey | null;
   isClosing?: boolean;
-  buttonRef?: React.RefObject<HTMLButtonElement>;
-  showCard?: boolean;
+  buttonRef: React.RefObject<HTMLButtonElement>;
+  showCard: boolean;
 }
 
 function ReactionCardPickerInline({
@@ -229,38 +229,49 @@ function ReactionCardPickerInline({
   }, [onClose]);
 
   // Calculate card position with viewport boundary detection using the button's live location
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!showCard) return;
 
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const safeMargin = 16;
-    const cardWidth = Math.min(cardRef.current?.offsetWidth || 360, viewportWidth - safeMargin * 2);
-    const cardHeight = cardRef.current?.offsetHeight || 100;
+    const updatePosition = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const safeMargin = 16;
+      const cardWidth = Math.min(cardRef.current?.offsetWidth || 360, viewportWidth - safeMargin * 2);
+      const cardHeight = cardRef.current?.offsetHeight || 100;
 
-    const buttonRect = buttonRef?.current?.getBoundingClientRect();
-    let centerX = buttonRect ? buttonRect.left + buttonRect.width / 2 : viewportWidth / 2;
-    centerX = Math.min(
-      Math.max(centerX, safeMargin + cardWidth / 2),
-      viewportWidth - safeMargin - cardWidth / 2
-    );
+      const buttonRect = buttonRef.current?.getBoundingClientRect();
+      let centerX = buttonRect ? buttonRect.left + buttonRect.width / 2 : viewportWidth / 2;
+      centerX = Math.min(
+        Math.max(centerX, safeMargin + cardWidth / 2),
+        viewportWidth - safeMargin - cardWidth / 2
+      );
 
-    let y = safeMargin;
-    if (buttonRect) {
-      const above = buttonRect.top - cardHeight - 12;
-      const below = buttonRect.bottom + 12;
-      if (above >= safeMargin) {
-        y = above;
-      } else if (below + cardHeight + safeMargin <= viewportHeight) {
-        y = below;
+      let y = safeMargin;
+      if (buttonRect) {
+        const above = buttonRect.top - cardHeight - 12;
+        const below = buttonRect.bottom + 12;
+        if (above >= safeMargin) {
+          y = above;
+        } else if (below + cardHeight + safeMargin <= viewportHeight) {
+          y = below;
+        } else {
+          y = Math.max(safeMargin, viewportHeight - cardHeight - safeMargin);
+        }
       } else {
-        y = Math.max(safeMargin, viewportHeight - cardHeight - safeMargin);
+        y = viewportHeight - cardHeight - safeMargin;
       }
-    } else {
-      y = viewportHeight - cardHeight - safeMargin;
-    }
 
-    setCardPosition({ top: `${y}px`, left: `${centerX}px` });
+      setCardPosition({ top: `${y}px`, left: `${centerX}px` });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
   }, [showCard, buttonRef]);
 
   const handleReactionHover = useCallback((type: ReactionKey) => {
