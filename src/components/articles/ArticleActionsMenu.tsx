@@ -39,19 +39,21 @@ interface ArticleActionsMenuProps {
 export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete }: ArticleActionsMenuProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { dismiss } = useDismissedArticles();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [reportStep, setReportStep] = useState<0 | 1 | 2>(0);
+  const [reportStep, setReportStep] = useState<0 | 1 | 2 | 3>(0);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [reportNote, setReportNote] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [bookmarkChecked, setBookmarkChecked] = useState(false);
 
   const { user } = useAuth();
-  
+
   useEffect(() => {
     setUserId(user?.id || null);
   }, [user]);
