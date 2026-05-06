@@ -13,11 +13,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDismissedArticles } from "@/hooks/useDismissedArticles";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 import menuDotsIcon from "@/assets/icons/menu-dots-vertical.svg";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 const REPORT_REASONS = [
   "محتوای نادرست یا گمراه‌کننده",
