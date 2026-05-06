@@ -13,11 +13,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDismissedArticles } from "@/hooks/useDismissedArticles";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 import menuDotsIcon from "@/assets/icons/menu-dots-vertical.svg";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 const REPORT_REASONS = [
   "محتوای نادرست یا گمراه‌کننده",
@@ -37,19 +39,21 @@ interface ArticleActionsMenuProps {
 export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete }: ArticleActionsMenuProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { dismiss } = useDismissedArticles();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [reportStep, setReportStep] = useState<0 | 1 | 2>(0);
+  const [reportStep, setReportStep] = useState<0 | 1 | 2 | 3>(0);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [reportNote, setReportNote] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [bookmarkChecked, setBookmarkChecked] = useState(false);
 
   const { user } = useAuth();
-  
+
   useEffect(() => {
     setUserId(user?.id || null);
   }, [user]);
@@ -102,29 +106,54 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
   const handleSave = async () => {
     if (!userId) {
       toast({ title: "برای ذخیره باید وارد شوید", variant: "destructive" });
+      smoothClose();
+      setTimeout(() => navigate("/auth?view=login"), 250);
       return;
     }
-    if (isBookmarked) {
-      await supabase.from("bookmarks").delete().eq("article_id", articleId).eq("user_id", userId);
-      setIsBookmarked(false);
-      toast({ title: "از ذخیره‌ها حذف شد" });
-    } else {
-      await supabase.from("bookmarks").insert({ article_id: articleId, user_id: userId });
-      setIsBookmarked(true);
-      toast({ title: "ذخیره شد" });
-    }
+    // Optimistic toggle
+    const wasBookmarked = isBookmarked;
+    setIsBookmarked(!wasBookmarked);
     smoothClose();
+    try {
+      if (wasBookmarked) {
+        const { error } = await supabase.from("bookmarks").delete()
+          .eq("article_id", articleId).eq("user_id", userId);
+        if (error) throw error;
+        toast({ title: "از ذخیره‌ها حذف شد" });
+      } else {
+        const { error } = await supabase.from("bookmarks").insert({ article_id: articleId, user_id: userId });
+        if (error && error.code !== "23505") throw error;
+        toast({
+          title: "✅ ذخیره شد",
+          description: "در «ذخیره‌شده‌ها» قابل مشاهده است",
+        });
+      }
+    } catch (err) {
+      logger.error("Bookmark toggle failed", err);
+      setIsBookmarked(wasBookmarked); // revert
+      toast({ title: "خطا در ذخیره", variant: "destructive" });
+    }
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/article/${articleId}`;
-    if (navigator.share) {
-      await navigator.share({ title: articleTitle || "مقاله", url });
-    } else {
+    const url = `${window.location.origin}/article/${articleId}?ref=share`;
+    smoothClose();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: articleTitle || "مقاله", url });
+        return;
+      }
+    } catch (err: any) {
+      // User cancelled native share — silent
+      if (err?.name === "AbortError") return;
+      logger.warn("Native share failed, falling back", err);
+    }
+    try {
       await navigator.clipboard.writeText(url);
       toast({ title: "لینک کپی شد" });
+    } catch {
+      toast({ title: "نتوانستم لینک را کپی کنم", variant: "destructive" });
     }
-    smoothClose();
   };
 
   const handleEdit = () => {
@@ -147,16 +176,13 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
     }
   };
 
-  const handleNotInterested = () => {
-    try {
-      const hidden = JSON.parse(localStorage.getItem("hidden_articles") || "[]");
-      if (!hidden.includes(articleId)) {
-        hidden.push(articleId);
-        localStorage.setItem("hidden_articles", JSON.stringify(hidden));
-      }
-    } catch { /* ignore */ }
-    toast({ title: "این نوع مقالات کمتر نمایش داده خواهد شد" });
+  const handleNotInterested = async () => {
     smoothClose();
+    await dismiss(articleId, "not_interested");
+    toast({
+      title: "ممنون از بازخورد شما",
+      description: "این نوع مقالات کمتر نمایش داده می‌شود",
+    });
     onDelete?.();
   };
 
@@ -170,26 +196,30 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
   };
 
   const handleReportSubmit = async () => {
-    if (!userId || !selectedReason) return;
+    if (!userId || !selectedReason || isSubmittingReport) return;
+    setIsSubmittingReport(true);
     const reason = reportNote.trim()
       ? `${selectedReason} — ${reportNote.trim()}`
       : selectedReason;
 
-    const { error } = await supabase.from("reported_articles" as any).insert({
+    const { error } = await supabase.from("reported_articles").insert({
       article_id: articleId,
       reporter_id: userId,
       reason,
     });
+    setIsSubmittingReport(false);
     if (error?.code === "23505") {
-      toast({ title: "قبلاً گزارش کرده‌اید" });
+      toast({ title: "قبلاً این مقاله را گزارش کرده‌اید" });
+      setReportStep(0);
+      setSelectedReason(null);
+      setReportNote("");
     } else if (error) {
+      logger.error("Report failed", error);
       toast({ title: "خطا در ثبت گزارش", variant: "destructive" });
     } else {
-      toast({ title: "گزارش ثبت شد", description: "با تشکر از گزارش شما" });
+      // Move to confirmation step instead of plain toast
+      setReportStep(3);
     }
-    setReportStep(0);
-    setSelectedReason(null);
-    setReportNote("");
   };
 
   const closeReport = () => {
@@ -350,11 +380,26 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
             <AlertDialogCancel>انصراف</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleReportSubmit}
-              disabled={!selectedReason}
+              disabled={!selectedReason || isSubmittingReport}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              ثبت گزارش
+              {isSubmittingReport ? "در حال ارسال..." : "ثبت گزارش"}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Report success confirmation */}
+      <AlertDialog open={reportStep === 3} onOpenChange={(open) => !open && closeReport()}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>گزارش شما ثبت شد</AlertDialogTitle>
+            <AlertDialogDescription>
+              با تشکر از گزارش شما. تیم ما این مقاله را در اسرع وقت بررسی خواهد کرد.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={closeReport}>باشه</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

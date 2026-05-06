@@ -1,147 +1,141 @@
+# Mobile-First Production Upgrade — نوبهار
 
-
-# Production Upgrade Plan — Reactions & Engagement
-
-## Goal
-Upgrade the reaction system and overall engagement loop to production quality, inspired by Medium's approach: make reading rewarding, reactions meaningful, and the overall experience sticky enough that users return daily.
+Focused on the 390px viewport (where most users are). Inspired by Medium (reading focus, claps depth), LinkedIn (reaction tray), Twitter/X (action sheets), and Instagram (not-interested feedback loop).
 
 ---
 
-## Phase 1 — Fix Broken Reaction Icons (P0)
+## Phase 1 — Bug Fixes (P0)
 
-**Problem**: Reaction icons use CSS `mask-image` technique (`ReactionIcons.tsx`) which renders colored rectangles instead of actual icons when the SVG mask fails to load or when `currentColor` inheritance breaks.
-
-**Fix**: Replace the `IconMask` approach with direct `<img>` tags (like `NawbaharIcon` already does) for the inactive state, and use the colored background approach only for the active state. This guarantees icons always render correctly.
-
-**Files**: `src/components/articles/ReactionIcons.tsx`
-
----
-
-## Phase 2 — Reaction Tray UX (Mobile-Critical)
-
-**Problem**: The reaction picker tray opens above the button (`bottom-full mb-3`) which clips off-screen on mobile, especially for cards near the top. The tray is also too small and cramped.
-
-**Fix**:
-- Change the reaction picker tray to a **bottom sheet** on mobile (consistent with the three-dot menu pattern already implemented)
-- Larger touch targets: 56px per reaction button instead of 48px
-- Add the Persian label below each icon clearly
-- Smooth spring animation on open/close
-- Show the user's current reaction with a subtle colored ring highlight
-
-**Files**: `src/components/articles/ReactionPicker.tsx`, `src/styles/reactions.css`
+1. **`hidden_articles` is dead code.** `ArticleActionsMenu.handleNotInterested` writes to localStorage, but `useSmartFeed` never reads it. Articles reappear after refresh. Wire `useSmartFeed` (and `useExploreArticles`) to filter out hidden IDs.
+2. **`reported_articles` cast as `any`.** Forces unsafe insert and silent type drift. Regenerate types and remove the cast.
+3. **Two competing theme sources of truth.** `useTheme.ts` exists but `Header.tsx` re-implements its own `isDark` state with direct localStorage writes. Switching theme from one place can desync the other. Consolidate on `useTheme`.
+4. **Notifications N+1.** `useNotificationExtras` fires a `select` per comment/reaction notification (up to 40 round-trips on open). Batch with `.in('article_id', [...])` + client-side group.
+5. **Reaction toggle double-fetch.** `toggleReaction` calls `fetchReactions()` after every successful RPC, throwing away the optimistic update for a full refetch. Trust the RPC return value; only refetch on error.
+6. **Bookmark check repeated per card.** `ArticleActionsMenu` queries `bookmarks` on every sheet open. Centralize into a `useBookmarks()` set hook (single query, cached) shared with article page.
+7. **Share fallback throws on iOS PWAs without clipboard permission.** Wrap in try/catch and toast a graceful fallback.
 
 ---
 
-## Phase 3 — Medium-Style "Clap" Counter & Reaction Summary
+## Phase 2 — Reactions, Refined
 
-**Problem**: Currently reactions show just a number. No social proof, no engagement pull.
+Building on the existing 6-reaction LinkedIn-style system.
 
-**Fix** (inspired by Medium):
-- On the **Article page**, show a rich reaction bar:
-  - Top 3 reaction type icons stacked/overlapping (like LinkedIn)
-  - Total count in Persian
-  - Clicking the count opens the `ReactionDetailsModal`
-  - Add a **bookmark/save** button on the right side of the reaction bar (currently missing from Article page)
-  - Add a **share** button next to bookmark
-- On **feed cards**, keep it minimal: icon + count only (already done, just ensure icons render)
-
-**Files**: `src/components/articles/ArticleReactions.tsx`, `src/pages/Article.tsx`
+- **Long-press threshold** lowered to 250ms (currently feels sluggish on mid-range Androids); add subtle haptic pulse on tray open via existing `lib/haptics.ts`.
+- **Tray as bottom sheet on mobile** (≤640px) with safe-area padding, 56px touch targets, Persian label always visible (not just on hover). Tray on desktop stays as floating popover.
+- **Selected ring** on the user's current reaction inside the tray.
+- **Card summary**: show the top reaction emoji + count, plus 2 stacked avatars of followed reactors when available (social proof). Tap opens `ReactionDetailsModal`.
+- **Article page**: reaction bar gets a tabbed details modal (All / by type), like LinkedIn.
+- **Undo toast** on accidental reaction (3-second window).
+- **Guest tap** opens a soft auth sheet (not a hard redirect): "برای واکنش وارد شوید" with inline login button.
 
 ---
 
-## Phase 4 — Article Page Content Rendering
+## Phase 3 — Action Semantics: Save / Share / Report / Not-Interested
 
-**Problem**: Article content renders as plain `whitespace-pre-wrap` text. All formatting from the editor (bold, italic, headings, lists) is lost.
+Define what actually happens, end-to-end. Today most are toast-only.
 
-**Fix**:
-- Install `react-markdown` (or use a simple HTML parser if content is stored as HTML)
-- Check what format the editor saves content in (plain text vs HTML vs markdown)
-- Render content with proper typography: headings, bold, italic, lists, blockquotes, links
-- Style with the existing `article-content` class using Tailwind prose-like styles
+### Save (Bookmark)
+- Optimistic toggle, single source of truth via `useBookmark`.
+- Success toast with **"مشاهده ذخیره‌ها"** action → `/bookmarks`.
+- Bookmarked state visually persists on the card (filled icon).
+- Offline-safe: queue via existing `backgroundSync` if no network.
 
-**Files**: `src/pages/Article.tsx`, possibly `src/index.css` for article typography
+### Share
+- Native `navigator.share` first; fallback to clipboard with toast.
+- Append UTM-style ref `?ref=share` so we can later measure share-driven traffic.
+- After share, increment a local "shared" engagement signal used by `useSmartFeed` ranking.
 
----
+### Not Interested (currently broken)
+- Insert into a new `article_dismissals` table `(user_id, article_id, reason, created_at)` for signed-in users; localStorage fallback for guests.
+- Optional follow-up chip row inside the toast: "کمتر از این نویسنده" / "کمتر از این موضوع" — feeds into feed ranking.
+- Card animates out (height collapse 200ms) instead of just disappearing on next refresh.
+- `useSmartFeed` and `useExploreArticles` filter dismissed IDs.
 
-## Phase 5 — Bookmark from Article Page
-
-**Problem**: There's no way to bookmark/save an article from the article detail page. Users must go back to the feed.
-
-**Fix**:
-- Add a bookmark toggle button in the Article page reaction bar
-- Use existing `bookmarks` table — insert/delete on toggle
-- Show filled/outlined bookmark icon based on state
-- Toast confirmation on save/unsave
-
-**Files**: `src/pages/Article.tsx`, new hook `src/hooks/useBookmark.ts`
-
----
-
-## Phase 6 — Reading Progress Indicator
-
-**Problem**: No visual indicator of reading progress on articles. Medium uses a progress bar at the top.
-
-**Fix**:
-- Add a thin (2px) progress bar at the top of the Article page that fills as the user scrolls
-- Use brand purple color
-- Disappears when fully read (100%)
-- Lightweight: pure CSS + scroll event, no library
-
-**Files**: `src/pages/Article.tsx`
+### Report
+- Keep 3-step flow but move to bottom sheet (consistent with menu).
+- Add **"ارسال شد"** confirmation screen with a short note about review SLA, instead of a plain toast.
+- Server: trigger to notify admins (`notifications` table, `type='report'`) when a report row is created.
+- Prevent duplicate reports gracefully (already partial — keep 23505 path, unify message).
 
 ---
 
-## Phase 7 — Explore Page Server-Side Search
+## Phase 4 — Writing Motivation Banner — Redesign
 
-**Problem**: Explore fetches ALL articles and filters in JavaScript. Won't scale.
+The current banner is colorful, gradient-heavy, with a streak chip + "remaining" chip + sparkle icon + two buttons. On 390px it dominates the feed and reads as an ad.
 
-**Fix**:
-- Create `useExploreArticles(filters)` hook that passes topic/tag/query to Supabase `.ilike()` and `.contains()` queries
-- Remove client-side filtering from `Explore.tsx`
-- Add debounced search (300ms) for text queries
-
-**Files**: `src/pages/Explore.tsx`, new `src/hooks/useExploreArticles.ts`
-
----
-
-## Phase 8 — "Continue Reading" Section
-
-**Problem**: No way for users to resume articles they started but didn't finish. Medium prominently features this.
-
-**Fix**:
-- Track articles the user has opened (already done via `localStorage` view tracking)
-- On the home feed, show a "ادامه مطالعه" section at the top with 1-3 partially-read articles (opened but not fully scrolled)
-- Use the existing `useEngagementTracking` scroll percentage data
-- Simple horizontal scroll cards
-
-**Files**: `src/pages/Index.tsx`, `src/components/articles/ContinueReading.tsx`
+### New direction: quiet, contextual, dismissible-for-good
+- Single line, bordered card (no gradient), matches reading-surface tone.
+- Format: short prompt + single ghost button "بنویسید".
+- No streak/count chips in the feed banner; move those to the Profile page where users actually want stats.
+- Show **at most once per session**, never above-the-fold on first scroll. After dismissal, suppress for 7 days (currently 4h, too aggressive).
+- Hide entirely for users who published in the last 24h.
+- Triggered placement: between feed items at position 6 (Medium-style "tip card"), not sticky-top.
+- Long-form prompts move into the existing `WritingGuidanceModal`; the banner only nudges.
 
 ---
 
-## Phase 9 — Notification Badge on Bottom Nav
+## Phase 5 — Theme Toggle, Polished
 
-**Problem**: The bell icon in bottom nav has no unread count badge. Users don't know they have new notifications.
+- Replace the menu row toggle with a proper segmented `[☀ روشن | 🌙 تاریک | ⚙ سیستم]` control. "System" option respects `prefers-color-scheme` and updates live.
+- Smooth color transition: add `transition-colors duration-200` on `html` root via a class added during toggle (avoids flashing on every hover).
+- Source of truth: `useTheme`. Header's local state is removed.
+- Preserve no-FOUC: keep the inline script in `index.html` that sets the class before React mounts (verify it exists; add if missing).
 
-**Fix**:
-- Query unread notification count from `notifications` table where `is_read = false`
-- Show a small red dot or count badge on the bell icon in `BottomNav`
-- Use realtime subscription to update in real-time
+---
 
-**Files**: `src/components/layout/BottomNav.tsx`
+## Phase 6 — Notifications, Polished
+
+- **Visual**: each row uses an avatar (actor) + a small colored type-badge (heart/comment/follow/reaction) overlapping bottom-right of the avatar — the current "two icons side-by-side" reads cluttered on 390px.
+- **Performance**: batch the comment/reaction lookups (Phase 1 #4) into 2 queries total.
+- **Grouping**: collapse multiple reactions on the same article ("۵ نفر به مقاله شما واکنش نشان دادند") with expand-on-tap.
+- **Empty state**: friendly illustration + CTA "کاوش مقالات".
+- **Bottom-nav badge**: ensure it caps at "۹+" and uses brand orange (currently red conflicts with destructive semantics).
+- **Settings panel** moved into a dedicated `/notifications/settings` route to declutter the list page.
+
+---
+
+## Phase 7 — Error Handling, Centralized
+
+- Audit all `supabase` calls for silent failures. Standardize on a `safeCall(fn, { context })` wrapper that:
+  - logs via `logger`
+  - maps codes via existing `errorHandler.ts`
+  - returns `{ data, error }` shape
+- Replace all bare `try/catch { /* ignore */ }` (e.g. `handleNotInterested`, `handleShare`) with explicit user feedback or intentional silence.
+- Wrap `Notifications`, `Article`, `Profile`, `Explore` in route-level error boundaries with retry buttons (we already have `CardErrorBoundary` for feed cards).
+- Add an offline-aware toast wrapper: when offline, queue intent and show "ذخیره می‌شود وقتی آنلاین شدید".
+
+---
+
+## Phase 8 — Mobile UX Polish (cross-cutting)
+
+- Tap targets audited to 44×44 minimum (current menu-dot trigger is ~14px icon in a 1px-padded button — too small).
+- Bottom-sheet handle drag-to-dismiss.
+- Persian numerals everywhere via `toPersianNumber` (currently inconsistent in notification settings and badges).
+- `safe-bottom` padding applied to all sheets and the bottom nav (verify on iOS PWA).
+- Replace `alert("لینک کپی شد")` in `Header.handleShareApp` with toast.
 
 ---
 
 ## Technical Summary
 
-| Phase | What | Impact | Effort |
-|-------|------|--------|--------|
-| 1 | Fix broken reaction icons | P0 — icons show as colored squares | Small |
-| 2 | Reaction tray as bottom sheet | P0 — mobile clipping | Medium |
-| 3 | Rich reaction bar on article page | Engagement — social proof | Medium |
-| 4 | Article content rendering | P1 — formatting completely lost | Medium |
-| 5 | Bookmark from article page | Retention — save for later | Small |
-| 6 | Reading progress bar | Engagement — completion motivation | Small |
-| 7 | Server-side search | Scalability — won't work past 1000 articles | Medium |
-| 8 | Continue Reading section | Retention — bring users back | Medium |
-| 9 | Notification badge | Engagement — pull users back | Small |
+| Area | Files (primary) |
+|---|---|
+| Hide / dismiss feed items | `useSmartFeed.ts`, `useExploreArticles.ts`, new `article_dismissals` migration, `ArticleActionsMenu.tsx` |
+| Reactions tray + summary | `ReactionPicker.tsx`, `ReactionPickerButton.tsx`, `ArticleReactions.tsx`, `useCardReactions.ts` |
+| Bookmark unification | `useBookmark.ts` (extend to set-based), `ArticleActionsMenu.tsx`, `Article.tsx` |
+| Report flow polish | `ArticleActionsMenu.tsx`, migration: trigger → admin notification |
+| Motivation banner | `WritingMotivationBanner.tsx`, `Index.tsx`, `useWritingMotivation.ts` |
+| Theme | `useTheme.ts`, `Header.tsx`, `index.html` (no-FOUC script) |
+| Notifications | `Notifications.tsx` (batch queries, grouping), `BottomNav.tsx` (badge), new `/notifications/settings` route |
+| Error handling | new `lib/safeCall.ts`, route-level error boundaries in `App.tsx` |
 
+### Migrations
+1. `article_dismissals (id, user_id uuid, article_id uuid, reason text, created_at)` + RLS (owner-only read/write/delete).
+2. Trigger on `reported_articles` insert → insert admin notification rows.
+
+### Phasing / Priority
+- **P0 (ship first):** Phase 1 bugs, Phase 3 not-interested + share, Phase 4 banner, Phase 5 theme.
+- **P1:** Phase 2 reactions polish, Phase 6 notifications, Phase 7 error handling.
+- **P2:** Phase 8 cross-cutting polish.
+
+No external dependencies added. All work fits the existing Tailwind / Supabase / TanStack stack.

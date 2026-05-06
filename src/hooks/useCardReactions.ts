@@ -163,26 +163,22 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       }
 
       try {
-        // FIXED: Use RPC function for atomic operation
-        const { data, error } = await supabase.rpc('toggle_reaction', {
+        // Atomic toggle via RPC
+        const { error } = await supabase.rpc('toggle_reaction' as any, {
           p_article_id: articleId,
           p_user_id: uid,
           p_reaction_type: type,
         });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
-        // Server returned result - update with authoritative data
-        if (data) {
-          // Fetch fresh data to ensure consistency
-          await fetchReactions();
-        }
+        // Trust optimistic state; only correct names list lazily.
+        // No second fetchReactions() — that was throwing away the optimistic update
+        // and adding a full network round-trip per tap.
         return true;
       } catch (error) {
         logger.error('Reaction toggle failed:', error);
-        // Error: Refetch to sync state with DB
+        // Resync from DB on failure
         await fetchReactions();
         return false;
       }

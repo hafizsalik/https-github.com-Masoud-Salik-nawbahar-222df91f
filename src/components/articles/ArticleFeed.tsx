@@ -1,9 +1,10 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { ArticleCard } from "./ArticleCard";
 import { CardErrorBoundary } from "@/components/CardErrorBoundary";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDismissedArticles } from "@/hooks/useDismissedArticles";
 
 interface ArticleFeedProps {
   articles: FeedArticle[];
@@ -15,6 +16,12 @@ interface ArticleFeedProps {
 
 export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadMore }: ArticleFeedProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const { dismissedIds } = useDismissedArticles();
+
+  const visibleArticles = useMemo(
+    () => articles.filter((a) => !dismissedIds.has(a.id)),
+    [articles, dismissedIds]
+  );
 
   // Infinite scroll observer
   useEffect(() => {
@@ -35,7 +42,7 @@ export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadM
     return () => observer.disconnect();
   }, [onLoadMore, hasMore, loadingMore]);
 
-  if (articles.length === 0) {
+  if (visibleArticles.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4 text-center animate-fade-in">
         <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-5">
@@ -59,7 +66,7 @@ export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadM
 
   return (
     <div className="max-w-[680px] mx-auto px-2">
-      {articles.map((article, index) => (
+      {visibleArticles.map((article, index) => (
         <div
           key={article.id}
           className="animate-fade-in"
@@ -70,7 +77,7 @@ export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadM
               <ArticleCard article={article} onDelete={onRefresh} />
             </CardErrorBoundary>
           </div>
-          {index < articles.length - 1 && (
+          {index < visibleArticles.length - 1 && (
             <div className="mx-6 border-b border-border/30" />
           )}
         </div>
@@ -87,7 +94,7 @@ export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadM
       )}
 
       {/* End of feed */}
-      {!hasMore && articles.length > 0 && (
+      {!hasMore && visibleArticles.length > 0 && (
         <div className="text-center py-8 text-[12px] text-muted-foreground/30">
           پایان مقالات
         </div>
