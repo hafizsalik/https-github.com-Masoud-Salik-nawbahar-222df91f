@@ -1,9 +1,10 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { ArticleCard } from "./ArticleCard";
 import { CardErrorBoundary } from "@/components/CardErrorBoundary";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDismissedArticles } from "@/hooks/useDismissedArticles";
 
 interface ArticleFeedProps {
   articles: FeedArticle[];
