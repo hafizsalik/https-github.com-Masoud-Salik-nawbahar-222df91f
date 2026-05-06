@@ -16,6 +16,12 @@ interface ArticleFeedProps {
 
 export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadMore }: ArticleFeedProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const { dismissedIds } = useDismissedArticles();
+
+  const visibleArticles = useMemo(
+    () => articles.filter((a) => !dismissedIds.has(a.id)),
+    [articles, dismissedIds]
+  );
 
   // Infinite scroll observer
   useEffect(() => {
