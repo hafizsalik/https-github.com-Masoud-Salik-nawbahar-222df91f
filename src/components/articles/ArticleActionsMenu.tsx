@@ -380,11 +380,26 @@ export function ArticleActionsMenu({ articleId, authorId, articleTitle, onDelete
             <AlertDialogCancel>انصراف</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleReportSubmit}
-              disabled={!selectedReason}
+              disabled={!selectedReason || isSubmittingReport}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              ثبت گزارش
+              {isSubmittingReport ? "در حال ارسال..." : "ثبت گزارش"}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Report success confirmation */}
+      <AlertDialog open={reportStep === 3} onOpenChange={(open) => !open && closeReport()}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>گزارش شما ثبت شد</AlertDialogTitle>
+            <AlertDialogDescription>
+              با تشکر از گزارش شما. تیم ما این مقاله را در اسرع وقت بررسی خواهد کرد.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={closeReport}>باشه</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
