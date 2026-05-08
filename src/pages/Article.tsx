@@ -51,10 +51,16 @@ function ArticleContent({ content, searchQuery }: { content: string; searchQuery
   const isHTML = /<[a-z][\s\S]*>/i.test(content);
 
   if (isHTML) {
+    const raw = highlightText(content, searchQuery) as string;
+    const safeHtml = DOMPurify.sanitize(raw, {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ["style", "script", "iframe", "object", "embed", "form"],
+      FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "style"],
+    });
     return (
       <div
         className="article-prose"
-        dangerouslySetInnerHTML={{ __html: highlightText(content, searchQuery) }}
+        dangerouslySetInnerHTML={{ __html: safeHtml }}
       />
     );
   }
