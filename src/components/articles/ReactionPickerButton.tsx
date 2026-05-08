@@ -370,7 +370,7 @@ function ReactionCardPickerInline({
               }}
               className={cn(
                 "flex items-center justify-center",
-                "w-12 h-12 rounded-full",
+                "w-10 h-10 rounded-full",
                 "transition-all duration-150",
                 "touch-none select-none",
                 isActive && "scale-110",
@@ -391,7 +391,7 @@ function ReactionCardPickerInline({
             >
               {Icon && (
                 <Icon
-                  size={24}
+                  size={20}
                   strokeWidth={isActive || isSelected ? 2.2 : 1.8}
                   animated={isActive || isSelected}
                   className="reaction-icon"
