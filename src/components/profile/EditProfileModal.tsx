@@ -128,7 +128,7 @@ export function EditProfileModal({
         avatarUrl = urlData.publicUrl;
       }
 
-      // Update profile
+      // Update profile (without whatsapp — it's now in profile_contacts)
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -136,13 +136,21 @@ export function EditProfileModal({
           specialty: specialty.trim() || null,
           bio: bio.trim() || null,
           avatar_url: avatarUrl,
-          whatsapp_number: whatsapp.trim() || null,
           facebook_url: facebook.trim() || null,
           linkedin_url: linkedin.trim() || null,
         })
         .eq("id", userId);
 
       if (error) throw error;
+
+      // Upsert whatsapp into profile_contacts (auth-only readable)
+      const { error: contactError } = await supabase
+        .from("profile_contacts")
+        .upsert(
+          { user_id: userId, whatsapp_number: whatsapp.trim() || null, updated_at: new Date().toISOString() },
+          { onConflict: "user_id" },
+        );
+      if (contactError) throw contactError;
 
       toast({
         title: "موفق!",

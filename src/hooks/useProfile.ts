@@ -40,59 +40,54 @@ export function useProfile(userId: string | undefined) {
 
   const fetchProfile = async () => {
     if (!userId) return;
-    
+
     setLoading(true);
 
     // Check if viewing own profile or someone else's
     const { data: { user } } = await supabase.auth.getUser();
     const isOwnProfile = user?.id === userId;
 
-    // Use different queries based on whether viewing own profile or public profile
-    const profileQuery = isOwnProfile 
-      ? supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url, specialty, bio, reputation_score, trust_score, whatsapp_number, facebook_url, linkedin_url, created_at")
-          .eq("id", userId)
-          .maybeSingle()
-      : supabase
-          .from("public_profiles" as any)
-          .select("id, display_name, avatar_url, specialty, bio, reputation_score, created_at")
-          .eq("id", userId)
-          .maybeSingle();
+    const profileQuery = supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url, specialty, bio, reputation_score, trust_score, facebook_url, linkedin_url, created_at")
+      .eq("id", userId)
+      .maybeSingle();
 
-    const [profileResult, articlesResult, bookmarksResult] = await Promise.all([
+    // whatsapp lives in profile_contacts (auth-only readable)
+    const contactQuery = user
+      ? supabase
+          .from("profile_contacts")
+          .select("whatsapp_number")
+          .eq("user_id", userId)
+          .maybeSingle()
+      : Promise.resolve({ data: null });
+
+    const [profileResult, contactResult, articlesResult, bookmarksResult] = await Promise.all([
       profileQuery,
+      contactQuery,
       supabase
         .from("articles")
         .select("id, title, content, cover_image_url, created_at, view_count")
         .eq("author_id", userId)
         .eq("status", "published")
         .order("created_at", { ascending: false }),
-      // Only fetch bookmarks if viewing own profile
-      isOwnProfile ? supabase
-        .from("bookmarks")
-        .select("article_id")
-        .eq("user_id", userId) : Promise.resolve({ data: [] })
+      isOwnProfile
+        ? supabase.from("bookmarks").select("article_id").eq("user_id", userId)
+        : Promise.resolve({ data: [] }),
     ]);
 
     if (profileResult.data) {
-      // For public profiles, add default values for missing fields
-      const profileData = isOwnProfile 
-        ? profileResult.data as Profile
-        : {
-            ...(profileResult.data as any),
-            trust_score: null,
-            whatsapp_number: null,
-            facebook_url: null,
-            linkedin_url: null
-          } as Profile;
-      
+      const whatsapp = (contactResult?.data as { whatsapp_number?: string | null } | null)?.whatsapp_number ?? null;
+      const profileData: Profile = {
+        ...(profileResult.data as Omit<Profile, "whatsapp_number">),
+        whatsapp_number: whatsapp,
+      };
       setProfile(profileData);
     }
 
     setArticles(articlesResult.data || []);
 
-    const bookmarkIds = (bookmarksResult.data || []).map(b => b.article_id);
+    const bookmarkIds = (bookmarksResult.data || []).map((b: { article_id: string }) => b.article_id);
     if (bookmarkIds.length > 0) {
       const { data: bookmarkedArticles } = await supabase
         .from("articles")
