@@ -400,6 +400,24 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_contacts: {
+        Row: {
+          updated_at: string
+          user_id: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          updated_at?: string
+          user_id: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          updated_at?: string
+          user_id?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       profile_reviews: {
         Row: {
           content: string
@@ -439,7 +457,6 @@ export type Database = {
           specialty: string | null
           trust_score: number | null
           updated_at: string
-          whatsapp_number: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -455,7 +472,6 @@ export type Database = {
           specialty?: string | null
           trust_score?: number | null
           updated_at?: string
-          whatsapp_number?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -471,7 +487,6 @@ export type Database = {
           specialty?: string | null
           trust_score?: number | null
           updated_at?: string
-          whatsapp_number?: string | null
         }
         Relationships: []
       }
@@ -659,6 +674,10 @@ export type Database = {
       get_follower_ids: { Args: { target_user_id: string }; Returns: string[] }
       get_following_count: { Args: { target_user_id: string }; Returns: number }
       get_following_ids: { Args: { target_user_id: string }; Returns: string[] }
+      get_profile_score_field: {
+        Args: { _field: string; _user_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
