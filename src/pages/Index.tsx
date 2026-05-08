@@ -16,12 +16,18 @@ const Index = () => {
   const motivationData = useWritingMotivation();
   const [bannerVisible, setBannerVisible] = useState(() => {
     const dismissedUntil = storage.get<number>("writing_motivation_dismissed_until", 0);
-    return Date.now() > dismissedUntil;
+    if (Date.now() <= dismissedUntil) return false;
+    // Once-per-session
+    if (sessionStorage.getItem("writing_motivation_seen") === "1") return false;
+    return true;
   });
 
-  const showMotivationBanner = !!user && bannerVisible;
+  // Hide for users who already published today
+  const showMotivationBanner = !!user && bannerVisible && !motivationData.hasWrittenToday;
   const dismissBanner = () => {
-    storage.set("writing_motivation_dismissed_until", Date.now() + 4 * 60 * 60 * 1000);
+    // Suppress for 7 days after explicit dismissal
+    storage.set("writing_motivation_dismissed_until", Date.now() + 7 * 24 * 60 * 60 * 1000);
+    sessionStorage.setItem("writing_motivation_seen", "1");
     setBannerVisible(false);
   };
 
