@@ -331,15 +331,15 @@ function ReactionCardPickerInline({
         ref={cardRef}
         className={cn(
           "fixed z-50",
-          "flex items-center gap-1",
-          "px-3 py-2.5",
+          "flex items-center gap-0.5",
+          "px-2 py-1.5",
           "bg-card rounded-full",
           "shadow-lg border border-border",
-          "pointer-events-auto overflow-visible"
+          "pointer-events-auto overflow-visible",
+          "w-auto"
         )}
         style={{
-          width: "min(100vw - 32px, 100%)",
-          maxWidth: "calc(100vw - 32px)",
+          maxWidth: "calc(100vw - 24px)",
           top: cardPosition.top,
           left: cardPosition.left,
           transform: "translateX(-50%)",
