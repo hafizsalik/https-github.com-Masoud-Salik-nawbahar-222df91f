@@ -256,21 +256,35 @@ export function Header() {
 
             {/* Menu items */}
             <div className="flex-1 py-2">
-              {/* Dark mode toggle */}
-              <div className="px-5 py-3.5 flex items-center justify-between">
-                <span className="text-[13px] text-foreground">حالت تاریک</span>
-                <button
-                  onClick={() => setIsDark(!isDark)}
-                  className={cn(
-                    "w-10 h-[22px] rounded-full flex items-center transition-colors relative overflow-hidden flex-shrink-0",
-                    isDark ? "bg-primary" : "bg-muted"
-                  )}
-                >
-                  <div className={cn(
-                    "w-4 h-4 rounded-full bg-white shadow transition-transform absolute",
-                    isDark ? "translate-x-0.5" : "translate-x-4"
-                  )} />
-                </button>
+              {/* Theme segmented control */}
+              <div className="px-5 py-3">
+                <p className="text-[11px] text-muted-foreground/60 mb-2">ظاهر</p>
+                <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/40">
+                  {([
+                    { value: "light", label: "روشن", Icon: Sun },
+                    { value: "dark", label: "تاریک", Icon: Moon },
+                    { value: "system", label: "سیستم", Icon: Monitor },
+                  ] as const).map(({ value, label, Icon }) => {
+                    const active = mode === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setMode(value as ThemeMode)}
+                        aria-pressed={active}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-[12px] font-medium transition-all",
+                          active
+                            ? "bg-card text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Icon size={13} strokeWidth={1.8} />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="mx-5 border-b border-border/15" />
