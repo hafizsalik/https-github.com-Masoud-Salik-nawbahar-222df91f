@@ -235,21 +235,18 @@ function ReactionCardPickerInline({
     const updatePosition = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const safeMargin = 16;
-      const cardWidth = Math.min(cardRef.current?.offsetWidth || 360, viewportWidth - safeMargin * 2);
-      const cardHeight = cardRef.current?.offsetHeight || 100;
+      const safeMargin = 12;
+      const cardHeight = cardRef.current?.offsetHeight || 56;
+      const gap = 20; // clearance so it doesn't cover the reaction count row
+
+      // Always center horizontally on the viewport
+      const centerX = viewportWidth / 2;
 
       const buttonRect = buttonRef.current?.getBoundingClientRect();
-      let centerX = buttonRect ? buttonRect.left + buttonRect.width / 2 : viewportWidth / 2;
-      centerX = Math.min(
-        Math.max(centerX, safeMargin + cardWidth / 2),
-        viewportWidth - safeMargin - cardWidth / 2
-      );
-
       let y = safeMargin;
       if (buttonRect) {
-        const above = buttonRect.top - cardHeight - 12;
-        const below = buttonRect.bottom + 12;
+        const above = buttonRect.top - cardHeight - gap;
+        const below = buttonRect.bottom + gap;
         if (above >= safeMargin) {
           y = above;
         } else if (below + cardHeight + safeMargin <= viewportHeight) {
@@ -334,15 +331,15 @@ function ReactionCardPickerInline({
         ref={cardRef}
         className={cn(
           "fixed z-50",
-          "flex items-center gap-1",
-          "px-3 py-2.5",
+          "flex items-center gap-0.5",
+          "px-2 py-1.5",
           "bg-card rounded-full",
           "shadow-lg border border-border",
-          "pointer-events-auto overflow-visible"
+          "pointer-events-auto overflow-visible",
+          "w-auto"
         )}
         style={{
-          width: "min(100vw - 32px, 100%)",
-          maxWidth: "calc(100vw - 32px)",
+          maxWidth: "calc(100vw - 24px)",
           top: cardPosition.top,
           left: cardPosition.left,
           transform: "translateX(-50%)",
@@ -373,7 +370,7 @@ function ReactionCardPickerInline({
               }}
               className={cn(
                 "flex items-center justify-center",
-                "w-12 h-12 rounded-full",
+                "w-10 h-10 rounded-full",
                 "transition-all duration-150",
                 "touch-none select-none",
                 isActive && "scale-110",
@@ -394,7 +391,7 @@ function ReactionCardPickerInline({
             >
               {Icon && (
                 <Icon
-                  size={24}
+                  size={20}
                   strokeWidth={isActive || isSelected ? 2.2 : 1.8}
                   animated={isActive || isSelected}
                   className="reaction-icon"
