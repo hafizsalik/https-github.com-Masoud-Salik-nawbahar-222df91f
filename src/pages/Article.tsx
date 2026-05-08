@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import DOMPurify from "dompurify";
 import { ArrowRight, Star, CornerUpRight, Share2, Bookmark, BookmarkCheck, ChevronUp, ChevronDown, X } from "lucide-react";
 import { formatSolarShort } from "@/lib/solarHijri";
 import { useAuth } from "@/hooks/useAuth";
