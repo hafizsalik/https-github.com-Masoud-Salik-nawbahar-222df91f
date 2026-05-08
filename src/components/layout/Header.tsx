@@ -1,4 +1,4 @@
-import { Info, LogOut, Shield, MessageSquare, Share2, BookOpen } from "lucide-react";
+import { Info, LogOut, Shield, MessageSquare, Share2, BookOpen, Sun, Moon, Monitor } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,8 +10,9 @@ import { NawbaharIcon } from "@/components/NawbaharIcon";
 import { WritingGuidanceModal } from "@/components/WritingGuidanceModal";
 import { SearchDropdown } from "@/components/SearchDropdown";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
+import { useTheme, type ThemeMode } from "@/hooks/useTheme";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 
 import menuBurgerIcon from "@/assets/icons/menu-burger.svg";
@@ -20,9 +21,11 @@ import userIcon from "@/assets/icons/user.svg";
 import logoImg from "@/assets/logo.png";
 
 export function Header() {
-  const { unreadCount } = useNotifications();
+  useNotifications();
   const { user, signOut } = useAuth();
   const { isAdmin } = useUserRole();
+  const { mode, setMode } = useTheme();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,23 +37,6 @@ export function Header() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showWritingGuide, setShowWritingGuide] = useState(false);
-
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved) return saved === 'dark';
-    return document.documentElement.classList.contains('dark');
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
 
   // Search suggestions
   const { articles: articleSuggestions, profiles: profileSuggestions } = useSearchSuggestions(searchValue);
@@ -108,11 +94,15 @@ export function Header() {
     try {
       if (navigator.share) {
         await navigator.share({ title, text, url: shareUrl });
-      } else {
-        await navigator.clipboard.writeText(`${title} - ${shareUrl}`);
-        alert("لینک اپلیکیشن کپی شد.");
+        return;
       }
-    } catch { /* cancelled */ }
+    } catch { /* cancelled or unsupported */ }
+    try {
+      await navigator.clipboard.writeText(`${title} - ${shareUrl}`);
+      toast({ title: "لینک اپلیکیشن کپی شد" });
+    } catch {
+      toast({ title: "اشتراک‌گذاری ممکن نشد", variant: "destructive" });
+    }
   };
 
   const handleSignOut = async () => setShowLogoutConfirm(true);
