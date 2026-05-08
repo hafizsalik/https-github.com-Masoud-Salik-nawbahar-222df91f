@@ -18,7 +18,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { REACTION_LABELS } from "@/hooks/useCardReactions";
 
-/** Fetch latest comment content by actor on article */
+/** Batched fetch: latest comment / reaction by actor on article — 2 queries total. */
 function useNotificationExtras(notifications: any[]) {
   const [extras, setExtras] = useState<Record<string, { commentPreview?: string; reactionType?: string }>>({});
 
@@ -28,44 +28,68 @@ function useNotificationExtras(notifications: any[]) {
 
     if (commentNotifs.length === 0 && reactionNotifs.length === 0) return;
 
-    const fetchExtras = async () => {
+    let cancelled = false;
+
+    (async () => {
       const result: Record<string, { commentPreview?: string; reactionType?: string }> = {};
 
+      // --- Batched comments lookup ---
       if (commentNotifs.length > 0) {
-        for (const n of commentNotifs.slice(0, 20)) {
-          const { data } = await supabase
-            .from("comments")
-            .select("content")
-            .eq("article_id", n.article_id)
-            .eq("user_id", n.actor_id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-          if (data && data[0]) {
-            const content = data[0].content;
-            result[n.id] = { commentPreview: content.length > 60 ? content.slice(0, 60) + "…" : content };
+        const articleIds = Array.from(new Set(commentNotifs.map(n => n.article_id)));
+        const userIds = Array.from(new Set(commentNotifs.map(n => n.actor_id)));
+        const { data } = await supabase
+          .from("comments")
+          .select("article_id, user_id, content, created_at")
+          .in("article_id", articleIds)
+          .in("user_id", userIds)
+          .order("created_at", { ascending: false });
+
+        if (data) {
+          // Pick latest per (article_id, user_id) pair
+          const latest = new Map<string, string>();
+          for (const c of data) {
+            const key = `${c.article_id}:${c.user_id}`;
+            if (!latest.has(key)) latest.set(key, c.content);
+          }
+          for (const n of commentNotifs) {
+            const content = latest.get(`${n.article_id}:${n.actor_id}`);
+            if (content) {
+              result[n.id] = {
+                commentPreview: content.length > 60 ? content.slice(0, 60) + "…" : content,
+              };
+            }
           }
         }
       }
 
+      // --- Batched reactions lookup ---
       if (reactionNotifs.length > 0) {
-        for (const n of reactionNotifs.slice(0, 20)) {
-          const { data } = await supabase
-            .from("reactions")
-            .select("reaction_type")
-            .eq("article_id", n.article_id)
-            .eq("user_id", n.actor_id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-          if (data && data[0]) {
-            result[n.id] = { ...result[n.id], reactionType: data[0].reaction_type };
+        const articleIds = Array.from(new Set(reactionNotifs.map(n => n.article_id)));
+        const userIds = Array.from(new Set(reactionNotifs.map(n => n.actor_id)));
+        const { data } = await supabase
+          .from("reactions")
+          .select("article_id, user_id, reaction_type, created_at")
+          .in("article_id", articleIds)
+          .in("user_id", userIds)
+          .order("created_at", { ascending: false });
+
+        if (data) {
+          const latest = new Map<string, string>();
+          for (const r of data) {
+            const key = `${r.article_id}:${r.user_id}`;
+            if (!latest.has(key)) latest.set(key, r.reaction_type);
+          }
+          for (const n of reactionNotifs) {
+            const t = latest.get(`${n.article_id}:${n.actor_id}`);
+            if (t) result[n.id] = { ...result[n.id], reactionType: t };
           }
         }
       }
 
-      setExtras(result);
-    };
+      if (!cancelled) setExtras(result);
+    })();
 
-    fetchExtras();
+    return () => { cancelled = true; };
   }, [notifications]);
 
   return extras;
