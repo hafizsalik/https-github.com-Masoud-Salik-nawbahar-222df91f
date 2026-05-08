@@ -236,7 +236,6 @@ function ReactionCardPickerInline({
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const safeMargin = 12;
-      const cardWidth = cardRef.current?.offsetWidth || 300;
       const cardHeight = cardRef.current?.offsetHeight || 56;
       const gap = 20; // clearance so it doesn't cover the reaction count row
 
