@@ -235,21 +235,19 @@ function ReactionCardPickerInline({
     const updatePosition = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const safeMargin = 16;
-      const cardWidth = Math.min(cardRef.current?.offsetWidth || 360, viewportWidth - safeMargin * 2);
-      const cardHeight = cardRef.current?.offsetHeight || 100;
+      const safeMargin = 12;
+      const cardWidth = cardRef.current?.offsetWidth || 300;
+      const cardHeight = cardRef.current?.offsetHeight || 56;
+      const gap = 20; // clearance so it doesn't cover the reaction count row
+
+      // Always center horizontally on the viewport
+      const centerX = viewportWidth / 2;
 
       const buttonRect = buttonRef.current?.getBoundingClientRect();
-      let centerX = buttonRect ? buttonRect.left + buttonRect.width / 2 : viewportWidth / 2;
-      centerX = Math.min(
-        Math.max(centerX, safeMargin + cardWidth / 2),
-        viewportWidth - safeMargin - cardWidth / 2
-      );
-
       let y = safeMargin;
       if (buttonRect) {
-        const above = buttonRect.top - cardHeight - 12;
-        const below = buttonRect.bottom + 12;
+        const above = buttonRect.top - cardHeight - gap;
+        const below = buttonRect.bottom + gap;
         if (above >= safeMargin) {
           y = above;
         } else if (below + cardHeight + safeMargin <= viewportHeight) {
