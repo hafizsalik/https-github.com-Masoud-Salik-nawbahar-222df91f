@@ -98,6 +98,7 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
     
+    let callerUserId: string | null = null;
     if (!isServiceRole) {
       // Validate JWT for non-service-role callers
       const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
@@ -107,12 +108,13 @@ serve(async (req) => {
         { global: { headers: { Authorization: authHeader } } }
       );
       const token = authHeader.replace('Bearer ', '');
-      const { error: userError } = await supabaseAuth.auth.getUser(token);
-      if (userError) {
+      const { data: userData, error: userError } = await supabaseAuth.auth.getUser(token);
+      if (userError || !userData?.user) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      callerUserId = userData.user.id;
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -124,6 +126,23 @@ serve(async (req) => {
 
     if (!user_id || !title) {
       return new Response(JSON.stringify({ error: "user_id and title are required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // IDOR guard: non-service-role callers may only push to themselves
+    if (!isServiceRole && callerUserId !== user_id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Length limits to prevent abuse
+    if (typeof title !== "string" || title.length > 120 ||
+        (body && (typeof body !== "string" || body.length > 300))) {
+      return new Response(JSON.stringify({ error: "Invalid payload" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
