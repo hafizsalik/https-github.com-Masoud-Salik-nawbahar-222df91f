@@ -342,7 +342,7 @@ function ReactionCardPickerInline({
           maxWidth: "calc(100vw - 24px)",
           top: cardPosition.top,
           left: cardPosition.left,
-          transform: "translateX(-50%)",
+          transform: "translateX(-100%)",
           animation: isClosing
             ? "reactionCardExit 150ms ease-out forwards"
             : "reactionCardEnter 100ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
