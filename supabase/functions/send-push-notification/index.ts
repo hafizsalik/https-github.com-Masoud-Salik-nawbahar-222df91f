@@ -131,6 +131,23 @@ serve(async (req) => {
       });
     }
 
+    // IDOR guard: non-service-role callers may only push to themselves
+    if (!isServiceRole && callerUserId !== user_id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Length limits to prevent abuse
+    if (typeof title !== "string" || title.length > 120 ||
+        (body && (typeof body !== "string" || body.length > 300))) {
+      return new Response(JSON.stringify({ error: "Invalid payload" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: subscriptions } = await supabaseAdmin
