@@ -49,8 +49,11 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("stats");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [reportedComments, setReportedComments] = useState<any[]>([]);
+  const [articleToDelete, setArticleToDelete] = useState<AdminArticle | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => { checkAdminAccess(); }, []);
   useEffect(() => {
