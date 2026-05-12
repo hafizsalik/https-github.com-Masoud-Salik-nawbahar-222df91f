@@ -176,6 +176,22 @@ const AdminDashboard = () => {
     if (!error) { toast({ title: "گزارش رد شد" }); fetchReportedComments(); }
   };
 
+  const handleDeleteArticle = async () => {
+    if (!articleToDelete) return;
+    setDeleting(true);
+    const { error } = await supabase.from("articles").delete().eq("id", articleToDelete.id);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "خطا در حذف", description: error.message, variant: "destructive" });
+      return;
+    }
+    setArticles(prev => prev.filter(a => a.id !== articleToDelete.id));
+    setArticleToDelete(null);
+    toast({ title: "✅ مقاله حذف شد" });
+    queryClient.invalidateQueries({ queryKey: ["articles-smart-feed"] });
+    queryClient.invalidateQueries({ queryKey: ["articles-published"] });
+    if (activeTab === "stats") fetchStats();
+  };
   const handleReviewComplete = () => {
     setSelectedArticle(null);
     if (activeTab !== "stats" && activeTab !== "reports") fetchArticles(activeTab as any);
