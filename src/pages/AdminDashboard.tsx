@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Clock, FileText, CheckCircle, XCircle, Users, Eye, MessageCircle, Flag, TrendingUp, Shield, BarChart3, ThumbsUp } from "lucide-react";
+import { ArrowRight, Clock, FileText, CheckCircle, XCircle, Users, Eye, MessageCircle, Flag, TrendingUp, Shield, BarChart3, ThumbsUp, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { formatSolarShort } from "@/lib/solarHijri";
 import { ReviewModal } from "@/components/admin/ReviewModal";
 import { cn } from "@/lib/utils";
@@ -47,8 +49,11 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("stats");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [reportedComments, setReportedComments] = useState<any[]>([]);
+  const [articleToDelete, setArticleToDelete] = useState<AdminArticle | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => { checkAdminAccess(); }, []);
   useEffect(() => {
@@ -171,6 +176,22 @@ const AdminDashboard = () => {
     if (!error) { toast({ title: "گزارش رد شد" }); fetchReportedComments(); }
   };
 
+  const handleDeleteArticle = async () => {
+    if (!articleToDelete) return;
+    setDeleting(true);
+    const { error } = await supabase.from("articles").delete().eq("id", articleToDelete.id);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "خطا در حذف", description: error.message, variant: "destructive" });
+      return;
+    }
+    setArticles(prev => prev.filter(a => a.id !== articleToDelete.id));
+    setArticleToDelete(null);
+    toast({ title: "✅ مقاله حذف شد" });
+    queryClient.invalidateQueries({ queryKey: ["articles-smart-feed"] });
+    queryClient.invalidateQueries({ queryKey: ["articles-published"] });
+    if (activeTab === "stats") fetchStats();
+  };
   const handleReviewComplete = () => {
     setSelectedArticle(null);
     if (activeTab !== "stats" && activeTab !== "reports") fetchArticles(activeTab as any);
@@ -301,6 +322,14 @@ const AdminDashboard = () => {
                             {totalScore > 0 && (
                               <span className="text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-full text-[9px]">{totalScore}/50</span>
                             )}
+                            <button
+                              type="button"
+                              aria-label="حذف مقاله"
+                              onClick={(e) => { e.stopPropagation(); setArticleToDelete(article); }}
+                              className="p-1 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -316,6 +345,27 @@ const AdminDashboard = () => {
       {selectedArticle && (
         <ReviewModal article={selectedArticle} onClose={() => setSelectedArticle(null)} onComplete={handleReviewComplete} />
       )}
+
+      <AlertDialog open={!!articleToDelete} onOpenChange={(o) => { if (!o) setArticleToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف مقاله</AlertDialogTitle>
+            <AlertDialogDescription>
+              آیا از حذف مقاله «{articleToDelete?.title}» مطمئن هستید؟ این عمل قابل بازگشت نیست.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>انصراف</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); handleDeleteArticle(); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "در حال حذف…" : "حذف"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

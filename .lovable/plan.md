@@ -1,141 +1,63 @@
-# Mobile-First Production Upgrade — نوبهار
+# Upgrade Plan
 
-Focused on the 390px viewport (where most users are). Inspired by Medium (reading focus, claps depth), LinkedIn (reaction tray), Twitter/X (action sheets), and Instagram (not-interested feedback loop).
+Four scoped changes. Existing article page, reactions logic, and feed ranking remain untouched.
 
----
+## 1. Inline Quick-View Expansion ("... بیشتر")
 
-## Phase 1 — Bug Fixes (P0)
+**Goal:** Add a lightweight inline reader inside `ArticleCard` without removing the existing navigation to `/article/:id`.
 
-1. **`hidden_articles` is dead code.** `ArticleActionsMenu.handleNotInterested` writes to localStorage, but `useSmartFeed` never reads it. Articles reappear after refresh. Wire `useSmartFeed` (and `useExploreArticles`) to filter out hidden IDs.
-2. **`reported_articles` cast as `any`.** Forces unsafe insert and silent type drift. Regenerate types and remove the cast.
-3. **Two competing theme sources of truth.** `useTheme.ts` exists but `Header.tsx` re-implements its own `isDark` state with direct localStorage writes. Switching theme from one place can desync the other. Consolidate on `useTheme`.
-4. **Notifications N+1.** `useNotificationExtras` fires a `select` per comment/reaction notification (up to 40 round-trips on open). Batch with `.in('article_id', [...])` + client-side group.
-5. **Reaction toggle double-fetch.** `toggleReaction` calls `fetchReactions()` after every successful RPC, throwing away the optimistic update for a full refetch. Trust the RPC return value; only refetch on error.
-6. **Bookmark check repeated per card.** `ArticleActionsMenu` queries `bookmarks` on every sheet open. Centralize into a `useBookmarks()` set hook (single query, cached) shared with article page.
-7. **Share fallback throws on iOS PWAs without clipboard permission.** Wrap in try/catch and toast a graceful fallback.
+- In `ArticleCard.tsx`, replace the static `…` truncation with:
+  - The truncated excerpt followed by an inline `…` + `بیشتر` button, both styled in the brand blue (`text-primary`), bold, hover underline.
+  - Clicking `بیشتر` calls `e.preventDefault()` + `e.stopPropagation()` so the parent `<Link>` does NOT navigate, and toggles a local `expanded` state.
+- When `expanded === true`:
+  - Animate open with a smooth max-height/opacity transition (Tailwind + a small CSS keyframe, or `data-state` driven transition similar to existing `SlideDownComments`).
+  - Render the full `article.content` inside the card in a clean reading layout (right-aligned RTL, `prose`-like spacing, no cover repeat, no author re-render).
+  - Show a `بستن` button at the bottom that collapses it.
+  - Trigger view tracking via the existing `useViewCount` / `useEngagementTracking` hook the same way the article page does (so reads still count).
+- Quick-view is reading-only: NO comments, NO related articles, NO suggested writers, NO reactions panel beyond what `ArticleCardMetrics` already shows under the card.
+- Clicking the title/cover/excerpt area (anywhere except `بیشتر`) keeps the current behavior → navigates to the full `/article/:id` page (with all its existing widgets).
+- Infinite scrolling is already provided by `ArticleFeed`'s `IntersectionObserver`; expanded cards naturally push the next card down, giving a LinkedIn/Facebook-style continuous feed.
 
----
+## 2. Admin Article Deletion
 
-## Phase 2 — Reactions, Refined
+**Goal:** Allow admins to delete any article from the admin dashboard.
 
-Building on the existing 6-reaction LinkedIn-style system.
+- In `src/pages/AdminDashboard.tsx`, in each row of the articles tabs (pending/published/rejected), add a red trash icon button.
+- On click, open a shadcn `AlertDialog` titled "حذف مقاله" with body "آیا از حذف این مقاله مطمئن هستید؟ این عمل قابل بازگشت نیست." and Confirm/Cancel buttons.
+- On confirm: `supabase.from('articles').delete().eq('id', id)`. RLS already allows admin delete (policy "Users can delete their own articles" includes `has_role(auth.uid(),'admin')`).
+- After success: optimistic remove from local list, `toast.success("مقاله حذف شد")`, and invalidate the home feed query keys (`['articles-smart-feed']`, `['articles-published']`) so it disappears from the homepage instantly.
+- Soft-delete/trash is **skipped** for now (can be added later as an `is_deleted` column + status filter — out of scope unless you confirm).
 
-- **Long-press threshold** lowered to 250ms (currently feels sluggish on mid-range Androids); add subtle haptic pulse on tray open via existing `lib/haptics.ts`.
-- **Tray as bottom sheet on mobile** (≤640px) with safe-area padding, 56px touch targets, Persian label always visible (not just on hover). Tray on desktop stays as floating popover.
-- **Selected ring** on the user's current reaction inside the tray.
-- **Card summary**: show the top reaction emoji + count, plus 2 stacked avatars of followed reactors when available (social proof). Tap opens `ReactionDetailsModal`.
-- **Article page**: reaction bar gets a tabbed details modal (All / by type), like LinkedIn.
-- **Undo toast** on accidental reaction (3-second window).
-- **Guest tap** opens a soft auth sheet (not a hard redirect): "برای واکنش وارد شوید" with inline login button.
+## 3. Public/Guest Access
 
----
+**Goal:** Anyone (including signed-out visitors) can browse, open, and quick-view articles.
 
-## Phase 3 — Action Semantics: Save / Share / Report / Not-Interested
+- Audit & confirm:
+  - `/` (Index), `/article/:id`, and `/explore` are NOT wrapped in any auth guard. RLS for `articles` already allows `status = 'published'` for everyone.
+  - Verify nothing in `AppLayout`/`Header` redirects guests to `/auth`.
+- Ensure these guest-visible pages don't crash when `user` is `null` (already handled via `useAuth` returning `null`).
+- Auth-gated actions remain protected via the existing `useRequireAuth` pattern (publish, comment, react, bookmark, follow, admin). Any place currently blocking *reading* for guests will be removed.
+- Update Article page so any "sign in to continue reading" wall, if present, is removed.
 
-Define what actually happens, end-to-end. Today most are toast-only.
+## 4. Reaction Picker Position Fix
 
-### Save (Bookmark)
-- Optimistic toggle, single source of truth via `useBookmark`.
-- Success toast with **"مشاهده ذخیره‌ها"** action → `/bookmarks`.
-- Bookmarked state visually persists on the card (filled icon).
-- Offline-safe: queue via existing `backgroundSync` if no network.
+**Goal:** Center the reaction card on screen and ensure it never sits off-screen or hides count.
 
-### Share
-- Native `navigator.share` first; fallback to clipboard with toast.
-- Append UTM-style ref `?ref=share` so we can later measure share-driven traffic.
-- After share, increment a local "shared" engagement signal used by `useSmartFeed` ranking.
+- In `ReactionPickerButton.tsx` (around line 341), the current `transform: translateX(-100%)` shifts the card fully left of the trigger, which can clip off-screen on narrow viewports.
+- Replace the positioning logic so the card:
+  - Is anchored above the trigger button with a small gap.
+  - Uses `translateX(-50%)` and clamps `left` to `[12px, viewportWidth - cardWidth - 12px]` after measuring `cardRef` width on mount (existing `cardPosition` state already supports this).
+  - Sits **above** the reactions count row, not overlapping it (verify `top` is computed from the trigger's `getBoundingClientRect().top - cardHeight - 8`).
+- Reduce card padding by ~15% (`px-2 py-1.5` → `px-1.5 py-1`) and icon gap (`gap-0.5` already minimal) to shrink overall footprint.
+- Verify on 865px and 375px widths that the full picker is visible and centered.
 
-### Not Interested (currently broken)
-- Insert into a new `article_dismissals` table `(user_id, article_id, reason, created_at)` for signed-in users; localStorage fallback for guests.
-- Optional follow-up chip row inside the toast: "کمتر از این نویسنده" / "کمتر از این موضوع" — feeds into feed ranking.
-- Card animates out (height collapse 200ms) instead of just disappearing on next refresh.
-- `useSmartFeed` and `useExploreArticles` filter dismissed IDs.
+## Technical Notes
 
-### Report
-- Keep 3-step flow but move to bottom sheet (consistent with menu).
-- Add **"ارسال شد"** confirmation screen with a short note about review SLA, instead of a plain toast.
-- Server: trigger to notify admins (`notifications` table, `type='report'`) when a report row is created.
-- Prevent duplicate reports gracefully (already partial — keep 23505 path, unify message).
+- Files touched:
+  - `src/components/articles/ArticleCard.tsx` (inline expansion + بیشتر button)
+  - `src/pages/AdminDashboard.tsx` (delete button + AlertDialog)
+  - `src/components/articles/ReactionPickerButton.tsx` (positioning)
+  - Possibly small audit edits in `src/pages/Article.tsx` / layout if a guest gate is found
+- No DB migrations required — RLS already supports admin delete and public read.
+- No new dependencies.
 
----
-
-## Phase 4 — Writing Motivation Banner — Redesign
-
-The current banner is colorful, gradient-heavy, with a streak chip + "remaining" chip + sparkle icon + two buttons. On 390px it dominates the feed and reads as an ad.
-
-### New direction: quiet, contextual, dismissible-for-good
-- Single line, bordered card (no gradient), matches reading-surface tone.
-- Format: short prompt + single ghost button "بنویسید".
-- No streak/count chips in the feed banner; move those to the Profile page where users actually want stats.
-- Show **at most once per session**, never above-the-fold on first scroll. After dismissal, suppress for 7 days (currently 4h, too aggressive).
-- Hide entirely for users who published in the last 24h.
-- Triggered placement: between feed items at position 6 (Medium-style "tip card"), not sticky-top.
-- Long-form prompts move into the existing `WritingGuidanceModal`; the banner only nudges.
-
----
-
-## Phase 5 — Theme Toggle, Polished
-
-- Replace the menu row toggle with a proper segmented `[☀ روشن | 🌙 تاریک | ⚙ سیستم]` control. "System" option respects `prefers-color-scheme` and updates live.
-- Smooth color transition: add `transition-colors duration-200` on `html` root via a class added during toggle (avoids flashing on every hover).
-- Source of truth: `useTheme`. Header's local state is removed.
-- Preserve no-FOUC: keep the inline script in `index.html` that sets the class before React mounts (verify it exists; add if missing).
-
----
-
-## Phase 6 — Notifications, Polished
-
-- **Visual**: each row uses an avatar (actor) + a small colored type-badge (heart/comment/follow/reaction) overlapping bottom-right of the avatar — the current "two icons side-by-side" reads cluttered on 390px.
-- **Performance**: batch the comment/reaction lookups (Phase 1 #4) into 2 queries total.
-- **Grouping**: collapse multiple reactions on the same article ("۵ نفر به مقاله شما واکنش نشان دادند") with expand-on-tap.
-- **Empty state**: friendly illustration + CTA "کاوش مقالات".
-- **Bottom-nav badge**: ensure it caps at "۹+" and uses brand orange (currently red conflicts with destructive semantics).
-- **Settings panel** moved into a dedicated `/notifications/settings` route to declutter the list page.
-
----
-
-## Phase 7 — Error Handling, Centralized
-
-- Audit all `supabase` calls for silent failures. Standardize on a `safeCall(fn, { context })` wrapper that:
-  - logs via `logger`
-  - maps codes via existing `errorHandler.ts`
-  - returns `{ data, error }` shape
-- Replace all bare `try/catch { /* ignore */ }` (e.g. `handleNotInterested`, `handleShare`) with explicit user feedback or intentional silence.
-- Wrap `Notifications`, `Article`, `Profile`, `Explore` in route-level error boundaries with retry buttons (we already have `CardErrorBoundary` for feed cards).
-- Add an offline-aware toast wrapper: when offline, queue intent and show "ذخیره می‌شود وقتی آنلاین شدید".
-
----
-
-## Phase 8 — Mobile UX Polish (cross-cutting)
-
-- Tap targets audited to 44×44 minimum (current menu-dot trigger is ~14px icon in a 1px-padded button — too small).
-- Bottom-sheet handle drag-to-dismiss.
-- Persian numerals everywhere via `toPersianNumber` (currently inconsistent in notification settings and badges).
-- `safe-bottom` padding applied to all sheets and the bottom nav (verify on iOS PWA).
-- Replace `alert("لینک کپی شد")` in `Header.handleShareApp` with toast.
-
----
-
-## Technical Summary
-
-| Area | Files (primary) |
-|---|---|
-| Hide / dismiss feed items | `useSmartFeed.ts`, `useExploreArticles.ts`, new `article_dismissals` migration, `ArticleActionsMenu.tsx` |
-| Reactions tray + summary | `ReactionPicker.tsx`, `ReactionPickerButton.tsx`, `ArticleReactions.tsx`, `useCardReactions.ts` |
-| Bookmark unification | `useBookmark.ts` (extend to set-based), `ArticleActionsMenu.tsx`, `Article.tsx` |
-| Report flow polish | `ArticleActionsMenu.tsx`, migration: trigger → admin notification |
-| Motivation banner | `WritingMotivationBanner.tsx`, `Index.tsx`, `useWritingMotivation.ts` |
-| Theme | `useTheme.ts`, `Header.tsx`, `index.html` (no-FOUC script) |
-| Notifications | `Notifications.tsx` (batch queries, grouping), `BottomNav.tsx` (badge), new `/notifications/settings` route |
-| Error handling | new `lib/safeCall.ts`, route-level error boundaries in `App.tsx` |
-
-### Migrations
-1. `article_dismissals (id, user_id uuid, article_id uuid, reason text, created_at)` + RLS (owner-only read/write/delete).
-2. Trigger on `reported_articles` insert → insert admin notification rows.
-
-### Phasing / Priority
-- **P0 (ship first):** Phase 1 bugs, Phase 3 not-interested + share, Phase 4 banner, Phase 5 theme.
-- **P1:** Phase 2 reactions polish, Phase 6 notifications, Phase 7 error handling.
-- **P2:** Phase 8 cross-cutting polish.
-
-No external dependencies added. All work fits the existing Tailwind / Supabase / TanStack stack.

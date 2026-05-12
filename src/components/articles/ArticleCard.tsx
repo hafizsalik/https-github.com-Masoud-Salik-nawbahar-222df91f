@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, memo } from "react";
 import { CornerUpRight } from "lucide-react";
+import DOMPurify from "dompurify";
 import { Link, useNavigate } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { useComments } from "@/hooks/useComments";
@@ -34,6 +35,24 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
   const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const isHTMLContent = useMemo(() => /<[a-z][\s\S]*>/i.test(article.content), [article.content]);
+  const sanitizedContent = useMemo(() => {
+    if (!expanded || !isHTMLContent) return "";
+    return DOMPurify.sanitize(article.content, {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ["style", "script", "iframe", "object", "embed", "form"],
+      FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "style"],
+    });
+  }, [expanded, isHTMLContent, article.content]);
+
+  const handleExpandClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpanded(prev => !prev);
+  }, []);
+
 
   const {
     comments,
@@ -135,12 +154,27 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
         {/* Content row: excerpt + image */}
         <div className="flex gap-3" style={{ direction: "rtl" }}>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] leading-[1.7] line-clamp-4 text-muted-foreground">
-              {searchQuery
-                ? highlightTextSegments(getExcerpt(article.content, 180), searchQuery)
-                : getExcerpt(article.content, 180)
-              }
-            </p>
+            {!expanded && (
+              <p className="text-[14px] leading-[1.7] line-clamp-4 text-muted-foreground">
+                {searchQuery
+                  ? highlightTextSegments(getExcerpt(article.content, 180), searchQuery)
+                  : getExcerpt(article.content, 180)
+                }
+                {article.content.length > 180 && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={handleExpandClick}
+                      className="text-primary font-bold hover:underline focus:outline-none"
+                      aria-expanded={expanded}
+                    >
+                      بیشتر
+                    </button>
+                  </>
+                )}
+              </p>
+            )}
           </div>
           <div
             className={cn(
@@ -159,6 +193,46 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
             />
           </div>
         </div>
+
+        {/* Inline expanded full content */}
+        {expanded && (
+          <div
+            className="mt-4 animate-fade-in"
+            style={{ direction: "rtl" }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
+            {isHTMLContent ? (
+              <div
+                className="article-prose text-[15px] leading-[2.1] text-foreground"
+                dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              />
+            ) : (
+              <div className="text-foreground whitespace-pre-wrap leading-[2.1] text-[15px]">
+                {article.content}
+              </div>
+            )}
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={handleExpandClick}
+                className="text-primary text-[13px] font-bold hover:underline focus:outline-none"
+              >
+                بستن
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/article/${article.id}`);
+                }}
+                className="text-muted-foreground text-[12px] hover:text-foreground"
+              >
+                مشاهده صفحه کامل ←
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Metrics */}
         <div onClick={handleReactionClick}>
