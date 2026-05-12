@@ -322,6 +322,14 @@ const AdminDashboard = () => {
                             {totalScore > 0 && (
                               <span className="text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-full text-[9px]">{totalScore}/50</span>
                             )}
+                            <button
+                              type="button"
+                              aria-label="حذف مقاله"
+                              onClick={(e) => { e.stopPropagation(); setArticleToDelete(article); }}
+                              className="p-1 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         </div>
                       </div>
