@@ -194,6 +194,46 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
           </div>
         </div>
 
+        {/* Inline expanded full content */}
+        {expanded && (
+          <div
+            className="mt-4 animate-fade-in"
+            style={{ direction: "rtl" }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
+            {isHTMLContent ? (
+              <div
+                className="article-prose text-[15px] leading-[2.1] text-foreground"
+                dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              />
+            ) : (
+              <div className="text-foreground whitespace-pre-wrap leading-[2.1] text-[15px]">
+                {article.content}
+              </div>
+            )}
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={handleExpandClick}
+                className="text-primary text-[13px] font-bold hover:underline focus:outline-none"
+              >
+                بستن
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/article/${article.id}`);
+                }}
+                className="text-muted-foreground text-[12px] hover:text-foreground"
+              >
+                مشاهده صفحه کامل ←
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Metrics */}
         <div onClick={handleReactionClick}>
           <ArticleCardMetrics
