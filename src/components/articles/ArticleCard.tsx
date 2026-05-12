@@ -154,12 +154,27 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
         {/* Content row: excerpt + image */}
         <div className="flex gap-3" style={{ direction: "rtl" }}>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] leading-[1.7] line-clamp-4 text-muted-foreground">
-              {searchQuery
-                ? highlightTextSegments(getExcerpt(article.content, 180), searchQuery)
-                : getExcerpt(article.content, 180)
-              }
-            </p>
+            {!expanded && (
+              <p className="text-[14px] leading-[1.7] line-clamp-4 text-muted-foreground">
+                {searchQuery
+                  ? highlightTextSegments(getExcerpt(article.content, 180), searchQuery)
+                  : getExcerpt(article.content, 180)
+                }
+                {article.content.length > 180 && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={handleExpandClick}
+                      className="text-primary font-bold hover:underline focus:outline-none"
+                      aria-expanded={expanded}
+                    >
+                      بیشتر
+                    </button>
+                  </>
+                )}
+              </p>
+            )}
           </div>
           <div
             className={cn(
