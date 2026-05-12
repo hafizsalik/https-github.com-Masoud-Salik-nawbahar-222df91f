@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, memo } from "react";
 import { CornerUpRight } from "lucide-react";
+import DOMPurify from "dompurify";
 import { Link, useNavigate } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { useComments } from "@/hooks/useComments";
