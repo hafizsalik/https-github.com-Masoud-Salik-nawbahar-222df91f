@@ -345,6 +345,27 @@ const AdminDashboard = () => {
       {selectedArticle && (
         <ReviewModal article={selectedArticle} onClose={() => setSelectedArticle(null)} onComplete={handleReviewComplete} />
       )}
+
+      <AlertDialog open={!!articleToDelete} onOpenChange={(o) => { if (!o) setArticleToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف مقاله</AlertDialogTitle>
+            <AlertDialogDescription>
+              آیا از حذف مقاله «{articleToDelete?.title}» مطمئن هستید؟ این عمل قابل بازگشت نیست.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>انصراف</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); handleDeleteArticle(); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "در حال حذف…" : "حذف"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
