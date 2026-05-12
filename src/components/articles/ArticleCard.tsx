@@ -35,6 +35,24 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
   const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const isHTMLContent = useMemo(() => /<[a-z][\s\S]*>/i.test(article.content), [article.content]);
+  const sanitizedContent = useMemo(() => {
+    if (!expanded || !isHTMLContent) return "";
+    return DOMPurify.sanitize(article.content, {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ["style", "script", "iframe", "object", "embed", "form"],
+      FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "style"],
+    });
+  }, [expanded, isHTMLContent, article.content]);
+
+  const handleExpandClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpanded(prev => !prev);
+  }, []);
+
 
   const {
     comments,
