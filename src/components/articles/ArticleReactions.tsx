@@ -48,7 +48,6 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
           <ReactionPickerButton
             userReaction={userReaction}
             onReact={onReact}
-            count={totalCount}
             reactorNames={reactorNames}
           />
 
