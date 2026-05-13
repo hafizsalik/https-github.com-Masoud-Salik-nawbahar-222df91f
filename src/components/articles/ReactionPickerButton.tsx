@@ -13,6 +13,7 @@ interface ReactionPickerButtonProps {
   onReact: (type: ReactionKey) => void;
   reactorNames?: string[];
   isProcessing?: boolean;
+  count?: number;
 }
 
 export function ReactionPickerButton({
