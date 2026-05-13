@@ -1,7 +1,7 @@
 import { CheckCheck } from "lucide-react";
 import { cn, toPersianNumber } from "@/lib/utils";
 import { ReactionPickerButton } from "./ReactionPickerButton";
-import { type ReactionKey, type ReactionSummary, REACTION_EMOJIS, REACTION_LABELS } from "@/hooks/useCardReactions";
+import { type ReactionKey, type ReactionSummary, REACTION_EMOJIS, REACTION_LABELS, REACTION_COLORS } from "@/hooks/useCardReactions";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
 
 import commentIcon from "@/assets/icons/comment.svg";
