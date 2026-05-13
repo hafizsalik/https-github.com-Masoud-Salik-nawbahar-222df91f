@@ -235,14 +235,15 @@ function ReactionCardPickerInline({
     const updatePosition = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const safeMargin = 12;
-      const cardHeight = cardRef.current?.offsetHeight || 56;
-      const gap = 20; // clearance so it doesn't cover the reaction count row
-
-      // Always center horizontally on the viewport
-      const centerX = viewportWidth / 2;
+      const safeMargin = 8;
+      const cardEl = cardRef.current;
+      const cardHeight = cardEl?.offsetHeight || 48;
+      const cardWidth = cardEl?.offsetWidth || 280;
+      const gap = 8; // small clearance above the reactions row
 
       const buttonRect = buttonRef.current?.getBoundingClientRect();
+
+      // Vertical: sit just above the trigger button (above the numbers row)
       let y = safeMargin;
       if (buttonRect) {
         const above = buttonRect.top - cardHeight - gap;
@@ -254,11 +255,19 @@ function ReactionCardPickerInline({
         } else {
           y = Math.max(safeMargin, viewportHeight - cardHeight - safeMargin);
         }
-      } else {
-        y = viewportHeight - cardHeight - safeMargin;
       }
 
-      setCardPosition({ top: `${y}px`, left: `${centerX}px` });
+      // Horizontal: align the RIGHT edge of the card with the right edge of
+      // the trigger button so the rightmost reaction ("like") sits directly
+      // above the like trigger / its count. Clamp inside the viewport.
+      let rightEdge = buttonRect ? buttonRect.right : viewportWidth - safeMargin;
+      let leftEdge = rightEdge - cardWidth;
+      if (leftEdge < safeMargin) leftEdge = safeMargin;
+      if (leftEdge + cardWidth > viewportWidth - safeMargin) {
+        leftEdge = viewportWidth - safeMargin - cardWidth;
+      }
+
+      setCardPosition({ top: `${y}px`, left: `${leftEdge}px` });
     };
 
     updatePosition();
