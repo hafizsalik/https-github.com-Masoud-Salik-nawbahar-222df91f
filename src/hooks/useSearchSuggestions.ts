@@ -71,12 +71,13 @@ export function useSearchSuggestions(query: string): SearchSuggestions {
                 const articlesWithAuthors: SearchArticle[] = (articlesData || []).map(
                     (article) => ({
                         ...article,
+                        tags: article.tags ?? [],
                         author: profileMap.get(article.author_id),
                     })
                 );
 
                 setAllArticles(articlesWithAuthors);
-                setAllProfiles(profilesData || []);
+                setAllProfiles((profilesData || []).map(p => ({ ...p, reputation_score: p.reputation_score ?? undefined })));
             } catch (err) {
                 console.error('Error fetching search data:', err);
                 setError('Failed to load search data');

@@ -80,9 +80,9 @@ export function SearchDropdown({
                                         <span className="text-[10px] text-muted-foreground">
                                             {result.item.author?.display_name || 'نویسنده'}
                                         </span>
-                                        {result.item.view_count > 0 && (
+                                        {(result.item.view_count ?? 0) > 0 && (
                                             <span className="text-[10px] text-muted-foreground/60">
-                                                {toPersianNumber(result.item.view_count)} بازدید
+                                                {toPersianNumber(result.item.view_count ?? 0)} بازدید
                                             </span>
                                         )}
                                     </div>

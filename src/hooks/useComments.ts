@@ -137,7 +137,7 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
       .from("comments")
       .delete()
       .eq("id", commentId)
-      .eq("user_id", userId);
+      .eq("user_id", userId ?? "");
 
     if (!error) {
       setComments((prev) => prev.filter((c) => c.id !== commentId && c.parent_id !== commentId));
