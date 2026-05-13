@@ -54,6 +54,7 @@ export function ArticleCardMetrics({
               userReaction={userReaction}
               onReact={onReact}
               isProcessing={isProcessing}
+              count={displayReactionCount}
             />
             {/* User reaction indicator badge */}
             {userReaction && (
