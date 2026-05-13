@@ -77,7 +77,7 @@ export function getNotificationText(
     case "comment":
       return (
         <>
-          {batchCount > 1 ? (
+          {(batchCount ?? 0) > 1 ? (
             <>
               <strong className="font-medium">{batchCount} نظر جدید</strong> دریافت کردید
             </>
