@@ -64,7 +64,7 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
     submitting,
   } = useComments(article.id, { lazy: !showComments });
 
-  const { summary: reactionSummary, toggleReaction, ensureFetched, isProcessing } = useCardReactions(article.id, false);
+  const { summary: reactionSummary, toggleReaction, ensureFetched, isProcessing, fetched } = useCardReactions(article.id, false);
 
   const coverImage = article.cover_image_url || defaultCover;
   const hasBeenRead = useMemo(() => isArticleRead(article.id), [article.id]);
@@ -240,6 +240,7 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
             articleId={article.id}
             commentCount={article.comment_count}
             reactionCount={article.reaction_count}
+            reactionsFetched={fetched}
             isRead={hasBeenRead}
             commentsOpen={showComments}
             onCommentClick={handleCommentClick}

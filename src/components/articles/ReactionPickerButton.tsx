@@ -140,16 +140,15 @@ export function ReactionPickerButton({
           "touch-none select-none",
           "hover:scale-105 active:scale-95",
           "transition-all duration-200",
-          userReaction && "text-foreground",
+          userReaction && "ring-2 shadow-sm font-semibold",
           isProcessing && "opacity-60 cursor-not-allowed"
         )}
         style={
           userReaction
             ? {
-              backgroundColor: REACTION_COLORS[userReaction]?.bg,
+              backgroundColor: REACTION_COLORS[userReaction]?.bg?.replace("0.10", "0.20"),
               color: activeHexColor,
-              borderColor: REACTION_COLORS[userReaction]?.ring,
-              outlineColor: REACTION_COLORS[userReaction]?.ring,
+              boxShadow: `0 0 0 2px ${REACTION_COLORS[userReaction]?.ring}, 0 2px 8px ${REACTION_COLORS[userReaction]?.ring}`,
             }
             : { color: "hsl(var(--muted-foreground))" }
         }

@@ -133,6 +133,13 @@ export function useCardReactions(articleId: string, autoFetch = true) {
     setIsProcessing(true);
 
     try {
+      // Make sure we have a real baseline count before applying an optimistic
+      // delta — otherwise toggling on an unfetched card snaps the number to
+      // 0/1 instead of N/N+1, which looks like a decrease.
+      if (!fetched) {
+        await fetchReactions();
+      }
+
       // Capture current state for optimistic update
       const previousReaction = summary.userReaction;
 
