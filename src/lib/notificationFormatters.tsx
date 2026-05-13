@@ -50,7 +50,7 @@ export function getNotificationText(
     case "like":
       return (
         <>
-          {batchCount > 1 ? (
+          {(batchCount ?? 0) > 1 ? (
             <>
               <strong className="font-medium">{batchCount} نفر</strong>
               {reactionLabel
