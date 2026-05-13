@@ -31,7 +31,7 @@ export interface SearchProfile {
 export interface SearchResult<T> {
     item: T;
     score: number;
-    matches?: Fuse.FuseResultMatch[];
+    matches?: readonly any[];
 }
 
 /**
