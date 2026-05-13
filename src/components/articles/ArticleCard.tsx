@@ -240,6 +240,7 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
             articleId={article.id}
             commentCount={article.comment_count}
             reactionCount={article.reaction_count}
+            reactionsFetched={fetched}
             isRead={hasBeenRead}
             commentsOpen={showComments}
             onCommentClick={handleCommentClick}
