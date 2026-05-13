@@ -6,12 +6,12 @@ export interface SearchArticle {
     title: string;
     content: string;
     cover_image_url: string | null;
-    tags: string[];
+    tags: string[] | null;
     created_at: string;
-    save_count: number;
-    view_count: number;
-    comment_count: number;
-    reaction_count: number;
+    save_count: number | null;
+    view_count: number | null;
+    comment_count: number | null;
+    reaction_count: number | null;
     author_id: string;
     author?: {
         display_name: string;
