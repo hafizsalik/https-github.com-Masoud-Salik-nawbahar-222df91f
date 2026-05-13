@@ -49,6 +49,7 @@ export function ArticleReactions({ articleId, summary, commentCount, onReact, on
             userReaction={userReaction}
             onReact={onReact}
             reactorNames={reactorNames}
+            count={totalCount}
           />
 
           {/* Comment */}
