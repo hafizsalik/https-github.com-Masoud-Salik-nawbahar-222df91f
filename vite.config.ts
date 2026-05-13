@@ -218,8 +218,8 @@ export default defineConfig(async ({ mode }) => ({
     "import.meta.env.VITE_APP_VERSION": JSON.stringify(process.env.npm_package_version || "0.0.1"),
   },
   build: {
-    target: 'ES2020',
-    minify: 'terser',
+    target: 'es2020',
+    minify: 'terser' as const,
     sourcemap: false,
     terserOptions: {
       compress: {
