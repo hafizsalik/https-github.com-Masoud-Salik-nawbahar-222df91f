@@ -50,7 +50,11 @@ const Contact = () => {
 
   return (
     <AppLayout>
-      <SEOHead title="ارتباط با ما" description="تماس با تیم نوبهار" ogUrl="/contact" />
+      <SEOHead
+        title="ارتباط با ما"
+        description="با تیم نوبهار از طریق فرم تماس، ایمیل یا واتس‌اپ در ارتباط باشید. پاسخ‌گوی پیشنهادها، گزارش مشکلات و همکاری با نویسندگان هستیم."
+        ogUrl="/contact"
+      />
       <div className="max-w-lg mx-auto px-5 py-6 animate-fade-in">
         <h1 className="text-[16px] font-extrabold text-foreground mb-1">ارتباط با ما</h1>
         <p className="text-[11.5px] text-muted-foreground/60 mb-5">

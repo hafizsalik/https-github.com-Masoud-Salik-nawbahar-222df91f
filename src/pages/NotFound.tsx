@@ -1,10 +1,16 @@
 import { Link } from "react-router-dom";
 import { Home, Search, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SEOHead } from "@/components/SEOHead";
 
 const NotFound = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center animate-fade-in">
+      <SEOHead
+        title="صفحه یافت نشد"
+        description="صفحه‌ای که دنبال آن هستید در نوبهار وجود ندارد یا منتقل شده است. به صفحه اصلی بازگردید یا از بخش کاوش استفاده کنید."
+        noIndex
+      />
       {/* 404 Illustration */}
       <div className="relative mb-8">
         <div className="text-[120px] font-black text-muted/20 leading-none select-none">۴۰۴</div>
