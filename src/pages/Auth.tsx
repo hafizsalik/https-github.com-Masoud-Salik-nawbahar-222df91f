@@ -260,7 +260,7 @@ const Auth = () => {
   if (view === "forgot") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <SEOHead title="بازیابی رمز عبور" description="بازیابی رمز عبور حساب نوبهار" ogUrl="/auth" noIndex />
+        <SEOHead title="بازیابی رمز عبور" description="رمز عبور حساب نوبهار خود را به‌سادگی بازیابی کنید و دوباره به مقالات و فعالیت‌های خود دسترسی داشته باشید." ogUrl="/auth" noIndex />
         <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
         <div className="flex-1 flex items-center justify-center p-5">
           <div className="w-full max-w-sm animate-fade-in">
