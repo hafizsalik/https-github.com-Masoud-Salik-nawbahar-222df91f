@@ -322,7 +322,7 @@ const Auth = () => {
   return (
     <>
       <div className="min-h-screen bg-background flex flex-col">
-      <SEOHead title="ثبت‌نام" description="ایجاد حساب کاربری در نوبهار" ogUrl="/auth" noIndex />
+      <SEOHead title="ثبت‌نام در نوبهار" description="در نوبهار ثبت‌نام کنید و به جامعه نخبگان و نویسندگان فارسی‌زبان افغانستانی برای انتشار و کشف مقالات تخصصی بپیوندید." ogUrl="/auth" noIndex />
       <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
       <div className="flex-1 flex items-center justify-center p-5">
         <div className="w-full max-w-sm animate-fade-in">
