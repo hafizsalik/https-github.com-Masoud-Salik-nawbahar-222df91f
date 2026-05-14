@@ -32,7 +32,7 @@ const ProfileSetup = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEOHead title="تکمیل پروفایل" description="تکمیل پروفایل نوبهار" ogUrl="/profile-setup" noIndex />
+      <SEOHead title="تکمیل پروفایل" description="پروفایل خود در نوبهار را با نام نمایشی، تخصص و عکس کامل کنید تا تجربه‌ای شخصی‌سازی‌شده از مقالات و دنبال‌کردن نویسندگان داشته باشید." ogUrl="/profile-setup" noIndex />
       <div className="h-1 bg-gradient-to-l from-primary via-accent to-primary/40" />
       <div className="flex-1 flex items-center justify-center p-5">
         <div className="w-full max-w-sm animate-fade-in text-center">

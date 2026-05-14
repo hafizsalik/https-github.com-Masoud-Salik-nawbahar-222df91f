@@ -10,8 +10,8 @@ const VIP = () => {
   return (
     <AppLayout>
       <SEOHead
-        title="مقالات"
-        description="فید مقالات نوبهار"
+        title="مقالات ویژه"
+        description="مقالات ویژه و سردبیری نوبهار؛ منتخبی از بهترین نوشته‌های نخبگان افغانستانی در حوزه‌های علمی، فرهنگی و تحلیلی."
         ogUrl="/vip"
       />
       {loading ? (

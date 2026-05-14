@@ -75,7 +75,9 @@ const Profile = () => {
     <AppLayout>
       <SEOHead
         title={profile?.display_name || "پروفایل"}
-        description={profile?.specialty ? `${profile.display_name} - ${profile.specialty}` : `پروفایل ${profile?.display_name || "کاربر"} در نوبهار`}
+        description={profile?.specialty
+          ? `${profile.display_name} - ${profile.specialty} | پروفایل نویسنده در نوبهار، پلتفرم نشر مقالات تخصصی فارسی/دری.`
+          : `پروفایل ${profile?.display_name || "کاربر"} در نوبهار؛ مشاهده مقالات منتشرشده، دنبال‌کنندگان و فعالیت نویسنده.`}
         ogUrl={`/profile/${viewingUserId}`}
         ogImage={profile?.avatar_url || undefined}
         noIndex={isOwnProfile}

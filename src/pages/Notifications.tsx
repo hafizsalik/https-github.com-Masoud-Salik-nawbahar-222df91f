@@ -118,7 +118,7 @@ const Notifications = () => {
   if (!user) {
     return (
       <AppLayout>
-        <SEOHead title="اعلانات" description="اعلانات نوبهار" ogUrl="/notifications" noIndex />
+        <SEOHead title="اعلانات" description="آخرین واکنش‌ها، نظرات، دنبال‌کنندگان جدید و فعالیت‌های مرتبط با حساب شما در نوبهار را اینجا دنبال کنید." ogUrl="/notifications" noIndex />
         <div className="flex flex-col items-center justify-center py-20 px-4 text-center animate-fade-in">
           <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
             <Bell size={22} className="text-muted-foreground/40" aria-hidden="true" />
@@ -137,7 +137,7 @@ const Notifications = () => {
 
   return (
     <AppLayout>
-      <SEOHead title="اعلانات" description="اعلانات نوبهار" ogUrl="/notifications" noIndex />
+      <SEOHead title="اعلانات" description="آخرین واکنش‌ها، نظرات، دنبال‌کنندگان جدید و فعالیت‌های مرتبط با حساب شما در نوبهار را اینجا دنبال کنید." ogUrl="/notifications" noIndex />
       <OfflineFallback>
         <div className="min-h-screen animate-fade-in">
           {/* Header */}
