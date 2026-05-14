@@ -22,7 +22,13 @@ export function SEOHead({
   jsonLd,
   noIndex = false,
 }: SEOHeadProps) {
-  const fullTitle = title === "نوبهار" ? "نوبهار - جامعه نخبگان" : `${title} | نوبهار`;
+  const SUFFIX = " | نوبهار";
+  const MAX_TITLE = 60;
+  const truncatedTitle =
+    title.length + SUFFIX.length > MAX_TITLE
+      ? title.slice(0, MAX_TITLE - SUFFIX.length - 1).trim() + "…"
+      : title;
+  const fullTitle = title === "نوبهار" ? "نوبهار - جامعه نخبگان" : `${truncatedTitle}${SUFFIX}`;
   const canonicalUrl = ogUrl ? `${BASE_URL}${ogUrl}` : undefined;
 
   useEffect(() => {
