@@ -371,11 +371,14 @@ function ReactionCardPickerInline({
             <button
               key={key}
               onPointerMove={() => handleReactionHover(key)}
-              onPointerUp={() => handleReactionSelect(key)}
-              onClick={(e) => {
+              onPointerUp={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleReactionSelect(key);
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
               }}
               className={cn(
                 "flex items-center justify-center",
