@@ -40,6 +40,17 @@ export interface ReactionSummary {
   userReaction: ReactionKey | null;
 }
 
+type ReactionRow = {
+  reaction_type: string;
+  user_id: string;
+  profiles?: { display_name?: string | null } | { display_name?: string | null }[] | null;
+};
+
+type ToggleReactionRpc = (
+  fn: "toggle_reaction",
+  args: { p_article_id: string; p_user_id: string; p_reaction_type: ReactionKey }
+) => Promise<{ error: unknown }>;
+
 const EMPTY_SUMMARY: ReactionSummary = {
   topTypes: [],
   totalCount: 0,
@@ -96,12 +107,13 @@ export function useCardReactions(articleId: string, autoFetch = true) {
         return EMPTY_SUMMARY;
       }
 
+      const reactionRows = reactions as ReactionRow[];
       const typeCounts: Record<string, number> = {};
       const userReactionType = currentUserId
-        ? reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined
+        ? reactionRows.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined
         : null;
 
-      reactions.forEach((r) => {
+      reactionRows.forEach((r) => {
         typeCounts[r.reaction_type] = (typeCounts[r.reaction_type] || 0) + 1;
       });
 
@@ -114,7 +126,10 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       const topReactors = reactions
         .filter(r => r.user_id !== currentUserId)
         .slice(0, 3)
-        .map((r: any) => r.profiles?.display_name || "کاربر");
+        .map((r) => {
+          const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+          return profile?.display_name || "کاربر";
+        });
 
       const nextSummary = {
         topTypes,
@@ -190,7 +205,8 @@ export function useCardReactions(articleId: string, autoFetch = true) {
 
       try {
         // Atomic toggle via RPC
-        const { error } = await supabase.rpc('toggle_reaction' as any, {
+        const toggleReactionRpc = supabase.rpc as unknown as ToggleReactionRpc;
+        const { error } = await toggleReactionRpc('toggle_reaction', {
           p_article_id: articleId,
           p_user_id: uid,
           p_reaction_type: type,
