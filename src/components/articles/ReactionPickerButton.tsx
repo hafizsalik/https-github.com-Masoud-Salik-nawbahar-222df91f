@@ -52,7 +52,7 @@ export function ReactionPickerButton({
       }
       longPressTimer.current = null;
     }, LONG_PRESS_DURATION);
-  }, []);
+  }, [LONG_PRESS_DURATION]);
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -82,7 +82,7 @@ export function ReactionPickerButton({
       }
       // If long press was already detected, card is already open
     },
-    [userReaction, onReact]
+    [TAP_THRESHOLD, userReaction, onReact]
   );
 
   const handlePointerCancel = useCallback(() => {
