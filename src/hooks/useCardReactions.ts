@@ -147,31 +147,32 @@ export function useCardReactions(articleId: string, autoFetch = true) {
 
   const toggleReaction = async (type: ReactionKey) => {
     // Prevent double-submit while processing (atomic guarantee)
-    if (isProcessing) return false;
+    if (processingRef.current) return false;
+    processingRef.current = true;
     setIsProcessing(true);
+
+    const baseline = summaryRef.current;
 
     try {
       // Make sure we have a real baseline count before applying an optimistic
       // delta — otherwise toggling on an unfetched card snaps the number to
       // 0/1 instead of N/N+1, which looks like a decrease.
-      if (!fetched) {
-        await fetchReactions();
-      }
+      const currentSummary = fetched ? summaryRef.current : await fetchReactions();
 
       // Capture current state for optimistic update
-      const previousReaction = summary.userReaction;
+      const previousReaction = currentSummary.userReaction;
 
       // Optimistic update immediately
       if (previousReaction === type) {
-        setSummary(prev => ({
+        updateSummary(prev => ({
           ...prev,
           userReaction: null,
           totalCount: Math.max(0, prev.totalCount - 1)
         }));
       } else if (previousReaction) {
-        setSummary(prev => ({ ...prev, userReaction: type }));
+        updateSummary(prev => ({ ...prev, userReaction: type }));
       } else {
-        setSummary(prev => ({
+        updateSummary(prev => ({
           ...prev,
           userReaction: type,
           totalCount: prev.totalCount + 1
@@ -182,7 +183,7 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       const uid = session?.user?.id;
       if (!uid) {
         logger.warn('Not authenticated for reaction');
-        await fetchReactions();
+        updateSummary(baseline);
         setIsProcessing(false);
         return false;
       }
@@ -208,6 +209,7 @@ export function useCardReactions(articleId: string, autoFetch = true) {
         return false;
       }
     } finally {
+      processingRef.current = false;
       setIsProcessing(false);
     }
   };
