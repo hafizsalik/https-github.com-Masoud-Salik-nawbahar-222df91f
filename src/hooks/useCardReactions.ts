@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 
@@ -57,6 +57,21 @@ export function useCardReactions(articleId: string, autoFetch = true) {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const summaryRef = useRef<ReactionSummary>(EMPTY_SUMMARY);
+  const processingRef = useRef(false);
+
+  useEffect(() => {
+    summaryRef.current = summary;
+  }, [summary]);
+
+  const updateSummary = useCallback((next: ReactionSummary | ((prev: ReactionSummary) => ReactionSummary)) => {
+    const resolved = typeof next === "function"
+      ? (next as (prev: ReactionSummary) => ReactionSummary)(summaryRef.current)
+      : next;
+
+    summaryRef.current = resolved;
+    setSummary(resolved);
+  }, []);
 
   const fetchReactions = useCallback(async () => {
     setLoading(true);
@@ -75,10 +90,10 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       setUserId(currentUserId);
 
       if (!reactions || reactions.length === 0) {
-        setSummary(EMPTY_SUMMARY);
+        updateSummary(EMPTY_SUMMARY);
         setFetched(true);
         setLoading(false);
-        return;
+        return EMPTY_SUMMARY;
       }
 
       const typeCounts: Record<string, number> = {};
@@ -101,21 +116,24 @@ export function useCardReactions(articleId: string, autoFetch = true) {
         .slice(0, 3)
         .map((r: any) => r.profiles?.display_name || "کاربر");
 
-      setSummary({
+      const nextSummary = {
         topTypes,
         totalCount: reactions.length,
         reactorNames: topReactors,
         userReaction: userReactionType || null
-      });
+      };
+      updateSummary(nextSummary);
       setFetched(true);
       setLoading(false);
+      return nextSummary;
     } catch (error) {
       logger.error('Failed to fetch reactions:', error);
-      setSummary(EMPTY_SUMMARY);
+      updateSummary(EMPTY_SUMMARY);
       setFetched(true);
       setLoading(false);
+      return EMPTY_SUMMARY;
     }
-  }, [articleId]);
+  }, [articleId, updateSummary]);
 
   useEffect(() => {
     if (autoFetch && !fetched && !loading) {
