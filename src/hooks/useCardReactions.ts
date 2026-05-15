@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 
@@ -40,6 +40,17 @@ export interface ReactionSummary {
   userReaction: ReactionKey | null;
 }
 
+type ReactionRow = {
+  reaction_type: string;
+  user_id: string;
+  profiles?: { display_name?: string | null } | { display_name?: string | null }[] | null;
+};
+
+type ToggleReactionRpc = (
+  fn: "toggle_reaction",
+  args: { p_article_id: string; p_user_id: string; p_reaction_type: ReactionKey }
+) => Promise<{ error: unknown }>;
+
 const EMPTY_SUMMARY: ReactionSummary = {
   topTypes: [],
   totalCount: 0,
@@ -57,6 +68,21 @@ export function useCardReactions(articleId: string, autoFetch = true) {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const summaryRef = useRef<ReactionSummary>(EMPTY_SUMMARY);
+  const processingRef = useRef(false);
+
+  useEffect(() => {
+    summaryRef.current = summary;
+  }, [summary]);
+
+  const updateSummary = useCallback((next: ReactionSummary | ((prev: ReactionSummary) => ReactionSummary)) => {
+    const resolved = typeof next === "function"
+      ? (next as (prev: ReactionSummary) => ReactionSummary)(summaryRef.current)
+      : next;
+
+    summaryRef.current = resolved;
+    setSummary(resolved);
+  }, []);
 
   const fetchReactions = useCallback(async () => {
     setLoading(true);
@@ -75,18 +101,19 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       setUserId(currentUserId);
 
       if (!reactions || reactions.length === 0) {
-        setSummary(EMPTY_SUMMARY);
+        updateSummary(EMPTY_SUMMARY);
         setFetched(true);
         setLoading(false);
-        return;
+        return EMPTY_SUMMARY;
       }
 
+      const reactionRows = reactions as ReactionRow[];
       const typeCounts: Record<string, number> = {};
       const userReactionType = currentUserId
-        ? reactions.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined
+        ? reactionRows.find((r) => r.user_id === currentUserId)?.reaction_type as ReactionKey | undefined
         : null;
 
-      reactions.forEach((r) => {
+      reactionRows.forEach((r) => {
         typeCounts[r.reaction_type] = (typeCounts[r.reaction_type] || 0) + 1;
       });
 
@@ -99,23 +126,29 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       const topReactors = reactions
         .filter(r => r.user_id !== currentUserId)
         .slice(0, 3)
-        .map((r: any) => r.profiles?.display_name || "کاربر");
+        .map((r) => {
+          const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+          return profile?.display_name || "کاربر";
+        });
 
-      setSummary({
+      const nextSummary = {
         topTypes,
         totalCount: reactions.length,
         reactorNames: topReactors,
         userReaction: userReactionType || null
-      });
+      };
+      updateSummary(nextSummary);
       setFetched(true);
       setLoading(false);
+      return nextSummary;
     } catch (error) {
       logger.error('Failed to fetch reactions:', error);
-      setSummary(EMPTY_SUMMARY);
+      updateSummary(EMPTY_SUMMARY);
       setFetched(true);
       setLoading(false);
+      return EMPTY_SUMMARY;
     }
-  }, [articleId]);
+  }, [articleId, updateSummary]);
 
   useEffect(() => {
     if (autoFetch && !fetched && !loading) {
@@ -129,31 +162,32 @@ export function useCardReactions(articleId: string, autoFetch = true) {
 
   const toggleReaction = async (type: ReactionKey) => {
     // Prevent double-submit while processing (atomic guarantee)
-    if (isProcessing) return false;
+    if (processingRef.current) return false;
+    processingRef.current = true;
     setIsProcessing(true);
+
+    const baseline = summaryRef.current;
 
     try {
       // Make sure we have a real baseline count before applying an optimistic
       // delta — otherwise toggling on an unfetched card snaps the number to
       // 0/1 instead of N/N+1, which looks like a decrease.
-      if (!fetched) {
-        await fetchReactions();
-      }
+      const currentSummary = fetched ? summaryRef.current : await fetchReactions();
 
       // Capture current state for optimistic update
-      const previousReaction = summary.userReaction;
+      const previousReaction = currentSummary.userReaction;
 
       // Optimistic update immediately
       if (previousReaction === type) {
-        setSummary(prev => ({
+        updateSummary(prev => ({
           ...prev,
           userReaction: null,
           totalCount: Math.max(0, prev.totalCount - 1)
         }));
       } else if (previousReaction) {
-        setSummary(prev => ({ ...prev, userReaction: type }));
+        updateSummary(prev => ({ ...prev, userReaction: type }));
       } else {
-        setSummary(prev => ({
+        updateSummary(prev => ({
           ...prev,
           userReaction: type,
           totalCount: prev.totalCount + 1
@@ -164,14 +198,15 @@ export function useCardReactions(articleId: string, autoFetch = true) {
       const uid = session?.user?.id;
       if (!uid) {
         logger.warn('Not authenticated for reaction');
-        await fetchReactions();
+        updateSummary(baseline);
         setIsProcessing(false);
         return false;
       }
 
       try {
         // Atomic toggle via RPC
-        const { error } = await supabase.rpc('toggle_reaction' as any, {
+        const toggleReactionRpc = supabase.rpc as unknown as ToggleReactionRpc;
+        const { error } = await toggleReactionRpc('toggle_reaction', {
           p_article_id: articleId,
           p_user_id: uid,
           p_reaction_type: type,
@@ -190,6 +225,7 @@ export function useCardReactions(articleId: string, autoFetch = true) {
         return false;
       }
     } finally {
+      processingRef.current = false;
       setIsProcessing(false);
     }
   };

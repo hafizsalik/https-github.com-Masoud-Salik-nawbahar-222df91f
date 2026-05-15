@@ -52,7 +52,7 @@ export function ReactionPickerButton({
       }
       longPressTimer.current = null;
     }, LONG_PRESS_DURATION);
-  }, []);
+  }, [LONG_PRESS_DURATION]);
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -82,7 +82,7 @@ export function ReactionPickerButton({
       }
       // If long press was already detected, card is already open
     },
-    [userReaction, onReact]
+    [TAP_THRESHOLD, userReaction, onReact]
   );
 
   const handlePointerCancel = useCallback(() => {
@@ -260,7 +260,7 @@ function ReactionCardPickerInline({
       // Horizontal: align the RIGHT edge of the card with the right edge of
       // the trigger button so the rightmost reaction ("like") sits directly
       // above the like trigger / its count. Clamp inside the viewport.
-      let rightEdge = buttonRect ? buttonRect.right : viewportWidth - safeMargin;
+      const rightEdge = buttonRect ? buttonRect.right : viewportWidth - safeMargin;
       let leftEdge = rightEdge - cardWidth;
       if (leftEdge < safeMargin) leftEdge = safeMargin;
       if (leftEdge + cardWidth > viewportWidth - safeMargin) {
@@ -371,11 +371,14 @@ function ReactionCardPickerInline({
             <button
               key={key}
               onPointerMove={() => handleReactionHover(key)}
-              onPointerUp={() => handleReactionSelect(key)}
-              onClick={(e) => {
+              onPointerUp={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleReactionSelect(key);
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
               }}
               className={cn(
                 "flex items-center justify-center",
