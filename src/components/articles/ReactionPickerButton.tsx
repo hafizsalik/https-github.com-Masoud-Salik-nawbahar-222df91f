@@ -260,7 +260,7 @@ function ReactionCardPickerInline({
       // Horizontal: align the RIGHT edge of the card with the right edge of
       // the trigger button so the rightmost reaction ("like") sits directly
       // above the like trigger / its count. Clamp inside the viewport.
-      let rightEdge = buttonRect ? buttonRect.right : viewportWidth - safeMargin;
+      const rightEdge = buttonRect ? buttonRect.right : viewportWidth - safeMargin;
       let leftEdge = rightEdge - cardWidth;
       if (leftEdge < safeMargin) leftEdge = safeMargin;
       if (leftEdge + cardWidth > viewportWidth - safeMargin) {
