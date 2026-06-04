@@ -1,10 +1,12 @@
 import { useEffect, useRef, useMemo } from "react";
+import { Link } from "react-router-dom";
 import type { FeedArticle } from "@/hooks/useArticles";
 import { ArticleCard } from "./ArticleCard";
 import { CardErrorBoundary } from "@/components/CardErrorBoundary";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDismissedArticles } from "@/hooks/useDismissedArticles";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ArticleFeedProps {
   articles: FeedArticle[];
@@ -17,6 +19,7 @@ interface ArticleFeedProps {
 export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadMore }: ArticleFeedProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const { dismissedIds } = useDismissedArticles();
+  const { user } = useAuth();
 
   const visibleArticles = useMemo(
     () => articles.filter((a) => !dismissedIds.has(a.id)),
@@ -54,12 +57,19 @@ export function ArticleFeed({ articles, onRefresh, hasMore, loadingMore, onLoadM
         <p className="text-sm text-muted-foreground max-w-xs mb-6 leading-relaxed">
           اولین نفری باشید که دیدگاه خود را به اشتراک می‌گذارد.
         </p>
-        {onRefresh && (
-          <Button variant="outline" onClick={onRefresh} className="gap-2 rounded-lg text-sm">
-            <RefreshCw size={14} />
-            بارگذاری مجدد
-          </Button>
-        )}
+        <div className="flex flex-col items-center gap-2">
+          {onRefresh && (
+            <Button variant="outline" onClick={onRefresh} className="gap-2 rounded-lg text-sm">
+              <RefreshCw size={14} />
+              بارگذاری مجدد
+            </Button>
+          )}
+          {!user && (
+            <Link to="/auth" className="text-xs text-primary hover:underline mt-2">
+              ورود برای تجربه شخصی
+            </Link>
+          )}
+        </div>
       </div>
     );
   }
