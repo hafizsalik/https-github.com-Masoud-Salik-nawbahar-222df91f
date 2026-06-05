@@ -71,8 +71,8 @@ serve(async (req) => {
     }
     const article = articles[0];
 
-    // Check ownership: only the author can trigger AI scoring on their own article
-    if (article.author_id !== userId) {
+    // Check ownership: only the author (or service-role callers like the scheduler) can trigger AI scoring
+    if (!isServiceRole && article.author_id !== userId) {
       return new Response(JSON.stringify({ error: "Forbidden: you can only score your own articles" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
