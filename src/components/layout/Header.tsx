@@ -200,14 +200,19 @@ export function Header() {
           >
             {/* Menu header with logo and user info */}
             <div className="px-5 pt-6 pb-5 border-b border-border/20">
-              {/* Logo */}
-              <div className="flex items-center gap-3 mb-4">
+              {/* Logo → About */}
+              <Link
+                to="/about"
+                onClick={() => smoothCloseMenu()}
+                className="flex items-center gap-3 mb-4 rounded-lg -mx-1 px-1 py-1 hover:bg-muted/40 transition-colors"
+                aria-label="درباره نوبهار"
+              >
                 <img src={logoImg} alt="نوبهار" className="w-10 h-10 rounded-xl" />
-                <div>
+                <div className="text-right">
                   <h2 className="text-[16px] font-bold text-foreground">نوبهار</h2>
                   <p className="text-[11px] text-muted-foreground/60">جامعه نخبگان</p>
                 </div>
-              </div>
+              </Link>
 
               {/* User info */}
               {user && (
