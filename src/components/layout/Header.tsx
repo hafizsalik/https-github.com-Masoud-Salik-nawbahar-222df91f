@@ -41,16 +41,7 @@ export function Header() {
   // Search suggestions
   const { articles: articleSuggestions, profiles: profileSuggestions } = useSearchSuggestions(searchValue);
 
-  const smoothCloseMenu = useCallback(() => {
-    if (!menuOpen) return;
-    setMenuClosing(true);
-    setTimeout(() => {
-      setMenuOpen(false);
-      setMenuClosing(false);
-    }, 200);
-  }, [menuOpen]);
-
-  const smoothCloseMenuLocal = smoothCloseMenu;
+  // Menu state comes from MenuContext (smoothCloseMenu is `close` from useMenu).
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -113,7 +104,7 @@ export function Header() {
     setIsLoggingOut(true);
     try {
       await signOut();
-      setMenuOpen(false);
+      smoothCloseMenu();
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -135,10 +126,11 @@ export function Header() {
         <div className="flex items-center justify-between px-4 h-[52px] max-w-lg mx-auto">
           {/* Left: Hamburger menu */}
           <button
-            onClick={() => {
-              if (menuOpen) smoothCloseMenu();
-              else { setMenuOpen(true); setMenuClosing(false); }
-            }}
+            onClick={toggleMenu}
+            className="flex items-center justify-center w-11 h-11 -mr-1 transition-colors"
+            aria-label="منو"
+            aria-expanded={menuOpen}
+          ></button>
             className="flex items-center justify-center w-10 h-10 transition-colors"
             aria-label="منو"
           >
