@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
+import { useSwipeMenu } from "@/hooks/useSwipeMenu";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -10,10 +11,13 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, hideHeader, hideNav, className }: AppLayoutProps) {
+  // Enable swipe-to-toggle hamburger menu globally (except writing pages).
+  useSwipeMenu();
+
   return (
     <div className="min-h-screen bg-background flex flex-col transition-colors duration-200 ease-out">
       {!hideHeader && <Header />}
-      <main 
+      <main
         className={`${!hideNav ? 'pb-24' : ''} w-full mx-auto max-w-[640px] flex-1 ${className || ''} animate-fade-in`}
         role="main"
       >
