@@ -1,76 +1,67 @@
+
 ## Goal
 
-1. Let signed-out visitors see published articles on the home feed.
-2. Run a deep mobile-first audit of the platform and fix the highest-impact issues.
+Harden the platform for mobile users: fix bugs, tighten UX/UI, then add two small navigation conveniences (swipe-to-toggle hamburger, logo → About).
 
 ---
 
-## Part 1 — Show articles to guests (root cause found)
+## Part 1 — Bugs & stability (P0)
 
-The home feed calls Supabase REST as `anon`. The `articles` SELECT policy is:
+1. **Reaction picker stale reference** — `ReferenceError: handleReactionHover is not defined` still surfaces in `ReactionPickerButton.tsx`. Trace the dead handler, remove or inline it, and add a `CardErrorBoundary` fallback around the reactions row so a single card never blanks the feed.
+2. **Guest-safe realtime** — `BottomNav` + `useNotifications` open a Supabase realtime channel on `notifications` even when `user` is null, throwing 401s. Guard the subscription on `user?.id`.
+3. **Reaction count drift** — after the recent optimistic fix, verify counts on: double‑tap same reaction, switch reaction, offline → online, and after pull‑to‑refresh. Reconcile from server response in `useCardReactions`.
+4. **Long‑press preview** — re-verify the global `contextmenu` suppression doesn't break copy inside article body (`.prose`, `article`).
 
-```
-status = 'published' OR author_id = auth.uid() OR has_role(auth.uid(), 'admin')
-```
+## Part 2 — Mobile UX/UI sweep (P1)
 
-Calling that policy as `anon` errors with `permission denied for function has_role` — so PostgREST returns 0 rows and the UI shows "هنوز مقاله‌ای نیست". Same risk on `useSmartFeed`, `usePublishedArticles`, `useExploreArticles`, `useTrendingArticles`, profile reads, reactions, etc.
+Scope: 360–414px, RTL, iOS + Android Chrome.
 
-### Fix (migration)
+- **Bottom nav**: respect `env(safe-area-inset-bottom)` on notched iOS PWA; raise active-state contrast to WCAG AA; ensure 44×44 hit targets.
+- **Header**: enlarge search input + avatar hit targets to 44px; keep current 52px bar.
+- **Article card**: add `loading="lazy"` + `decoding="async"` to covers, `React.memo` the card, clamp title to 2 lines, tag overflow → `…`, normalize action‑row spacing (≥ 8px between icons).
+- **Reaction picker**: clamp to viewport so it never clips on 320–360px; flip side near right edge.
+- **Comment sheet**: lift input above the on‑screen keyboard (`visualViewport` listener), lock body scroll while open, dismiss on outside tap (consistent with `interaction-dismissal-logic` memory).
+- **WritingMotivationBanner**: hide while header is collapsing to avoid overlap.
+- **Number formatting**: run every visible count through `toPersianNumber` (audit `ArticleCardMetrics`, follower badges, notifications dot).
+- **End‑of‑feed text**: use `text-muted-foreground` so it stays visible in light theme.
 
-- `GRANT EXECUTE ON FUNCTION public.has_role(uuid, app_role) TO anon, authenticated;`
-- Rewrite policy to short-circuit so anonymous reads never need `has_role`:
-  `status = 'published' OR (auth.uid() IS NOT NULL AND (author_id = auth.uid() OR public.has_role(auth.uid(), 'admin')))`
-- Audit and `GRANT SELECT` to `anon` on the public-read tables the feed touches: `articles`, `profiles`, `article_reactions` (counts/top reactors), `comments` (counts), `follows` (counts), `article_tags` if used. Keep auth-only tables (`bookmarks`, `notifications`, `user_roles`, `dismissed_articles`, drafts) restricted.
-- Re-test the same anon REST call after the migration.
+## Part 3 — Performance (P1)
 
-### Frontend tweaks
+- Dedupe `useSmartFeed` vs `usePublishedArticles` on `/` (shared query key).
+- Compress cover uploads (already wired) — verify it runs on the editor's drop handler.
+- Run `browser--performance_profile` on `/` and `/article/:id`; flag any > 50ms re‑renders.
 
-- `useSmartFeed` / `usePublishedArticles`: no auth gate needed once RLS is fixed — verify they don't accidentally require `user`.
-- Guest-friendly empty state: keep current copy only when truly zero rows; for guests, show a soft "ورود برای تجربه شخصی" CTA below the feed instead of blocking it.
-- Guarded actions (react, bookmark, follow, comment, write) keep their existing redirect-to-auth behavior (already implemented per memory `guest-auth-redirect-logic`).
+## Part 4 — PWA / offline (P2)
 
----
+- Confirm `sw-push.js` bypasses `/~oauth` (memory `pwa-oauth-denylist`).
+- Verify `OfflineFallback` renders when navigator is offline at boot.
 
-## Part 2 — Mobile-focused deep audit
+## Part 5 — Navigation conveniences (last priority)
 
-Scope: viewport ≤ 414px on the live preview, real-device class (low-end Android). I will:
+A. **Swipe to toggle hamburger menu**
+   - Add a global `useSwipeMenu` hook mounted in `AppLayout`.
+   - Listens to `touchstart` / `touchend` on the main scroll container.
+   - In RTL: swipe **left → right** (deltaX > 60, |deltaY| < 40, duration < 400ms) opens the menu; swipe **right → left** closes it.
+   - Disabled when:
+     - route starts with `/write` or `/article/.../edit` (writing page),
+     - target is inside `input, textarea, [contenteditable]`, a `Carousel`, the reaction picker, or any element with `data-no-swipe`,
+     - a modal/sheet is open (check `document.body` lock or `[data-state="open"]` on Radix overlays).
+   - Expose `openMenu` / `closeMenu` from `Header` via a tiny context (or lift menu state into `AppLayout`) so the hook can drive it.
 
-1. **Reproduce & log runtime errors**
-   - Current console shows `ReferenceError: handleReactionHover is not defined`. The symbol exists in `ReactionPickerButton.tsx` (line 283), so this is likely a stale chunk / dead-code path. Re-trace with browser tools, repro on a card, and fix the real call site (probably a leftover handler reference outside the component scope or a closure created before the recent rewrite).
-   - Capture any other runtime errors during: open card → react → scroll feed → open article → comment → follow → bookmark → navigate via bottom nav.
-
-2. **Reaction stability regression check**
-   - Verify the fix from last turn (`useCardReactions` ref-based optimistic update) holds across: double-tap, switch reaction, offline, slow 3G.
-
-3. **Mobile UX / layout sweep** (RTL, 360–414px)
-   - Bottom nav overlap with content / safe-area-inset on iOS PWA.
-   - Header drawer + search input hit-targets ≥ 44px.
-   - Article card: title clamping, cover image aspect, tag overflow, action row tap-targets.
-   - Reaction picker positioning near screen edges and inside scroll containers.
-   - Comment sheet: keyboard push, scroll lock, dismiss on outside tap.
-   - Long-press / swipe gestures not hijacking native scroll.
-
-4. **Performance** (matches memory `mobile-performance-target`)
-   - `browser--performance_profile` on `/` and `/article/:id`.
-   - Confirm image compression path is used for uploads; lazy-load article covers; check for N+1 queries the 2-step fetch should already prevent.
-   - Look for re-render storms in feed (memoization of `ArticleCard`).
-
-5. **Offline / PWA**
-   - Verify offline fallback renders (memory `offline-fallback-ui`) and SW doesn't intercept `/~oauth`.
-   - Confirm install button and update flow on Android Chrome.
-
-6. **Accessibility / RTL**
-   - `dir="rtl"` consistency, focus-visible rings, color contrast on muted text, Persian number formatting in counts.
-
-### Deliverable for Part 2
-
-A prioritized fix list (P0 crash/blockers → P1 UX → P2 polish) with the actual code edits applied for P0/P1 in this same build pass. P2 items will be listed for follow-up.
+B. **Logo → About**
+   - In `Header.tsx` menu panel header, wrap the "نوبهار" title (and ideally the logo) in `<Link to="/about">` that also calls `smoothCloseMenu()`.
+   - If the user means the top‑bar (currently no visible "نوبهار" text in the 52px header — only avatar/search/burger), add a small centered logo+wordmark linking to `/about`, behind a feature check so it doesn't crowd 360px screens. Confirm with user if they want it in the top bar too.
 
 ---
 
-## Technical details
+## Technical notes
 
-- Migration file: single SQL with `GRANT EXECUTE` + policy replacement + `GRANT SELECT` to anon on public-read tables.
-- No edits to `src/integrations/supabase/client.ts` or `types.ts`.
-- Keep all UI changes inside existing components; no new design tokens.
-- Use `code--exec` curl with anon key to verify each newly-public table after the migration.
+- New hook: `src/hooks/useSwipeMenu.ts` (pure DOM, no deps).
+- Lift menu open state from `Header` into a `MenuContext` provider in `AppLayout` so swipes can toggle it.
+- All new strings localized (Persian), all counts via `toPersianNumber`.
+- No DB migration required for this batch.
+- No edits to `src/integrations/supabase/{client,types}.ts`.
+
+## Open question
+
+The current top bar shows the burger, search, and avatar — there's no "نوبهار" wordmark in the header itself, only inside the slide‑in menu. Do you want the wordmark added to the top bar (linking to `/about`), or is wiring the existing menu‑panel "نوبهار" title to `/about` enough?
