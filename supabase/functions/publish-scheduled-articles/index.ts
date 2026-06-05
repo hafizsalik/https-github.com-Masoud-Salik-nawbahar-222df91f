@@ -57,12 +57,34 @@ serve(async (req) => {
     let notificationsSent = 0;
 
     for (const article of articles) {
-      const { error: updateError } = await supabase
-        .from("articles")
-        .update({ status: "published" })
-        .eq("id", article.id);
+      // Run AI moderation/scoring before publishing. ai-score-article will set
+      // status to 'published' (if approved), 'rejected' (if blocked), or keep
+      // 'pending' (if quality threshold not met).
+      let approved = false;
+      try {
+        const scoreRes = await fetch(`${supabaseUrl}/functions/v1/ai-score-article`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${serviceRoleKey}`,
+          },
+          body: JSON.stringify({ articleId: article.id }),
+        });
+        if (scoreRes.ok) {
+          const scoreData = await scoreRes.json();
+          approved = scoreData.approved === true;
+        } else {
+          console.error(`AI scoring failed for ${article.id}: ${scoreRes.status}`);
+        }
+      } catch (e) {
+        console.error(`AI scoring error for ${article.id}:`, e);
+      }
 
-      if (updateError) continue;
+      if (!approved) {
+        // Leave the article in its current status (pending/rejected) — do not publish.
+        continue;
+      }
+
       published++;
       console.log(`Published: ${article.title} (${article.id})`);
 
