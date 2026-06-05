@@ -130,9 +130,6 @@ export function Header() {
             className="flex items-center justify-center w-11 h-11 -mr-1 transition-colors"
             aria-label="منو"
             aria-expanded={menuOpen}
-          ></button>
-            className="flex items-center justify-center w-10 h-10 transition-colors"
-            aria-label="منو"
           >
             <NawbaharIcon src={menuBurgerIcon} size={20} className="opacity-55 dark:invert" />
           </button>
