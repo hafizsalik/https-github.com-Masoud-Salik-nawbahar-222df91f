@@ -14,6 +14,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import Index from "./pages/Index";
 import "@/styles/reactions.css";
+import { MenuProvider } from "@/contexts/MenuContext";
 
 const Explore = lazy(() => import("./pages/Explore"));
 const Bookmarks = lazy(() => import("./pages/Bookmarks"));
@@ -114,27 +115,29 @@ const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Suspense fallback={<PageFallback />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/explore" element={<Explore />} />
-                  <Route path="/bookmarks" element={<Bookmarks />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/profile/:userId" element={<Profile />} />
-                  <Route path="/write" element={<Write />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/editor" element={<ArticleEditor />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/article/:id" element={<Article />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/vip" element={<VIP />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/install" element={<Install />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/profile-setup" element={<ProfileSetup />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
+              <MenuProvider>
+                <Suspense fallback={<PageFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/explore" element={<Explore />} />
+                    <Route path="/bookmarks" element={<Bookmarks />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile/:userId" element={<Profile />} />
+                    <Route path="/write" element={<Write />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/editor" element={<ArticleEditor />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/article/:id" element={<Article />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/vip" element={<VIP />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/install" element={<Install />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/profile-setup" element={<ProfileSetup />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </MenuProvider>
             </BrowserRouter>
           </AnalyticsProvider>
         </TooltipProvider>

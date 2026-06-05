@@ -3,7 +3,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useMenu } from "@/contexts/MenuContext";
 import { LogoutConfirmDialog } from "@/components/EnhancedButtons";
 import { Input } from "@/components/ui/input";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
@@ -28,8 +29,7 @@ export function Header() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuClosing, setMenuClosing] = useState(false);
+  const { isOpen: menuOpen, isClosing: menuClosing, open: openMenu, close: smoothCloseMenu, toggle: toggleMenu } = useMenu();
   const menuRef = useRef<HTMLDivElement>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -41,14 +41,7 @@ export function Header() {
   // Search suggestions
   const { articles: articleSuggestions, profiles: profileSuggestions } = useSearchSuggestions(searchValue);
 
-  const smoothCloseMenu = useCallback(() => {
-    if (!menuOpen) return;
-    setMenuClosing(true);
-    setTimeout(() => {
-      setMenuOpen(false);
-      setMenuClosing(false);
-    }, 200);
-  }, [menuOpen]);
+  // Menu state comes from MenuContext (smoothCloseMenu is `close` from useMenu).
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -111,7 +104,7 @@ export function Header() {
     setIsLoggingOut(true);
     try {
       await signOut();
-      setMenuOpen(false);
+      smoothCloseMenu();
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -133,12 +126,10 @@ export function Header() {
         <div className="flex items-center justify-between px-4 h-[52px] max-w-lg mx-auto">
           {/* Left: Hamburger menu */}
           <button
-            onClick={() => {
-              if (menuOpen) smoothCloseMenu();
-              else { setMenuOpen(true); setMenuClosing(false); }
-            }}
-            className="flex items-center justify-center w-10 h-10 transition-colors"
+            onClick={toggleMenu}
+            className="flex items-center justify-center w-11 h-11 -mr-1 transition-colors"
             aria-label="منو"
+            aria-expanded={menuOpen}
           >
             <NawbaharIcon src={menuBurgerIcon} size={20} className="opacity-55 dark:invert" />
           </button>
@@ -209,14 +200,19 @@ export function Header() {
           >
             {/* Menu header with logo and user info */}
             <div className="px-5 pt-6 pb-5 border-b border-border/20">
-              {/* Logo */}
-              <div className="flex items-center gap-3 mb-4">
+              {/* Logo → About */}
+              <Link
+                to="/about"
+                onClick={() => smoothCloseMenu()}
+                className="flex items-center gap-3 mb-4 rounded-lg -mx-1 px-1 py-1 hover:bg-muted/40 transition-colors"
+                aria-label="درباره نوبهار"
+              >
                 <img src={logoImg} alt="نوبهار" className="w-10 h-10 rounded-xl" />
-                <div>
+                <div className="text-right">
                   <h2 className="text-[16px] font-bold text-foreground">نوبهار</h2>
                   <p className="text-[11px] text-muted-foreground/60">جامعه نخبگان</p>
                 </div>
-              </div>
+              </Link>
 
               {/* User info */}
               {user && (
