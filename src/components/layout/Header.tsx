@@ -3,7 +3,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useMenu } from "@/contexts/MenuContext";
 import { LogoutConfirmDialog } from "@/components/EnhancedButtons";
 import { Input } from "@/components/ui/input";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
@@ -28,8 +29,7 @@ export function Header() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuClosing, setMenuClosing] = useState(false);
+  const { isOpen: menuOpen, isClosing: menuClosing, open: openMenu, close: smoothCloseMenu, toggle: toggleMenu } = useMenu();
   const menuRef = useRef<HTMLDivElement>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -49,6 +49,8 @@ export function Header() {
       setMenuClosing(false);
     }, 200);
   }, [menuOpen]);
+
+  const smoothCloseMenuLocal = smoothCloseMenu;
 
   useEffect(() => {
     if (!menuOpen) return;
