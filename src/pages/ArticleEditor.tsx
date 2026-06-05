@@ -542,6 +542,11 @@ const ArticleEditor = () => {
       }
 
       const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
+      if (new Date(scheduledAt).getTime() <= Date.now()) {
+        toast({ title: "خطا", description: "تاریخ زمان‌بندی باید در آینده باشد", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
 
       if (isEditMode && editId) {
         await supabase.from("articles").update({
