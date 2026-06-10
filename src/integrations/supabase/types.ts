@@ -689,6 +689,14 @@ export type Database = {
         Args: { article_uuid: string }
         Returns: undefined
       }
+      toggle_reaction: {
+        Args: {
+          p_article_id: string
+          p_reaction_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "user" | "verified_writer" | "admin"
