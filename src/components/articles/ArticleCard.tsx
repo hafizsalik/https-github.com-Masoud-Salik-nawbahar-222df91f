@@ -64,7 +64,7 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
     submitting,
   } = useComments(article.id, { lazy: !showComments });
 
-  const { summary: reactionSummary, toggleReaction, ensureFetched, isProcessing, fetched } = useCardReactions(article.id, false);
+  const { summary: reactionSummary, toggleReaction, ensureFetched, isProcessing, fetched } = useCardReactions(article.id, false, article.reaction_count);
 
   const coverImage = article.cover_image_url || defaultCover;
   const hasBeenRead = useMemo(() => isArticleRead(article.id), [article.id]);
@@ -75,10 +75,15 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
     navigate(`/profile/${article.author_id}`);
   };
 
-  const handleReactionClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+  const handleNavigateToArticle = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const qs = searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : "";
+      navigate(`/article/${article.id}${qs}`);
+    },
+    [navigate, article.id, searchQuery]
+  );
 
   const handleCommentClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -108,7 +113,11 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
         </Link>
       )}
 
-      <Link to={`/article/${article.id}${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`} className="block px-4 pt-4 pb-1">
+      {/* Card body — NOT wrapped in a <Link>. Nested <button>s inside an <a>
+          are invalid HTML, break a11y, and trigger the iOS long-press link
+          preview card. Instead, individual surfaces (title, excerpt, cover)
+          navigate programmatically. */}
+      <div className="block px-4 pt-4 pb-1">
         {/* Author row */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0" style={{ direction: "rtl" }}>
@@ -135,27 +144,31 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
             <span className="text-[12px] text-muted-foreground">
               {formatSolarShort(article.created_at)}
             </span>
-            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="flex-shrink-0">
+            <div className="flex-shrink-0">
               <ArticleActionsMenu articleId={article.id} authorId={article.author_id} articleTitle={article.title} onDelete={onDelete} />
             </div>
           </div>
         </div>
 
-        {/* Title — full width */}
+        {/* Title — clickable navigation surface */}
         <h3
+          onClick={handleNavigateToArticle}
           className={cn(
-            "text-[17px] font-bold leading-[1.7] line-clamp-2 mb-1.5 transition-colors",
+            "text-[17px] font-bold leading-[1.7] line-clamp-2 mb-1.5 transition-colors cursor-pointer",
             hasBeenRead ? "text-muted-foreground/60" : "text-foreground"
           )}
         >
           {searchQuery ? highlightTextSegments(article.title, searchQuery) : article.title}
         </h3>
 
-        {/* Content row: excerpt + image */}
+        {/* Content row: excerpt + image — both navigate */}
         <div className="flex gap-3" style={{ direction: "rtl" }}>
           <div className="flex-1 min-w-0">
             {!expanded && (
-              <p className="text-[14px] leading-[1.7] line-clamp-4 text-muted-foreground">
+              <p
+                onClick={handleNavigateToArticle}
+                className="text-[14px] leading-[1.7] line-clamp-4 text-muted-foreground cursor-pointer"
+              >
                 {searchQuery
                   ? highlightTextSegments(getExcerpt(article.content, 180), searchQuery)
                   : getExcerpt(article.content, 180)
@@ -177,8 +190,9 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
             )}
           </div>
           <div
+            onClick={handleNavigateToArticle}
             className={cn(
-              "w-[88px] h-[88px] flex-shrink-0 rounded-lg overflow-hidden relative bg-muted self-start transition-opacity",
+              "w-[88px] h-[88px] flex-shrink-0 rounded-lg overflow-hidden relative bg-muted self-start transition-opacity cursor-pointer",
               hasBeenRead && "opacity-40"
             )}
           >
@@ -196,11 +210,7 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
 
         {/* Inline expanded full content */}
         {expanded && (
-          <div
-            className="mt-4 animate-fade-in"
-            style={{ direction: "rtl" }}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          >
+          <div className="mt-4 animate-fade-in" style={{ direction: "rtl" }}>
             {isHTMLContent ? (
               <div
                 className="article-prose text-[15px] leading-[2.1] text-foreground"
@@ -221,11 +231,7 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
               </button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigate(`/article/${article.id}`);
-                }}
+                onClick={handleNavigateToArticle}
                 className="text-muted-foreground text-[12px] hover:text-foreground"
               >
                 مشاهده صفحه کامل ←
@@ -235,23 +241,21 @@ export const ArticleCard = memo(function ArticleCard({ article, onDelete, search
         )}
 
         {/* Metrics */}
-        <div onClick={handleReactionClick}>
-          <ArticleCardMetrics
-            articleId={article.id}
-            commentCount={article.comment_count}
-            reactionCount={article.reaction_count}
-            reactionsFetched={fetched}
-            isRead={hasBeenRead}
-            commentsOpen={showComments}
-            onCommentClick={handleCommentClick}
-            onResponseClick={handleResponseClick}
-            reactionSummary={reactionSummary}
-            onReact={(type) => { toggleReaction(type); }}
-            onReactionHover={ensureFetched}
-            isProcessing={isProcessing}
-          />
-        </div>
-      </Link>
+        <ArticleCardMetrics
+          articleId={article.id}
+          commentCount={article.comment_count}
+          reactionCount={article.reaction_count}
+          reactionsFetched={fetched}
+          isRead={hasBeenRead}
+          commentsOpen={showComments}
+          onCommentClick={handleCommentClick}
+          onResponseClick={handleResponseClick}
+          reactionSummary={reactionSummary}
+          onReact={(type) => { toggleReaction(type); }}
+          onReactionHover={ensureFetched}
+          isProcessing={isProcessing}
+        />
+      </div>
 
       {showComments && (
         <div className="border-t border-border/20 mx-4">

@@ -1,10 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-import { useAuth } from "@/hooks/useAuth";
 import { NawbaharIcon } from "@/components/NawbaharIcon";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useNotifications } from "@/hooks/useNotifications";
+import { toPersianNumber } from "@/lib/utils";
 
 import houseIcon from "@/assets/icons/house-chimney.svg";
 import categoryIcon from "@/assets/icons/category.svg";
@@ -23,37 +22,10 @@ const tabs = [
 export function BottomNav() {
   const location = useLocation();
   const isVisible = useScrollDirection();
-  const { user } = useAuth();
-  const [unreadCount, setUnreadCount] = useState(0);
+  // Single source of truth for unread count — useNotifications already opens
+  // a guarded realtime subscription. Avoid opening a second channel here.
+  const { unreadCount } = useNotifications();
 
-  // Fetch unread notification count
-  useEffect(() => {
-    if (!user) { setUnreadCount(0); return; }
-
-    const fetchCount = async () => {
-      const { count } = await supabase
-        .from("notifications")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
-      setUnreadCount(count || 0);
-    };
-
-    fetchCount();
-
-    // Realtime subscription for new notifications
-    const channel = supabase
-      .channel("bottom-nav-notif")
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "notifications",
-        filter: `user_id=eq.${user.id}`,
-      }, () => { fetchCount(); })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -103,7 +75,7 @@ export function BottomNav() {
                       {/* Notification badge */}
                       {tab.badge && unreadCount > 0 && (
                         <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center px-1 animate-scale-in">
-                          {unreadCount > 9 ? "۹+" : unreadCount}
+                          {unreadCount > 9 ? "+۹" : toPersianNumber(unreadCount)}
                         </span>
                       )}
                     </div>
