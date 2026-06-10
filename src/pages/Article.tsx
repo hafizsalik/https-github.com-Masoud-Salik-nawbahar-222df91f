@@ -118,8 +118,10 @@ function ReadingProgress() {
 
   if (progress >= 100) return null;
 
+  // Sits flush below the article's sticky header (h-11 = 44px). Width animates
+  // smoothly so it tracks scroll without re-laying the page out.
   return (
-    <div className="fixed top-[44px] left-0 right-0 z-50 h-[2px] bg-transparent">
+    <div className="fixed top-[44px] left-0 right-0 z-50 h-[2px] bg-transparent pointer-events-none">
       <div
         className="h-full bg-primary transition-[width] duration-150 ease-out"
         style={{ width: `${progress}%` }}

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ChevronUp, Send, ThumbsUp, CornerDownRight, Trash2, Flag, MoreVertical, Globe, ImagePlus, X, Loader2 } from "lucide-react";
@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { compressArticleImage } from "@/lib/imageCompression";
 import { playSuccessSound, playSubmitSound, playClickSound, playErrorSound } from "@/lib/sounds";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useVisualViewportInset } from "@/hooks/useVisualViewportInset";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -222,16 +224,46 @@ export function SlideDownComments({
     }
   };
 
+  // Mobile UX: lock body scroll while open + lift input above the on-screen
+  // keyboard + dismiss when the user taps outside the sheet.
+  useBodyScrollLock(isOpen);
+  const keyboardInset = useVisualViewportInset();
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (sheetRef.current && target && !sheetRef.current.contains(target)) {
+        // Ignore clicks on Radix overlays (dropdown menus opened from inside
+        // the sheet) so report/delete menus don't close it on first tap.
+        const el = e.target as HTMLElement;
+        if (el?.closest('[role="menu"], [data-radix-popper-content-wrapper]')) return;
+        onClose();
+      }
+    };
+    // Defer one tick so the opening tap doesn't immediately re-close it.
+    const t = setTimeout(() => document.addEventListener("pointerdown", handler, true), 50);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("pointerdown", handler, true);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="bg-muted/20 animate-slide-up">
+    <div
+      ref={sheetRef}
+      className="bg-muted/20 animate-slide-up"
+      style={keyboardInset > 0 ? { paddingBottom: keyboardInset } : undefined}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50">
         <span className="text-[13px] font-semibold text-foreground">
           نظرات {comments.length > 0 && <span className="text-muted-foreground font-normal">({toPersianNumber(comments.length)})</span>}
         </span>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 transition-colors">
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 transition-colors" aria-label="بستن نظرات">
           <ChevronUp size={18} strokeWidth={1.5} />
         </button>
       </div>
