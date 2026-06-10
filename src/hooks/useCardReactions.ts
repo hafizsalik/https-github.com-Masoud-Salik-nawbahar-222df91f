@@ -62,13 +62,23 @@ const EMPTY_SUMMARY: ReactionSummary = {
  * Card reactions hook — fixed race condition in toggleReaction.
  * Captures userReaction BEFORE optimistic update to ensure correct DB branch.
  */
-export function useCardReactions(articleId: string, autoFetch = true) {
-  const [summary, setSummary] = useState<ReactionSummary>(EMPTY_SUMMARY);
+export function useCardReactions(
+  articleId: string,
+  autoFetch = true,
+  initialCount = 0
+) {
+  const initialSummary: ReactionSummary = {
+    topTypes: [],
+    totalCount: initialCount,
+    reactorNames: [],
+    userReaction: null,
+  };
+  const [summary, setSummary] = useState<ReactionSummary>(initialSummary);
   const [fetched, setFetched] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const summaryRef = useRef<ReactionSummary>(EMPTY_SUMMARY);
+  const summaryRef = useRef<ReactionSummary>(initialSummary);
   const processingRef = useRef(false);
 
   useEffect(() => {

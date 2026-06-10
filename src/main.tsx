@@ -16,7 +16,15 @@ if (typeof window !== "undefined") {
     (e) => {
       const t = e.target as HTMLElement | null;
       if (!t) return;
-      if (t.closest('input, textarea, [contenteditable="true"], .allow-context, .prose, article')) {
+      // Allow native context menu only inside editable surfaces and inside the
+      // full-article reader body (which opts in via .article-prose or the
+      // [data-allow-context] attribute). Feed cards use <article> as their
+      // root but should NOT trigger the iOS link-preview card.
+      if (
+        t.closest(
+          'input, textarea, [contenteditable="true"], .allow-context, .article-prose, [data-allow-context]'
+        )
+      ) {
         return;
       }
       e.preventDefault();

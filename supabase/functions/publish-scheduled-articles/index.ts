@@ -55,35 +55,62 @@ serve(async (req) => {
 
     let published = 0;
     let notificationsSent = 0;
+    let flaggedForReview = 0;
+
+    // Try the AI gate with exponential backoff (500ms, 1.5s, 4.5s). If every
+    // attempt fails, mark the article as `needs_review` and notify the author
+    // so a human can manually approve it instead of leaving it stuck pending.
+    async function scoreWithRetry(articleId: string): Promise<{ ok: boolean; approved: boolean }> {
+      const delays = [500, 1500, 4500];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const scoreRes = await fetch(`${supabaseUrl}/functions/v1/ai-score-article`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${serviceRoleKey}`,
+            },
+            body: JSON.stringify({ articleId }),
+          });
+          if (scoreRes.ok) {
+            const scoreData = await scoreRes.json();
+            return { ok: true, approved: scoreData.approved === true };
+          }
+          console.error(`AI scoring attempt ${attempt + 1} for ${articleId} failed: ${scoreRes.status}`);
+        } catch (e) {
+          console.error(`AI scoring attempt ${attempt + 1} for ${articleId} threw:`, e);
+        }
+        if (attempt < delays.length) {
+          await new Promise((r) => setTimeout(r, delays[attempt]));
+        }
+      }
+      return { ok: false, approved: false };
+    }
 
     for (const article of articles) {
-      // Run AI moderation/scoring before publishing. ai-score-article will set
-      // status to 'published' (if approved), 'rejected' (if blocked), or keep
-      // 'pending' (if quality threshold not met).
-      let approved = false;
-      try {
-        const scoreRes = await fetch(`${supabaseUrl}/functions/v1/ai-score-article`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${serviceRoleKey}`,
-          },
-          body: JSON.stringify({ articleId: article.id }),
-        });
-        if (scoreRes.ok) {
-          const scoreData = await scoreRes.json();
-          approved = scoreData.approved === true;
-        } else {
-          console.error(`AI scoring failed for ${article.id}: ${scoreRes.status}`);
-        }
-      } catch (e) {
-        console.error(`AI scoring error for ${article.id}:`, e);
-      }
+      const result = await scoreWithRetry(article.id);
 
-      if (!approved) {
-        // Leave the article in its current status (pending/rejected) — do not publish.
+      if (!result.ok) {
+        // AI gate is unreachable — flag for manual review and notify the author.
+        await supabase
+          .from("articles")
+          .update({ status: "needs_review" })
+          .eq("id", article.id);
+        await supabase.from("notifications").insert({
+          user_id: article.author_id,
+          actor_id: article.author_id,
+          type: "needs_review",
+          article_id: article.id,
+        });
+        flaggedForReview++;
         continue;
       }
+
+      if (!result.approved) {
+        // AI scored it but it didn't pass — leave as pending/rejected.
+        continue;
+      }
+
 
       published++;
       console.log(`Published: ${article.title} (${article.id})`);
@@ -137,7 +164,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ published, notificationsSent, total: articles.length }), {
+    return new Response(JSON.stringify({ published, notificationsSent, flaggedForReview, total: articles.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
