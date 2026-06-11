@@ -58,6 +58,11 @@ const Explore = () => {
   // Trending articles (only shown when no filters)
   const { data: trendingArticles = [], isLoading: trendingLoading } = useTrendingArticles();
 
+  const queryClient = useQueryClient();
+  const ptr = usePullToRefresh({
+    onRefresh: () => queryClient.invalidateQueries({ queryKey: ["explore"] }),
+  });
+
   const handleTopicClick = (topicId: string) => {
     const newTopic = activeTopic === topicId ? null : topicId;
     setActiveTopic(newTopic);
