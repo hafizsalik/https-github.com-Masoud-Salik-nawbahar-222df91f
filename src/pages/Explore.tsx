@@ -60,7 +60,12 @@ const Explore = () => {
 
   const queryClient = useQueryClient();
   const ptr = usePullToRefresh({
-    onRefresh: () => queryClient.invalidateQueries({ queryKey: ["explore"] }),
+    onRefresh: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["explore-articles"] }),
+        queryClient.invalidateQueries({ queryKey: ["trending-articles"] }),
+      ]);
+    },
   });
 
   const handleTopicClick = (topicId: string) => {
