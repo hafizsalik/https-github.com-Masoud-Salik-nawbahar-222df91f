@@ -7,6 +7,10 @@ import { cn, toPersianNumber } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { SuggestedWriters } from "@/components/profile/SuggestedWriters";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { ArticleFeedSkeleton } from "@/components/articles/ArticleCardSkeleton";
+import { useQueryClient } from "@tanstack/react-query";
 
 const topics = [
   { id: "politics", label: "سیاست", emoji: "🏛️" },
@@ -54,6 +58,16 @@ const Explore = () => {
   // Trending articles (only shown when no filters)
   const { data: trendingArticles = [], isLoading: trendingLoading } = useTrendingArticles();
 
+  const queryClient = useQueryClient();
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["explore-articles"] }),
+        queryClient.invalidateQueries({ queryKey: ["trending-articles"] }),
+      ]);
+    },
+  });
+
   const handleTopicClick = (topicId: string) => {
     const newTopic = activeTopic === topicId ? null : topicId;
     setActiveTopic(newTopic);
@@ -76,6 +90,7 @@ const Explore = () => {
         description="جستجو و کاوش مقالات تخصصی نوبهار. موضوعات سیاست، فرهنگ، علم، جامعه، اقتصاد و سلامت."
         ogUrl="/explore"
       />
+      <PullToRefreshIndicator pull={ptr.pull} refreshing={ptr.refreshing} progress={ptr.progress} />
       <div className="animate-fade-in">
         {/* Topics */}
         <div className="px-5 pt-4 pb-2">
@@ -148,9 +163,7 @@ const Explore = () => {
           <div className="border-t border-border/30">
             <div className="px-5 py-2">
               {filterLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
+                <div className="py-4"><ArticleFeedSkeleton count={3} /></div>
               ) : (
                 <p className="text-[11px] text-muted-foreground/40">
                   {filteredArticles.length > 0 ? `${toPersianNumber(filteredArticles.length)} نتیجه` : "نتیجه‌ای یافت نشد"}
@@ -173,9 +186,7 @@ const Explore = () => {
                 <span className="text-[12px] font-semibold text-muted-foreground/50">پرطرفدارترین‌ها</span>
               </div>
               {trendingLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
+                <div className="py-4 px-5"><ArticleFeedSkeleton count={3} /></div>
               ) : (
                 <div className="divide-y divide-border/30">
                   {trendingArticles.map((article) => (

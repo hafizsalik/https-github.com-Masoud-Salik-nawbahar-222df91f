@@ -17,6 +17,9 @@ import { useState, useEffect, useMemo } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { REACTION_LABELS } from "@/hooks/useCardReactions";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** Batched fetch: latest comment / reaction by actor on article — 2 queries total. */
 function useNotificationExtras(notifications: any[]) {
@@ -101,10 +104,11 @@ const Notifications = () => {
   const {
     notifications, unreadCount, loading,
     markAsRead, markAllAsRead, deleteNotification,
-    settings, updateSettings
+    settings, updateSettings, refetch,
   } = useNotifications();
   const { isSupported, isSubscribed, permission, subscribe, unsubscribe } = usePushNotifications();
   const extras = useNotificationExtras(notifications);
+  const ptr = usePullToRefresh({ onRefresh: async () => { await refetch?.(); } });
 
   const [showSettings, setShowSettings] = useState(false);
 
@@ -138,6 +142,7 @@ const Notifications = () => {
   return (
     <AppLayout>
       <SEOHead title="اعلانات" description="آخرین واکنش‌ها، نظرات، دنبال‌کنندگان جدید و فعالیت‌های مرتبط با حساب شما در نوبهار را اینجا دنبال کنید." ogUrl="/notifications" noIndex />
+      <PullToRefreshIndicator pull={ptr.pull} refreshing={ptr.refreshing} progress={ptr.progress} />
       <OfflineFallback>
         <div className="min-h-screen animate-fade-in">
           {/* Header */}
@@ -264,8 +269,16 @@ const Notifications = () => {
           )}
 
           {loading ? (
-            <div className="flex justify-center py-16" role="status" aria-label="در حال بارگذاری">
-              <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <div className="px-5 py-4 space-y-3" role="status" aria-label="در حال بارگذاری">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 py-2">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
