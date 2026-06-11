@@ -47,12 +47,21 @@ const Bookmarks = () => {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex justify-center py-20">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="px-5 py-4 space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex gap-4 py-2">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-11/12" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+              <Skeleton className="w-14 h-14 rounded" />
+            </div>
+          ))}
         </div>
       </AppLayout>
     );
   }
+
 
   if (bookmarks.length === 0) {
     return (
