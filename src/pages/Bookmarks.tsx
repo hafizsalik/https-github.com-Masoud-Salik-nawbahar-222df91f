@@ -8,11 +8,16 @@ import { useProfile } from "@/hooks/useProfile";
 import { getRelativeTime } from "@/lib/relativeTime";
 import { toPersianNumber } from "@/lib/utils";
 import defaultCover from "@/assets/default-cover.jpg";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Bookmarks = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { bookmarks, loading } = useProfile(user?.id);
+  const { bookmarks, loading, refetch } = useProfile(user?.id);
+  const ptr = usePullToRefresh({ onRefresh: async () => { await refetch?.(); } });
+
 
   if (!user) {
     return (
