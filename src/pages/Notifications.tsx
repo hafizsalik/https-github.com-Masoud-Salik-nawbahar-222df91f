@@ -142,6 +142,7 @@ const Notifications = () => {
   return (
     <AppLayout>
       <SEOHead title="اعلانات" description="آخرین واکنش‌ها، نظرات، دنبال‌کنندگان جدید و فعالیت‌های مرتبط با حساب شما در نوبهار را اینجا دنبال کنید." ogUrl="/notifications" noIndex />
+      <PullToRefreshIndicator pull={ptr.pull} refreshing={ptr.refreshing} progress={ptr.progress} />
       <OfflineFallback>
         <div className="min-h-screen animate-fade-in">
           {/* Header */}
