@@ -66,6 +66,22 @@ export function ReportModal({
     setIsSubmitting(true);
 
     try {
+      const { checkRateLimit, RATE_LIMITS } = await import('@/lib/rateLimit');
+      const allowed = await checkRateLimit(
+        RATE_LIMITS.REPORT.action,
+        RATE_LIMITS.REPORT.max,
+        RATE_LIMITS.REPORT.window
+      );
+      if (!allowed) {
+        toast({
+          title: 'تعداد گزارش‌های شما زیاد است',
+          description: 'لطفاً کمی صبر کنید و دوباره تلاش کنید.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('content_reports' as any)
         .insert({
