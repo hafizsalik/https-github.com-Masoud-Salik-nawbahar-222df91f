@@ -87,6 +87,7 @@ const Bookmarks = () => {
         ogUrl="/bookmarks"
         noIndex
       />
+      <PullToRefreshIndicator pull={ptr.pull} refreshing={ptr.refreshing} progress={ptr.progress} />
       <div className="animate-fade-in">
         {/* Header */}
         <div className="sticky top-11 z-30 bg-background border-b border-border px-5 py-3 flex items-center justify-between">
