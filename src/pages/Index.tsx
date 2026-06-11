@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ArticleFeed } from "@/components/articles/ArticleFeed";
+import { ArticleFeedSkeleton } from "@/components/articles/ArticleCardSkeleton";
 import { ContinueReading } from "@/components/articles/ContinueReading";
-import { LoadingScreen } from "@/components/LoadingScreen";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { SEOHead } from "@/components/SEOHead";
 import { WritingMotivationBanner } from "@/components/WritingMotivationBanner";
 import { useSmartFeed } from "@/hooks/useSmartFeed";
 import { useAuth } from "@/hooks/useAuth";
 import { useWritingMotivation } from "@/hooks/useWritingMotivation";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { storage } from "@/lib/storage";
+
 
 const Index = () => {
   const { articles, loading, loadingMore, hasMore, refetch, loadMore } = useSmartFeed();
