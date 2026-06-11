@@ -105,6 +105,22 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
 
     setSubmitting(true);
 
+    const { checkRateLimit, RATE_LIMITS } = await import("@/lib/rateLimit");
+    const allowed = await checkRateLimit(
+      RATE_LIMITS.COMMENT.action,
+      RATE_LIMITS.COMMENT.max,
+      RATE_LIMITS.COMMENT.window
+    );
+    if (!allowed) {
+      toast({
+        title: "کمی آهسته‌تر",
+        description: "تعداد نظرات شما در دقایق اخیر زیاد است. چند دقیقه دیگر تلاش کنید.",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+      return false;
+    }
+
     const insertData: any = {
       article_id: articleId,
       user_id: userId,

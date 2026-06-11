@@ -517,6 +517,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action: string
+          count: number
+          created_at: string
+          id: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          action: string
+          count?: number
+          created_at?: string
+          id?: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          action?: string
+          count?: number
+          created_at?: string
+          id?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           article_id: string
@@ -670,6 +697,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: { p_action: string; p_max: number; p_window_seconds: number }
+        Returns: boolean
+      }
       get_follower_count: { Args: { target_user_id: string }; Returns: number }
       get_follower_ids: { Args: { target_user_id: string }; Returns: string[] }
       get_following_count: { Args: { target_user_id: string }; Returns: number }
