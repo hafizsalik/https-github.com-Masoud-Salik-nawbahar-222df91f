@@ -17,6 +17,9 @@ import { useState, useEffect, useMemo } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { REACTION_LABELS } from "@/hooks/useCardReactions";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** Batched fetch: latest comment / reaction by actor on article — 2 queries total. */
 function useNotificationExtras(notifications: any[]) {
