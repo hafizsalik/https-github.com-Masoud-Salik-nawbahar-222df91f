@@ -55,8 +55,9 @@ const Index = () => {
           },
         }}
       />
+      <PullToRefreshIndicator pull={ptr.pull} refreshing={ptr.refreshing} progress={ptr.progress} />
       {loading ? (
-        <LoadingScreen />
+        <ArticleFeedSkeleton count={4} />
       ) : (
         <>
           {showMotivationBanner && (
@@ -82,6 +83,7 @@ const Index = () => {
           </div>
         </>
       )}
+
     </AppLayout>
   );
 };
