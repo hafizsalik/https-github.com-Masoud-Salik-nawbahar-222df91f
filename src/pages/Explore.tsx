@@ -163,9 +163,7 @@ const Explore = () => {
           <div className="border-t border-border/30">
             <div className="px-5 py-2">
               {filterLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
+                <div className="py-4"><ArticleFeedSkeleton count={3} /></div>
               ) : (
                 <p className="text-[11px] text-muted-foreground/40">
                   {filteredArticles.length > 0 ? `${toPersianNumber(filteredArticles.length)} نتیجه` : "نتیجه‌ای یافت نشد"}
