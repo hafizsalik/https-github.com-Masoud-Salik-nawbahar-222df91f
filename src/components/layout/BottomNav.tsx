@@ -82,7 +82,7 @@ export function BottomNav() {
                     <span
                       className={cn(
                         "text-[10px] leading-none transition-colors",
-                        active ? "text-primary font-semibold" : "text-muted-foreground/40"
+                        active ? "text-primary font-semibold" : "text-muted-foreground/70"
                       )}
                     >
                       {tab.label}
