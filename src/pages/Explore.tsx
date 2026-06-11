@@ -186,9 +186,7 @@ const Explore = () => {
                 <span className="text-[12px] font-semibold text-muted-foreground/50">پرطرفدارترین‌ها</span>
               </div>
               {trendingLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
+                <div className="py-4 px-5"><ArticleFeedSkeleton count={3} /></div>
               ) : (
                 <div className="divide-y divide-border/30">
                   {trendingArticles.map((article) => (
