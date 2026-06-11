@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ArticleFeed } from "@/components/articles/ArticleFeed";
+import { ArticleFeedSkeleton } from "@/components/articles/ArticleCardSkeleton";
 import { ContinueReading } from "@/components/articles/ContinueReading";
-import { LoadingScreen } from "@/components/LoadingScreen";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { SEOHead } from "@/components/SEOHead";
 import { WritingMotivationBanner } from "@/components/WritingMotivationBanner";
 import { useSmartFeed } from "@/hooks/useSmartFeed";
 import { useAuth } from "@/hooks/useAuth";
 import { useWritingMotivation } from "@/hooks/useWritingMotivation";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { storage } from "@/lib/storage";
+
 
 const Index = () => {
   const { articles, loading, loadingMore, hasMore, refetch, loadMore } = useSmartFeed();
+  const ptr = usePullToRefresh({ onRefresh: refetch });
   const { user } = useAuth();
   const motivationData = useWritingMotivation();
   const [bannerVisible, setBannerVisible] = useState(() => {
@@ -51,8 +55,9 @@ const Index = () => {
           },
         }}
       />
+      <PullToRefreshIndicator pull={ptr.pull} refreshing={ptr.refreshing} progress={ptr.progress} />
       {loading ? (
-        <LoadingScreen />
+        <ArticleFeedSkeleton count={4} />
       ) : (
         <>
           {showMotivationBanner && (
@@ -78,6 +83,7 @@ const Index = () => {
           </div>
         </>
       )}
+
     </AppLayout>
   );
 };
