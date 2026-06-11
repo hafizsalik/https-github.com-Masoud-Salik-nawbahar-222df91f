@@ -104,10 +104,11 @@ const Notifications = () => {
   const {
     notifications, unreadCount, loading,
     markAsRead, markAllAsRead, deleteNotification,
-    settings, updateSettings
+    settings, updateSettings, refetch,
   } = useNotifications();
   const { isSupported, isSubscribed, permission, subscribe, unsubscribe } = usePushNotifications();
   const extras = useNotificationExtras(notifications);
+  const ptr = usePullToRefresh({ onRefresh: async () => { await refetch?.(); } });
 
   const [showSettings, setShowSettings] = useState(false);
 
