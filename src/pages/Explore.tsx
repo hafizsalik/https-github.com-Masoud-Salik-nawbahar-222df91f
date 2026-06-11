@@ -90,6 +90,7 @@ const Explore = () => {
         description="جستجو و کاوش مقالات تخصصی نوبهار. موضوعات سیاست، فرهنگ، علم، جامعه، اقتصاد و سلامت."
         ogUrl="/explore"
       />
+      <PullToRefreshIndicator pull={ptr.pull} refreshing={ptr.refreshing} progress={ptr.progress} />
       <div className="animate-fade-in">
         {/* Topics */}
         <div className="px-5 pt-4 pb-2">
