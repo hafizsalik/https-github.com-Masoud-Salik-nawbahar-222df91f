@@ -15,6 +15,7 @@ import { storage } from "@/lib/storage";
 
 const Index = () => {
   const { articles, loading, loadingMore, hasMore, refetch, loadMore } = useSmartFeed();
+  const ptr = usePullToRefresh({ onRefresh: refetch });
   const { user } = useAuth();
   const motivationData = useWritingMotivation();
   const [bannerVisible, setBannerVisible] = useState(() => {
