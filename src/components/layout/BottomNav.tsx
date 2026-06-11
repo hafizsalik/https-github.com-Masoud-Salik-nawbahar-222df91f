@@ -68,7 +68,7 @@ export function BottomNav() {
                         size={tab.size}
                         className={cn(
                           "transition-all duration-150 dark:invert",
-                          active ? "opacity-100" : "opacity-30 group-active:scale-90"
+                          active ? "opacity-100" : "opacity-60 group-active:scale-90"
                         )}
                         alt={tab.label}
                       />
