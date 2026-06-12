@@ -135,8 +135,14 @@ export function Header() {
             <NawbaharIcon src={menuBurgerIcon} size={20} className="opacity-55 dark:invert" />
           </button>
 
-          {/* Center: Search bar */}
-          <div className="flex-1 mx-3 max-w-[240px] relative" ref={searchRef}>
+          {/* Center: Search bar — expands to fill row on focus */}
+          <div
+            className={cn(
+              "flex-1 mx-3 relative transition-[max-width] duration-200",
+              searchFocused ? "max-w-none" : "max-w-[240px]"
+            )}
+            ref={searchRef}
+          >
             <form onSubmit={handleSearchSubmit} className="w-full">
               <div className="relative">
                 <NawbaharIcon src={searchIcon} size={14} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-30 dark:invert" />
@@ -146,7 +152,11 @@ export function Header() {
                     setSearchValue(e.target.value);
                     setShowSearchDropdown(true);
                   }}
-                  onFocus={() => searchValue && setShowSearchDropdown(true)}
+                  onFocus={() => {
+                    setSearchFocused(true);
+                    if (searchValue) setShowSearchDropdown(true);
+                  }}
+                  onBlur={() => setSearchFocused(false)}
                   placeholder="دنبال چی می‌گردی؟"
                   className="pr-8 pl-3 bg-muted/40 border-0 rounded-full h-[36px] text-[13px] focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/40"
                   aria-label="جستجو"
