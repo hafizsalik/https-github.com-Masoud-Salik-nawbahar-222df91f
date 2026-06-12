@@ -19,6 +19,7 @@ import { ArticleReactions } from "@/components/articles/ArticleReactions";
 import { SuggestedWriters } from "@/components/profile/SuggestedWriters";
 import { ResponseArticles } from "@/components/articles/ResponseArticles";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
+import { EditorialScoreChart } from "@/components/articles/EditorialScoreChart";
 import { Button } from "@/components/ui/button";
 import { FollowButton } from "@/components/FollowButton";
 import { useToast } from "@/hooks/use-toast";
@@ -470,6 +471,15 @@ const Article = () => {
             ))}
           </div>
         )}
+
+        {/* Editorial score (5-criterion) — reinforces نوبهار's scientific standard */}
+        <EditorialScoreChart
+          science={article.editorial_score_science}
+          ethics={article.editorial_score_ethics}
+          writing={article.editorial_score_writing}
+          timing={article.editorial_score_timing}
+          innovation={article.editorial_score_innovation}
+        />
 
         {/* Reactions + Comments */}
         <ArticleReactions
