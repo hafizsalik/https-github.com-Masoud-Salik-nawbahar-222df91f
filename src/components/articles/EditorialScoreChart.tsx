@@ -1,6 +1,5 @@
 import { Award } from "lucide-react";
-import { toPersianNumber } from "@/lib/persianNumbers";
-import { cn } from "@/lib/utils";
+import { toPersianNumber, cn } from "@/lib/utils";
 
 interface EditorialScoreChartProps {
   science: number;     // 0-15
