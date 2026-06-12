@@ -472,6 +472,15 @@ const Article = () => {
           </div>
         )}
 
+        {/* Editorial score (5-criterion) — reinforces نوبهار's scientific standard */}
+        <EditorialScoreChart
+          science={article.editorial_score_science}
+          ethics={article.editorial_score_ethics}
+          writing={article.editorial_score_writing}
+          timing={article.editorial_score_timing}
+          innovation={article.editorial_score_innovation}
+        />
+
         {/* Reactions + Comments */}
         <ArticleReactions
           articleId={article.id}
