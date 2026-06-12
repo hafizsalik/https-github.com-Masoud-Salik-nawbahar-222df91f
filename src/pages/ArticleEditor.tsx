@@ -60,6 +60,8 @@ const ArticleEditor = () => {
   const [loading, setLoading] = useState(false);
   const [parentArticle, setParentArticle] = useState<{ id: string; title: string } | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [savedTick, setSavedTick] = useState(0);
 
   // AI Review state
   const [reviewState, setReviewState] = useState<"idle" | "reviewing" | "result">("idle");
