@@ -179,8 +179,16 @@ const ArticleEditor = () => {
   useEffect(() => {
     if (!responseToId) {
       storage.set(DRAFT_KEY, JSON.stringify({ title, content, tags }));
+      if (title.trim() || content.trim()) setLastSavedAt(Date.now());
     }
   }, [title, content, tags, responseToId]);
+
+  // Tick every 10s so the "saved X ago" label stays fresh
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const id = setInterval(() => setSavedTick(t => t + 1), 10_000);
+    return () => clearInterval(id);
+  }, [lastSavedAt]);
 
   useEffect(() => {
     if (responseToId) {
