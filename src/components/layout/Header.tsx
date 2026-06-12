@@ -176,7 +176,7 @@ export function Header() {
           {/* Right: User avatar or guest icon */}
           <Link
             to={user ? "/profile" : "/auth?view=login"}
-            className="flex items-center justify-center w-10 h-10"
+            className="flex items-center justify-center w-11 h-11 -ml-1"
             aria-label="پروفایل"
           >
             {user && avatarUrl ? (
