@@ -154,8 +154,8 @@ export function ReactionPicker({
               </button>
             </div>
 
-            {/* Reaction grid */}
-            <div className="flex items-center justify-around px-4 pb-6 safe-bottom">
+            {/* Reaction grid — horizontally scrollable with snap on narrow screens */}
+            <div className="flex items-center gap-2 px-4 pb-6 safe-bottom overflow-x-auto snap-x snap-mandatory scrollbar-none justify-around">
               {REACTION_KEYS.map((key) => {
                 const isActive = userReaction === key;
                 const Icon = REACTION_SVG_ICONS[key] || DefaultIcon;
@@ -166,7 +166,7 @@ export function ReactionPicker({
                     key={key}
                     onClick={() => select(key)}
                     className={cn(
-                      "flex flex-col items-center justify-center rounded-2xl transition-all duration-200 w-14 h-16",
+                      "shrink-0 snap-center flex flex-col items-center justify-center rounded-2xl transition-all duration-200 w-14 h-16",
                       "active:scale-90",
                       isActive && "scale-105"
                     )}
