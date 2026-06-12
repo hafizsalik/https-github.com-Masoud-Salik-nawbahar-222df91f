@@ -596,6 +596,24 @@ const ArticleEditor = () => {
             <ArrowRight size={20} strokeWidth={1.5} />
           </button>
           <div className="flex items-center gap-1.5">
+            {lastSavedAt && (() => {
+              void savedTick;
+              const seconds = Math.max(1, Math.round((Date.now() - lastSavedAt) / 1000));
+              let label = "";
+              if (seconds < 60) label = `${toPersianNumber(seconds)} ثانیه قبل`;
+              else if (seconds < 3600) label = `${toPersianNumber(Math.round(seconds / 60))} دقیقه قبل`;
+              else label = `${toPersianNumber(Math.round(seconds / 3600))} ساعت قبل`;
+              return (
+                <span
+                  className="hidden sm:inline-flex items-center gap-1 text-[10px] text-muted-foreground/70 px-2 py-1 rounded-md bg-muted/30"
+                  aria-live="polite"
+                  title="پیش‌نویس به‌صورت خودکار ذخیره می‌شود"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  ذخیره شد · {label}
+                </span>
+              );
+            })()}
             <button
               onClick={handleSaveDraft}
               disabled={loading || !title.trim()}
