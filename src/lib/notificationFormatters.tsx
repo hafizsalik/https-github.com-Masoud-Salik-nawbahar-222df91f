@@ -119,6 +119,23 @@ export function getNotificationText(
           )}
         </>
       );
+    case "report":
+      return (
+        <>
+          <strong className="font-medium">گزارش جدید</strong> برای بررسی دریافت شد
+          {articleTitle && (
+            <span className="text-muted-foreground/50 block text-[11px] mt-0.5 line-clamp-1">
+              {articleTitle}
+            </span>
+          )}
+        </>
+      );
+    case "report_ack":
+      return (
+        <>
+          گزارش شما <strong className="font-medium">دریافت شد</strong> و در حال بررسی است
+        </>
+      );
     default:
       return <span>اعلان جدید</span>;
   }
