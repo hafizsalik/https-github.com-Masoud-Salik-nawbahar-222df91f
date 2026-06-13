@@ -1,4 +1,4 @@
-import { ThumbsUp, Heart, Lightbulb, Smile, Frown, MessageCircle, UserPlus, Bell } from "lucide-react";
+import { ThumbsUp, Heart, Lightbulb, Smile, Frown, MessageCircle, UserPlus, Bell, ShieldCheck, Flag } from "lucide-react";
 import { REACTION_LABELS } from "@/hooks/useCardReactions";
 
 export const REACTION_ICON_MAP: Record<string, React.ElementType> = {
