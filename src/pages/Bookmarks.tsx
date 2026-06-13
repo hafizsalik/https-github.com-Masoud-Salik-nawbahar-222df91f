@@ -71,9 +71,12 @@ const Bookmarks = () => {
             <Bookmark size={24} className="text-muted-foreground/40" />
           </div>
           <h2 className="text-lg font-bold mb-2">کتابخانه خالی است</h2>
-          <p className="text-muted-foreground text-[13px] max-w-[240px] leading-relaxed">
+          <p className="text-muted-foreground text-[13px] max-w-[260px] leading-relaxed mb-6">
             مقالاتی که ذخیره می‌کنید اینجا نمایش داده می‌شوند
           </p>
+          <Button onClick={() => navigate("/explore")} variant="outline" className="rounded-full px-6 h-9 text-[13px]">
+            کشف مقالات
+          </Button>
         </div>
       </AppLayout>
     );
