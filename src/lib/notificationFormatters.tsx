@@ -29,6 +29,10 @@ export function getNotificationIcon(type: string, reactionType?: string) {
       return <UserPlus size={s} strokeWidth={sw} className={cls} />;
     case "new_article":
       return <Bell size={s} strokeWidth={sw} className={cls} />;
+    case "report":
+      return <Flag size={s} strokeWidth={sw} className={cls} />;
+    case "report_ack":
+      return <ShieldCheck size={s} strokeWidth={sw} className="text-emerald-500/70" />;
     default:
       return <Bell size={s} strokeWidth={sw} className="text-muted-foreground/40" />;
   }
