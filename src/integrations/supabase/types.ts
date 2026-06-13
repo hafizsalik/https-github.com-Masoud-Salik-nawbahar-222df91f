@@ -245,6 +245,7 @@ export type Database = {
       comments: {
         Row: {
           article_id: string
+          auto_hidden: boolean
           content: string
           created_at: string
           id: string
@@ -256,6 +257,7 @@ export type Database = {
         }
         Insert: {
           article_id: string
+          auto_hidden?: boolean
           content: string
           created_at?: string
           id?: string
@@ -267,6 +269,7 @@ export type Database = {
         }
         Update: {
           article_id?: string
+          auto_hidden?: boolean
           content?: string
           created_at?: string
           id?: string
