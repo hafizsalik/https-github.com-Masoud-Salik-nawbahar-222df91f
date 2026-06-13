@@ -43,8 +43,9 @@ export function useComments(articleId: string, options?: UseCommentsOptions) {
     
     const { data: commentsData, error } = await supabase
       .from("comments")
-      .select("id, content, created_at, user_id, parent_id, image_url")
+      .select("id, content, created_at, user_id, parent_id, image_url, auto_hidden")
       .eq("article_id", articleId)
+      .eq("auto_hidden", false)
       .order("created_at", { ascending: true });
 
     if (error || !commentsData) {

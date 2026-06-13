@@ -1,4 +1,4 @@
-import { ThumbsUp, Heart, Lightbulb, Smile, Frown, MessageCircle, UserPlus, Bell } from "lucide-react";
+import { ThumbsUp, Heart, Lightbulb, Smile, Frown, MessageCircle, UserPlus, Bell, ShieldCheck, Flag } from "lucide-react";
 import { REACTION_LABELS } from "@/hooks/useCardReactions";
 
 export const REACTION_ICON_MAP: Record<string, React.ElementType> = {
@@ -29,6 +29,10 @@ export function getNotificationIcon(type: string, reactionType?: string) {
       return <UserPlus size={s} strokeWidth={sw} className={cls} />;
     case "new_article":
       return <Bell size={s} strokeWidth={sw} className={cls} />;
+    case "report":
+      return <Flag size={s} strokeWidth={sw} className={cls} />;
+    case "report_ack":
+      return <ShieldCheck size={s} strokeWidth={sw} className="text-emerald-500/70" />;
     default:
       return <Bell size={s} strokeWidth={sw} className="text-muted-foreground/40" />;
   }
@@ -113,6 +117,23 @@ export function getNotificationText(
               {articleTitle}
             </span>
           )}
+        </>
+      );
+    case "report":
+      return (
+        <>
+          <strong className="font-medium">گزارش جدید</strong> برای بررسی دریافت شد
+          {articleTitle && (
+            <span className="text-muted-foreground/50 block text-[11px] mt-0.5 line-clamp-1">
+              {articleTitle}
+            </span>
+          )}
+        </>
+      );
+    case "report_ack":
+      return (
+        <>
+          گزارش شما <strong className="font-medium">دریافت شد</strong> و در حال بررسی است
         </>
       );
     default:
