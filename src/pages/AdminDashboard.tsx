@@ -121,8 +121,8 @@ const AdminDashboard = () => {
     setIsAdmin(true);
   };
 
-  const fetchStats = async () => {
-    setLoading(true);
+  const fetchStats = async (silent = false) => {
+    if (!silent) setLoading(true);
     const [
       { count: totalArticles },
       { count: totalUsers },
