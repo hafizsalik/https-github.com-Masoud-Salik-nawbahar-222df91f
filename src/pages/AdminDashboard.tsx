@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Clock, FileText, CheckCircle, XCircle, Users, Eye, MessageCircle, Flag, TrendingUp, Shield, BarChart3, ThumbsUp, Trash2 } from "lucide-react";
+import { ArrowRight, Clock, FileText, CheckCircle, XCircle, Users, Eye, MessageCircle, Flag, TrendingUp, Shield, BarChart3, ThumbsUp, Trash2, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -51,16 +51,62 @@ const AdminDashboard = () => {
   const [reportedComments, setReportedComments] = useState<any[]>([]);
   const [articleToDelete, setArticleToDelete] = useState<AdminArticle | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
 
   useEffect(() => { checkAdminAccess(); }, []);
+
+  const refreshActiveTab = useCallback(async (silent = false) => {
+    if (!silent) setRefreshing(true);
+    const tab = activeTabRef.current;
+    try {
+      // Always refresh stats so badges stay live across all tabs
+      await fetchStats(true);
+      if (tab === "reports") await fetchReportedComments(true);
+      else if (tab === "pending" || tab === "published" || tab === "rejected") {
+        await fetchArticles(tab, true);
+      }
+      setLastUpdated(new Date());
+    } finally {
+      if (!silent) setRefreshing(false);
+    }
+  }, []);
+
+  // 60-second polling + realtime subscriptions
+  useEffect(() => {
+    if (!isAdmin) return;
+    const interval = setInterval(() => { refreshActiveTab(true); }, 60_000);
+
+    const channel = supabase
+      .channel("admin-dashboard-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, () => refreshActiveTab(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => refreshActiveTab(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => refreshActiveTab(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "reported_comments" }, () => refreshActiveTab(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "reported_articles" }, () => refreshActiveTab(true))
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin, refreshActiveTab]);
+
   useEffect(() => {
     if (isAdmin) {
       if (activeTab === "stats") fetchStats();
       else if (activeTab === "reports") fetchReportedComments();
-      else fetchArticles(activeTab as "pending" | "published" | "rejected");
+      else if (activeTab === "pending" || activeTab === "published" || activeTab === "rejected") {
+        fetchArticles(activeTab as any);
+      } else {
+        // analytics / content-reports have their own loaders; still refresh stats for badges
+        fetchStats(true);
+      }
     }
   }, [isAdmin, activeTab]);
 
@@ -75,8 +121,8 @@ const AdminDashboard = () => {
     setIsAdmin(true);
   };
 
-  const fetchStats = async () => {
-    setLoading(true);
+  const fetchStats = async (silent = false) => {
+    if (!silent) setLoading(true);
     const [
       { count: totalArticles },
       { count: totalUsers },
@@ -108,11 +154,11 @@ const AdminDashboard = () => {
       pendingArticles: pendingArticles || 0,
       reportedComments: reportedCommentsCount || 0,
     });
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
-  const fetchArticles = async (status: "pending" | "published" | "rejected") => {
-    setLoading(true);
+  const fetchArticles = async (status: "pending" | "published" | "rejected", silent = false) => {
+    if (!silent) setLoading(true);
 
     const { data, error } = await supabase
       .from("articles")
@@ -122,7 +168,7 @@ const AdminDashboard = () => {
 
     if (error) {
       toast({ title: "خطا", description: error.message, variant: "destructive" });
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
 
@@ -130,7 +176,7 @@ const AdminDashboard = () => {
 
     if (authorIds.length === 0) {
       setArticles((data || []).map((item: any) => ({ ...item, profiles: null })));
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
 
@@ -142,7 +188,7 @@ const AdminDashboard = () => {
     if (profilesError) {
       console.error("Error fetching profiles for admin dashboard:", profilesError);
       setArticles((data || []).map((item: any) => ({ ...item, profiles: null })));
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
 
@@ -156,14 +202,14 @@ const AdminDashboard = () => {
           : null,
       }))
     );
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
-  const fetchReportedComments = async () => {
-    setLoading(true);
+  const fetchReportedComments = async (silent = false) => {
+    if (!silent) setLoading(true);
     const { data } = await supabase.from("reported_comments").select("*, comments(id, content, user_id, article_id)").order("created_at", { ascending: false });
     setReportedComments(data || []);
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   const handleDeleteComment = async (commentId: string) => {
@@ -217,7 +263,15 @@ const AdminDashboard = () => {
             <Shield size={14} className="text-primary" />
             داشبورد مدیریت
           </h1>
-          <div className="w-10" />
+          <button
+            onClick={() => refreshActiveTab(false)}
+            disabled={refreshing}
+            className="p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            aria-label="بروزرسانی"
+            title={lastUpdated ? `آخرین بروزرسانی: ${lastUpdated.toLocaleTimeString("fa-IR")}` : "بروزرسانی"}
+          >
+            <RefreshCw size={16} strokeWidth={1.8} className={refreshing ? "animate-spin" : ""} />
+          </button>
         </div>
       </header>
 
