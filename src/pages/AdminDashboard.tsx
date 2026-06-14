@@ -263,7 +263,15 @@ const AdminDashboard = () => {
             <Shield size={14} className="text-primary" />
             داشبورد مدیریت
           </h1>
-          <div className="w-10" />
+          <button
+            onClick={() => refreshActiveTab(false)}
+            disabled={refreshing}
+            className="p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            aria-label="بروزرسانی"
+            title={lastUpdated ? `آخرین بروزرسانی: ${lastUpdated.toLocaleTimeString("fa-IR")}` : "بروزرسانی"}
+          >
+            <RefreshCw size={16} strokeWidth={1.8} className={refreshing ? "animate-spin" : ""} />
+          </button>
         </div>
       </header>
 
