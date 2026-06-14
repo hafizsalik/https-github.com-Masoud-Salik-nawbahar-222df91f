@@ -157,8 +157,8 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
-  const fetchArticles = async (status: "pending" | "published" | "rejected") => {
-    setLoading(true);
+  const fetchArticles = async (status: "pending" | "published" | "rejected", silent = false) => {
+    if (!silent) setLoading(true);
 
     const { data, error } = await supabase
       .from("articles")
@@ -168,7 +168,7 @@ const AdminDashboard = () => {
 
     if (error) {
       toast({ title: "خطا", description: error.message, variant: "destructive" });
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
 
@@ -176,7 +176,7 @@ const AdminDashboard = () => {
 
     if (authorIds.length === 0) {
       setArticles((data || []).map((item: any) => ({ ...item, profiles: null })));
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
 
@@ -188,7 +188,7 @@ const AdminDashboard = () => {
     if (profilesError) {
       console.error("Error fetching profiles for admin dashboard:", profilesError);
       setArticles((data || []).map((item: any) => ({ ...item, profiles: null })));
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
 
@@ -202,14 +202,14 @@ const AdminDashboard = () => {
           : null,
       }))
     );
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
-  const fetchReportedComments = async () => {
-    setLoading(true);
+  const fetchReportedComments = async (silent = false) => {
+    if (!silent) setLoading(true);
     const { data } = await supabase.from("reported_comments").select("*, comments(id, content, user_id, article_id)").order("created_at", { ascending: false });
     setReportedComments(data || []);
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   const handleDeleteComment = async (commentId: string) => {
