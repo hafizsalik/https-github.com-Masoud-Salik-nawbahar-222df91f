@@ -154,7 +154,7 @@ const AdminDashboard = () => {
       pendingArticles: pendingArticles || 0,
       reportedComments: reportedCommentsCount || 0,
     });
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   const fetchArticles = async (status: "pending" | "published" | "rejected", silent = false) => {
