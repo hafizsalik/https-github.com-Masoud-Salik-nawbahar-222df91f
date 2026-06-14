@@ -51,16 +51,62 @@ const AdminDashboard = () => {
   const [reportedComments, setReportedComments] = useState<any[]>([]);
   const [articleToDelete, setArticleToDelete] = useState<AdminArticle | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
 
   useEffect(() => { checkAdminAccess(); }, []);
+
+  const refreshActiveTab = useCallback(async (silent = false) => {
+    if (!silent) setRefreshing(true);
+    const tab = activeTabRef.current;
+    try {
+      // Always refresh stats so badges stay live across all tabs
+      await fetchStats(true);
+      if (tab === "reports") await fetchReportedComments(true);
+      else if (tab === "pending" || tab === "published" || tab === "rejected") {
+        await fetchArticles(tab, true);
+      }
+      setLastUpdated(new Date());
+    } finally {
+      if (!silent) setRefreshing(false);
+    }
+  }, []);
+
+  // 60-second polling + realtime subscriptions
+  useEffect(() => {
+    if (!isAdmin) return;
+    const interval = setInterval(() => { refreshActiveTab(true); }, 60_000);
+
+    const channel = supabase
+      .channel("admin-dashboard-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, () => refreshActiveTab(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => refreshActiveTab(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => refreshActiveTab(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "reported_comments" }, () => refreshActiveTab(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "reported_articles" }, () => refreshActiveTab(true))
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin, refreshActiveTab]);
+
   useEffect(() => {
     if (isAdmin) {
       if (activeTab === "stats") fetchStats();
       else if (activeTab === "reports") fetchReportedComments();
-      else fetchArticles(activeTab as "pending" | "published" | "rejected");
+      else if (activeTab === "pending" || activeTab === "published" || activeTab === "rejected") {
+        fetchArticles(activeTab as any);
+      } else {
+        // analytics / content-reports have their own loaders; still refresh stats for badges
+        fetchStats(true);
+      }
     }
   }, [isAdmin, activeTab]);
 
